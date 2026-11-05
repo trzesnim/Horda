@@ -40,12 +40,10 @@ from horde_waves import (
 
 
 def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
-    ai_p = ctx["ai_p"]
     ai_players = ctx["ai_players"]
     all_settlement_wave_triggers = ctx["all_settlement_wave_triggers"]
     allied_citadel = ctx["allied_citadel"]
     deep_target_center = ctx["deep_target_center"]
-    h_p = ctx["h_p"]
     human_players = ctx["human_players"]
     p_coords = ctx["p_coords"]
     q1_bldg = ctx["q1_bldg"]
@@ -62,18 +60,11 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     s_g2_snipers = ctx["s_g2_snipers"]
     s_g3_east = ctx["s_g3_east"]
     s_g3_north = ctx["s_g3_north"]
-    s_key = ctx["s_key"]
     sanctuary_cx = ctx["sanctuary_cx"]
     sanctuary_cy = ctx["sanctuary_cy"]
-    sx = ctx["sx"]
-    sy = ctx["sy"]
-    tier_0_wave_triggers = ctx["tier_0_wave_triggers"]
-    tier_m1_wave_triggers = ctx["tier_m1_wave_triggers"]
-    tier_p1_wave_triggers = ctx["tier_p1_wave_triggers"]
-    tier_p2_wave_triggers = ctx["tier_p2_wave_triggers"]
+    state_markers = ctx["state_markers"]
+    t_sanc_unlocked = ctx["t_sanc_unlocked"]
     tm = ctx["tm"]
-    u_id = ctx["u_id"]
-    wx = ctx["wx"]
 
     pad_up_box = (sanctuary_cx - 2, sanctuary_cy - 4, sanctuary_cx + 2, sanctuary_cy - 3)
     pad_down_box = (sanctuary_cx - 2, sanctuary_cy + 3, sanctuary_cx + 2, sanctuary_cy + 4)
@@ -82,17 +73,24 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     def apply_king_reset_and_safe_stat_shift(trig, mode: str):
         cx1, cy1, cx2, cy2 = full_chamber_box
         safe_call(
-            trig.new_effect.remove_object,
+            trig.new_effect.teleport_object,
             source_player=PlayerId.ONE,
             object_list_unit_id=UnitInfo.KING.ID,
-            area_x1=cx1, area_y1=cy1, area_x2=cx2, area_y2=cy2,
-        )
-        safe_call(
-            trig.new_effect.create_object,
-            object_list_unit_id=UnitInfo.KING.ID,
-            source_player=PlayerId.ONE,
+            area_x1=cx1,
+            area_y1=cy1,
+            area_x2=cx2,
+            area_y2=cy2,
             location_x=sanctuary_cx,
             location_y=sanctuary_cy,
+        )
+        safe_call(
+            trig.new_effect.stop_object,
+            source_player=PlayerId.ONE,
+            object_list_unit_id=UnitInfo.KING.ID,
+            area_x1=cx1,
+            area_y1=cy1,
+            area_x2=cx2,
+            area_y2=cy2,
         )
 
         if mode in ("pos_up", "pos_down"):
@@ -127,10 +125,10 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         trig,
         is_up: bool,
         stat_mode: str,
+        from_lvl: int,
+        to_lvl: int,
         to_disable: list,
         to_enable_after_2s: list,
-        waves_to_enable: list,
-        waves_to_disable: list,
         log_msg: str,
     ):
         bx1, by1, bx2, by2 = pad_up_box if is_up else pad_down_box
@@ -139,15 +137,21 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
             source_player=PlayerId.ONE,
             object_list=UnitInfo.KING.ID,
             object_list_unit_id=UnitInfo.KING.ID,
-            area_x1=bx1, area_y1=by1, area_x2=bx2, area_y2=by2,
+            area_x1=bx1,
+            area_y1=by1,
+            area_x2=bx2,
+            area_y2=by2,
             quantity=1,
+        )
+        safe_call(
+            trig.new_condition.trigger_active,
+            trigger_id=t_sanc_unlocked.trigger_id,
         )
         for d_tr in to_disable:
             safe_call(trig.new_effect.deactivate_trigger, trigger_id=d_tr.trigger_id)
-        for w_en in waves_to_enable:
-            safe_call(trig.new_effect.activate_trigger, trigger_id=w_en.trigger_id)
-        for w_dis in waves_to_disable:
-            safe_call(trig.new_effect.deactivate_trigger, trigger_id=w_dis.trigger_id)
+
+        safe_call(trig.new_effect.deactivate_trigger, trigger_id=state_markers[from_lvl].trigger_id)
+        safe_call(trig.new_effect.activate_trigger, trigger_id=state_markers[to_lvl].trigger_id)
 
         apply_king_reset_and_safe_stat_shift(trig, mode=stat_mode)
         send_highlight_chat(trig, "<RED>" if is_up else "<AQUA>", log_msg, flare_x=sanctuary_cx, flare_y=sanctuary_cy)
@@ -160,59 +164,83 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         safe_call(trig.new_effect.activate_trigger, trigger_id=t_relay.trigger_id)
 
     wire_difficulty_transition(
-        t_up_0_to_p1, is_up=True, stat_mode="pos_up",
+        t_up_0_to_p1,
+        is_up=True,
+        stat_mode="pos_up",
+        from_lvl=0,
+        to_lvl=1,
         to_disable=[t_up_0_to_p1, t_down_0_to_m1],
         to_enable_after_2s=[t_up_p1_to_p2, t_down_p1_to_0],
-        waves_to_enable=tier_p1_wave_triggers, waves_to_disable=[],
         log_msg="[LOG BALANSU]: Trudnosc ZWIEKSZONA do POZIOMU +1 (TRUDNY: +25% wielkosci fal, +15 HP, +2 Ataku)!",
     )
     wire_difficulty_transition(
-        t_up_p1_to_p2, is_up=True, stat_mode="pos_up",
+        t_up_p1_to_p2,
+        is_up=True,
+        stat_mode="pos_up",
+        from_lvl=1,
+        to_lvl=2,
         to_disable=[t_up_p1_to_p2, t_down_p1_to_0],
         to_enable_after_2s=[t_down_p2_to_p1],
-        waves_to_enable=tier_p2_wave_triggers, waves_to_disable=[],
         log_msg="[LOG BALANSU]: Trudnosc ZWIEKSZONA do POZIOMU +2 (EKSTREMALNY: +50% wielkosci fal, +30 HP, +4 Ataku)!",
     )
     wire_difficulty_transition(
-        t_down_p2_to_p1, is_up=False, stat_mode="pos_down",
+        t_down_p2_to_p1,
+        is_up=False,
+        stat_mode="pos_down",
+        from_lvl=2,
+        to_lvl=1,
         to_disable=[t_down_p2_to_p1],
         to_enable_after_2s=[t_up_p1_to_p2, t_down_p1_to_0],
-        waves_to_enable=[], waves_to_disable=tier_p2_wave_triggers,
         log_msg="[LOG BALANSU]: Trudnosc ZMNIEJSZONA z +2 do POZIOMU +1 (TRUDNY: +25% wielkosci fal)!",
     )
     wire_difficulty_transition(
-        t_down_p1_to_0, is_up=False, stat_mode="pos_down",
+        t_down_p1_to_0,
+        is_up=False,
+        stat_mode="pos_down",
+        from_lvl=1,
+        to_lvl=0,
         to_disable=[t_up_p1_to_p2, t_down_p1_to_0],
         to_enable_after_2s=[t_up_0_to_p1, t_down_0_to_m1],
-        waves_to_enable=[], waves_to_disable=tier_p1_wave_triggers,
         log_msg="[LOG BALANSU]: Trudnosc ZMNIEJSZONA z +1 do POZIOMU 0 (DOMYSLNY: 100% wielkosci fal)!",
     )
     wire_difficulty_transition(
-        t_down_0_to_m1, is_up=False, stat_mode="neg_down",
+        t_down_0_to_m1,
+        is_up=False,
+        stat_mode="neg_down",
+        from_lvl=0,
+        to_lvl=-1,
         to_disable=[t_up_0_to_p1, t_down_0_to_m1],
         to_enable_after_2s=[t_up_m1_to_0, t_down_m1_to_m2],
-        waves_to_enable=[], waves_to_disable=tier_0_wave_triggers,
         log_msg="[LOG BALANSU]: Trudnosc ZMNIEJSZONA do POZIOMU -1 (LATWY: -20% wielkosci fal, -15% HP wroga)!",
     )
     wire_difficulty_transition(
-        t_down_m1_to_m2, is_up=False, stat_mode="neg_down",
+        t_down_m1_to_m2,
+        is_up=False,
+        stat_mode="neg_down",
+        from_lvl=-1,
+        to_lvl=-2,
         to_disable=[t_up_m1_to_0, t_down_m1_to_m2],
         to_enable_after_2s=[t_up_m2_to_m1],
-        waves_to_enable=[], waves_to_disable=tier_m1_wave_triggers,
         log_msg="[LOG BALANSU]: Trudnosc ZMNIEJSZONA do POZIOMU -2 (BARDZO LATWY: -40% wielkosci fal, -28% HP wroga)!",
     )
     wire_difficulty_transition(
-        t_up_m2_to_m1, is_up=True, stat_mode="neg_up",
+        t_up_m2_to_m1,
+        is_up=True,
+        stat_mode="neg_up",
+        from_lvl=-2,
+        to_lvl=-1,
         to_disable=[t_up_m2_to_m1],
         to_enable_after_2s=[t_up_m1_to_0, t_down_m1_to_m2],
-        waves_to_enable=tier_m1_wave_triggers, waves_to_disable=[],
         log_msg="[LOG BALANSU]: Trudnosc ZWIEKSZONA z -2 do POZIOMU -1 (LATWY: -20% wielkosci fal)!",
     )
     wire_difficulty_transition(
-        t_up_m1_to_0, is_up=True, stat_mode="neg_up",
+        t_up_m1_to_0,
+        is_up=True,
+        stat_mode="neg_up",
+        from_lvl=-1,
+        to_lvl=0,
         to_disable=[t_up_m1_to_0, t_down_m1_to_m2],
         to_enable_after_2s=[t_up_0_to_p1, t_down_0_to_m1],
-        waves_to_enable=tier_0_wave_triggers, waves_to_disable=[],
         log_msg="[LOG BALANSU]: Trudnosc ZWIEKSZONA z -1 do POZIOMU 0 (DOMYSLNY: 100% wielkosci fal)!",
     )
 

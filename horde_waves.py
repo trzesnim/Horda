@@ -239,15 +239,6 @@ def add_spawn_and_attack_effect(trigger, ai_player: PlayerId, units_spec: list[t
     )
 
 
-def scale_comp(comp: list[tuple[int, int]], factor: float) -> list[tuple[int, int]]:
-    scaled = []
-    for u_id, cnt in comp:
-        new_cnt = round(cnt * factor)
-        if new_cnt > 0:
-            scaled.append((u_id, new_cnt))
-    return scaled
-
-
 def scale_comp_for_level(comp: list[tuple[int, int]], level: int) -> list[tuple[int, int]]:
     if any(cnt < 0 for _, cnt in comp):
         raise ValueError(f"Ujemna liczebnosc w kompozycji: {comp}")
@@ -673,114 +664,228 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     )
 
     # ==============================================================================
-    # 8. HARMONOGRAM 14 FAL Z PODZIAŁEM NA WARSTWY TRUDNOŚCI ORAZ ATAKAMI NA TRADE I LAS
+    # 8. ZNACZNIKI STANU TRUDNOŚCI, BLOKADA SANKTUARIUM I FAL (ETAP 3A + 3B + 3C)
     # ==============================================================================
     all_settlement_wave_triggers = {
         "G1_North": [], "G1_East": [], "G2_Snipers": [], "G2_Mages": [], "G3_North": [], "G3_East": [],
     }
-
-    tier_m1_wave_triggers = []
-    tier_0_wave_triggers = []
-    tier_p1_wave_triggers = []
-    tier_p2_wave_triggers = []
 
     eco_raid_targets = [(32, 118), (76, 120), (32, 168), (76, 172)]
     deep_target_north = (48, 138)
     deep_target_center = (54, 146)
     deep_target_east = (68, 162)
 
+    diff_tags = {-2: "M2", -1: "M1", 0: "0", 1: "P1", 2: "P2"}
+    state_markers = {}
+    for lvl, tag in diff_tags.items():
+        trig = tm.add_trigger(f"State_Diff_Lvl_{tag}", enabled=(lvl == 0), looping=False)
+        safe_call(trig.new_condition.timer, timer=999999)
+        state_markers[lvl] = trig
+
+    t_sanc_unlocked = tm.add_trigger("State_Sanctuary_Unlocked", enabled=True, looping=False)
+    safe_call(t_sanc_unlocked.new_condition.timer, timer=999999)
+
+    # ------------------------------------------------------------------------------
+    # BRAMKI I WARIANTY TRYBU ENDLESS PO FALI 14 (ETAP 3C - NAPRAWA BUG-03)
+    # ------------------------------------------------------------------------------
+    settlement_spawn_configs = {
+        "G1_North":   (PlayerId.FIVE,  48, 86,  *deep_target_north),
+        "G1_East":    (PlayerId.FIVE,  120, 162, *deep_target_east),
+        "G2_Snipers": (PlayerId.SIX,   68, 48,  *deep_target_north),
+        "G2_Mages":   (PlayerId.SEVEN, 116, 114, *deep_target_center),
+        "G3_North":   (PlayerId.EIGHT, 128, 36, *deep_target_center),
+        "G3_East":    (PlayerId.EIGHT, 160, 62, *deep_target_east),
+    }
+
     wave_definitions = get_wave_definitions()
-    total_waves = len(wave_definitions)
-    for (
-        wave_num, wave_time, wave_title,
-        g1_n_comp, g1_e_comp, g2_s_comp, g2_m_comp, g3_n_comp, g3_e_comp, raider_count,
-    ) in wave_definitions:
-        is_endless_last = wave_num == total_waves
-        loop_flag = is_endless_last
-        cond_time = BALANCE["wave_interval_sec"] if is_endless_last else wave_time
+    w14_def = wave_definitions[-1]
+    endless_settlement_comps = {
+        "G1_North":   w14_def.g1_north,
+        "G1_East":    w14_def.g1_east,
+        "G2_Snipers": w14_def.g2_snipers,
+        "G2_Mages":   w14_def.g2_mages,
+        "G3_North":   w14_def.g3_north,
+        "G3_East":    w14_def.g3_east,
+    }
 
-        t_ann = tm.add_trigger(f"03_W{wave_num:02d}_Announce", enabled=not is_endless_last, looping=loop_flag)
-        safe_call(t_ann.new_condition.timer, timer=cond_time)
+    # Specjalne ataki pętlowe Endless dla wydzielonych obozów
+    t_endless_trade = tm.add_trigger("03_Endless_Trade_Line_Attack", enabled=False, looping=False)
+    trade_raid_comp = [
+        (UnitInfo.SIEGE_RAM.ID, 3),
+        (UnitInfo.PALADIN.ID, 10 + (14 - 8) * 2),
+        (UnitInfo.HEAVY_CAVALRY_ARCHER.ID, 10 + (14 - 8) * 2),
+    ]
+    add_spawn_and_attack_effect(
+        t_endless_trade, PlayerId.EIGHT, trade_raid_comp,
+        spawn_x=162, spawn_y=180, target_x=190, target_y=194,
+    )
+    send_highlight_chat(
+        t_endless_trade, "<ORANGE>",
+        "[ATAK NA SZLAK HANDLOWY!]: Wydzielony korpus Hordy z taranami uderza na Mur Handlowy na poludniu (162, 184)!",
+        flare_x=162, flare_y=184,
+    )
+    safe_call(t_endless_trade.new_effect.deactivate_trigger, trigger_id=t_endless_trade.trigger_id)
+    all_settlement_wave_triggers["G3_East"].append(t_endless_trade)
 
+    t_endless_sapper = tm.add_trigger("03_Endless_Forest_Breach_Assault", enabled=False, looping=False)
+    add_spawn_and_attack_effect(
+        t_endless_sapper, PlayerId.SIX,
+        [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14), (ELITE_BERSERK_ID, 8)],
+        spawn_x=78, spawn_y=94, target_x=68, target_y=130,
+    )
+    add_spawn_and_attack_effect(
+        t_endless_sapper, PlayerId.SIX,
+        [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14), (UnitInfo.HUSKARL.ID, 10)],
+        spawn_x=110, spawn_y=140, target_x=68, target_y=146,
+    )
+    safe_call(t_endless_sapper.new_effect.deactivate_trigger, trigger_id=t_endless_sapper.trigger_id)
+    all_settlement_wave_triggers["G2_Snipers"].append(t_endless_sapper)
+
+    t_endless_szakale = tm.add_trigger("03_Endless_Szakale_EcoRaid", enabled=False, looping=False)
+    add_spawn_and_attack_effect(
+        t_endless_szakale, PlayerId.SEVEN, [(HUSSAR_ID, w14_def.raider_count)],
+        spawn_x=116, spawn_y=114,
+        target_x=eco_raid_targets[0][0], target_y=eco_raid_targets[0][1],
+        ignore_frontline_move_only=True,
+    )
+    safe_call(t_endless_szakale.new_effect.deactivate_trigger, trigger_id=t_endless_szakale.trigger_id)
+    all_settlement_wave_triggers["G2_Mages"].append(t_endless_szakale)
+
+    # Ogłoszenie cykliczne Endless
+    t_end_ann = tm.add_trigger("03_Endless_Announce_Loop", enabled=False, looping=True)
+    safe_call(t_end_ann.new_condition.timer, timer=BALANCE["wave_interval_sec"])
+    send_highlight_chat(
+        t_end_ann, "<RED>",
+        "=== [TRYB ENDLESS - NIESKONCZONA HORDA] === Horda rzuca do walki wszystkie rezerwy! Zniszczcie pozostale Settlementy, aby wygrac!",
+        flare_x=gate_center[0], flare_y=gate_center[1],
+    )
+
+    t_end_gate_ann = tm.add_trigger("03_Endless_Announce_Gate", enabled=True, looping=False)
+    safe_call(t_end_gate_ann.new_condition.timer, timer=4710)
+    safe_call(t_end_gate_ann.new_effect.activate_trigger, trigger_id=t_end_ann.trigger_id)
+
+    # Indywidualne Bramki Endless dla każdego Settlementu
+    endless_gates = {}
+    for s_key, (ai_p, sx, sy, tx, ty) in settlement_spawn_configs.items():
+        end_gate = tm.add_trigger(f"03_Endless_Gate_{s_key}", enabled=False, looping=True)
+        safe_call(end_gate.new_condition.timer, timer=BALANCE["wave_interval_sec"])
+        all_settlement_wave_triggers[s_key].append(end_gate)
+        endless_gates[s_key] = end_gate
+
+        end_variants = []
+        for lvl, tag in diff_tags.items():
+            t_end_var = tm.add_trigger(f"03_Endless_{s_key}_Diff_{tag}", enabled=False, looping=False)
+            safe_call(t_end_var.new_condition.trigger_active, trigger_id=state_markers[lvl].trigger_id)
+            end_army = scale_comp_for_level(endless_settlement_comps[s_key], lvl)
+            add_spawn_and_attack_effect(t_end_var, ai_p, end_army, spawn_x=sx, spawn_y=sy, target_x=tx, target_y=ty)
+            all_settlement_wave_triggers[s_key].append(t_end_var)
+            end_variants.append(t_end_var)
+
+        # Efekty bramki Endless: zamraża Sanktuarium i budzi warianty
+        safe_call(end_gate.new_effect.deactivate_trigger, trigger_id=t_sanc_unlocked.trigger_id)
+        for ev in end_variants:
+            safe_call(end_gate.new_effect.activate_trigger, trigger_id=ev.trigger_id)
+        if s_key == "G3_East":
+            safe_call(end_gate.new_effect.activate_trigger, trigger_id=t_endless_trade.trigger_id)
+        elif s_key == "G2_Snipers":
+            safe_call(end_gate.new_effect.activate_trigger, trigger_id=t_endless_sapper.trigger_id)
+        elif s_key == "G2_Mages":
+            safe_call(end_gate.new_effect.activate_trigger, trigger_id=t_endless_szakale.trigger_id)
+
+        # Efekty każdego wariantu Endless: wyłącza braci i odblokowuje Sanktuarium
+        for ev in end_variants:
+            for brother in end_variants:
+                safe_call(ev.new_effect.deactivate_trigger, trigger_id=brother.trigger_id)
+            safe_call(ev.new_effect.activate_trigger, trigger_id=t_sanc_unlocked.trigger_id)
+
+    # ------------------------------------------------------------------------------
+    # HARMONOGRAM FAL 1–14 Z SAMOZAMYKAJĄCYM OKNEM DISPATCHU (ETAP 3B - NAPRAWA BUG-01)
+    # ------------------------------------------------------------------------------
+    for w_def in wave_definitions:
+        w_num = w_def.wave_num
+        w_time = w_def.wave_sec
+        w_title = w_def.wave_title
+
+        t_ann = tm.add_trigger(f"03_W{w_num:02d}_Announce", enabled=True, looping=False)
+        safe_call(t_ann.new_condition.timer, timer=w_time)
         send_highlight_chat(
             t_ann, "<RED>",
-            f"=== [{wave_title}] === Po odparciu fali wyjdzcie w pole po Questy i Settlementy!",
+            f"=== [{w_title}] === Po odparciu fali wyjdzcie w pole po Questy i Settlementy!",
             flare_x=gate_center[0], flare_y=gate_center[1],
         )
 
         per_settlement_wave = [
-            ("G1_North", PlayerId.FIVE, g1_n_comp, 48, 86, *deep_target_north),
-            ("G1_East",  PlayerId.FIVE, g1_e_comp, 120, 162, *deep_target_east),
-            ("G2_Snipers", PlayerId.SIX, g2_s_comp, 68, 48, *deep_target_north),
-            ("G2_Mages",   PlayerId.SEVEN, g2_m_comp, 116, 114, *deep_target_center),
-            ("G3_North", PlayerId.EIGHT, g3_n_comp, 128, 36, *deep_target_center),
-            ("G3_East",  PlayerId.EIGHT, g3_e_comp, 160, 62, *deep_target_east),
+            ("G1_North",   PlayerId.FIVE,  w_def.g1_north, 48, 86,  *deep_target_north),
+            ("G1_East",    PlayerId.FIVE,  w_def.g1_east, 120, 162, *deep_target_east),
+            ("G2_Snipers", PlayerId.SIX,   w_def.g2_snipers, 68, 48,  *deep_target_north),
+            ("G2_Mages",   PlayerId.SEVEN, w_def.g2_mages, 116, 114, *deep_target_center),
+            ("G3_North",   PlayerId.EIGHT, w_def.g3_north, 128, 36, *deep_target_center),
+            ("G3_East",    PlayerId.EIGHT, w_def.g3_east, 160, 62, *deep_target_east),
         ]
+
+        wave_variants_all_settlements = []
 
         for s_key, ai_p, comp, sx, sy, tx, ty in per_settlement_wave:
             if not comp:
                 continue
 
-            base_comp = scale_comp(comp, 0.60)
-            m1_comp = scale_comp(comp, 0.20)
-            t0_comp = scale_comp(comp, 0.20)
-            p1_comp = scale_comp(comp, 0.25)
-            p2_comp = scale_comp(comp, 0.25)
+            t_clock = tm.add_trigger(f"03_W{w_num:02d}_{s_key}_Clock", enabled=True, looping=False)
+            safe_call(t_clock.new_condition.timer, timer=w_time)
+            all_settlement_wave_triggers[s_key].append(t_clock)
 
-            layer_specs = [
-                ("Base", base_comp, not is_endless_last, None),
-                ("TierM1", m1_comp, not is_endless_last, tier_m1_wave_triggers),
-                ("Tier0", t0_comp, not is_endless_last, tier_0_wave_triggers),
-                ("TierP1", p1_comp, False, tier_p1_wave_triggers),
-                ("TierP2", p2_comp, False, tier_p2_wave_triggers),
-            ]
+            settlement_variants = []
+            for lvl, tag in diff_tags.items():
+                t_var = tm.add_trigger(f"03_W{w_num:02d}_{s_key}_Diff_{tag}", enabled=False, looping=False)
+                safe_call(t_var.new_condition.trigger_active, trigger_id=state_markers[lvl].trigger_id)
+                scaled_comp = scale_comp_for_level(comp, lvl)
+                add_spawn_and_attack_effect(t_var, ai_p, scaled_comp, spawn_x=sx, spawn_y=sy, target_x=tx, target_y=ty)
 
-            for layer_name, l_comp, start_enabled, layer_list in layer_specs:
-                if not l_comp:
-                    continue
-                t_w = tm.add_trigger(f"03_W{wave_num:02d}_{s_key}_{layer_name}", enabled=start_enabled, looping=loop_flag)
-                safe_call(t_w.new_condition.timer, timer=cond_time)
-                add_spawn_and_attack_effect(t_w, ai_p, l_comp, spawn_x=sx, spawn_y=sy, target_x=tx, target_y=ty)
+                if s_key == "G2_Mages" and any(u == IMAM_UNIT_ID for u, _ in comp):
+                    safe_call(t_var.new_effect.activate_trigger, trigger_id=t_shield_on.trigger_id)
 
-                if layer_name == "Base" and s_key == "G2_Mages" and any(u == IMAM_UNIT_ID for u, _ in comp):
-                    safe_call(t_w.new_effect.activate_trigger, trigger_id=t_shield_on.trigger_id)
+                all_settlement_wave_triggers[s_key].append(t_var)
+                settlement_variants.append(t_var)
+                wave_variants_all_settlements.append(t_var)
 
-                all_settlement_wave_triggers[s_key].append(t_w)
-                if layer_list is not None:
-                    layer_list.append(t_w)
+            # Efekty Zegara Fali Settlementu
+            safe_call(t_clock.new_effect.deactivate_trigger, trigger_id=t_sanc_unlocked.trigger_id)
+            for v in settlement_variants:
+                safe_call(t_clock.new_effect.activate_trigger, trigger_id=v.trigger_id)
+            if w_num == 14:
+                safe_call(t_clock.new_effect.activate_trigger, trigger_id=endless_gates[s_key].trigger_id)
 
-                if is_endless_last and start_enabled:
-                    t_enable_endless = tm.add_trigger(f"03_Enable_Endless_{s_key}_{layer_name}", enabled=True, looping=False)
-                    safe_call(t_enable_endless.new_condition.timer, timer=wave_time)
-                    safe_call(t_enable_endless.new_effect.activate_trigger, trigger_id=t_w.trigger_id)
-                    if layer_name == "Base":
-                        safe_call(t_enable_endless.new_effect.activate_trigger, trigger_id=t_ann.trigger_id)
-                    all_settlement_wave_triggers[s_key].append(t_enable_endless)
+            # Efekty każdego z 5 wariantów: dezaktywacja braci
+            for v in settlement_variants:
+                for brother in settlement_variants:
+                    safe_call(v.new_effect.deactivate_trigger, trigger_id=brother.trigger_id)
 
-        if raider_count > 0:
-            eco_tx, eco_ty = eco_raid_targets[wave_num % len(eco_raid_targets)]
-            t_raid = tm.add_trigger(f"03_W{wave_num:02d}_Szakale_EcoRaid", enabled=not is_endless_last, looping=loop_flag)
-            safe_call(t_raid.new_condition.timer, timer=cond_time)
+        # Globalny bezpiecznik zamykający okno dispatchu dla fali
+        t_close = tm.add_trigger(f"03_W{w_num:02d}_Close_Window", enabled=True, looping=False)
+        safe_call(t_close.new_condition.timer, timer=w_time + 1)
+        for v in wave_variants_all_settlements:
+            safe_call(t_close.new_effect.deactivate_trigger, trigger_id=v.trigger_id)
+        safe_call(t_close.new_effect.activate_trigger, trigger_id=t_sanc_unlocked.trigger_id)
+
+        # Ataki specjalne zintegrowane z harmonogramem
+        if w_def.raider_count > 0:
+            eco_tx, eco_ty = eco_raid_targets[w_num % len(eco_raid_targets)]
+            t_raid = tm.add_trigger(f"03_W{w_num:02d}_Szakale_EcoRaid", enabled=True, looping=False)
+            safe_call(t_raid.new_condition.timer, timer=w_time)
             add_spawn_and_attack_effect(
-                t_raid, PlayerId.SEVEN, [(HUSSAR_ID, raider_count)],
-                spawn_x=116, spawn_y=162 if wave_num % 2 == 0 else 114,
+                t_raid, PlayerId.SEVEN, [(HUSSAR_ID, w_def.raider_count)],
+                spawn_x=116, spawn_y=162 if w_num % 2 == 0 else 114,
                 target_x=eco_tx, target_y=eco_ty,
                 ignore_frontline_move_only=True,
             )
             all_settlement_wave_triggers["G2_Mages"].append(t_raid)
-            if is_endless_last:
-                t_en_raid = tm.add_trigger("03_Enable_Endless_Szakale", enabled=True, looping=False)
-                safe_call(t_en_raid.new_condition.timer, timer=wave_time)
-                safe_call(t_en_raid.new_effect.activate_trigger, trigger_id=t_raid.trigger_id)
-                all_settlement_wave_triggers["G2_Mages"].append(t_en_raid)
 
-        if wave_num in (8, 10, 12, 14):
-            t_trade_raid = tm.add_trigger(f"03_W{wave_num:02d}_Trade_Line_Attack", enabled=not is_endless_last, looping=loop_flag)
-            safe_call(t_trade_raid.new_condition.timer, timer=cond_time)
+        if w_num in (8, 10, 12, 14):
+            t_trade_raid = tm.add_trigger(f"03_W{w_num:02d}_Trade_Line_Attack", enabled=True, looping=False)
+            safe_call(t_trade_raid.new_condition.timer, timer=w_time)
             trade_raid_comp = [
                 (UnitInfo.SIEGE_RAM.ID, 3),
-                (UnitInfo.PALADIN.ID, 10 + (wave_num - 8) * 2),
-                (UnitInfo.HEAVY_CAVALRY_ARCHER.ID, 10 + (wave_num - 8) * 2),
+                (UnitInfo.PALADIN.ID, 10 + (w_num - 8) * 2),
+                (UnitInfo.HEAVY_CAVALRY_ARCHER.ID, 10 + (w_num - 8) * 2),
             ]
             add_spawn_and_attack_effect(
                 t_trade_raid, PlayerId.EIGHT, trade_raid_comp,
@@ -792,15 +897,10 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
                 flare_x=162, flare_y=184,
             )
             all_settlement_wave_triggers["G3_East"].append(t_trade_raid)
-            if is_endless_last:
-                t_en_tr = tm.add_trigger("03_Enable_Endless_Trade_Attack", enabled=True, looping=False)
-                safe_call(t_en_tr.new_condition.timer, timer=wave_time)
-                safe_call(t_en_tr.new_effect.activate_trigger, trigger_id=t_trade_raid.trigger_id)
-                all_settlement_wave_triggers["G3_East"].append(t_en_tr)
 
-        if wave_num == 9:
+        if w_num == 9:
             t_warn_forest_n = tm.add_trigger("03_W09_Forest_Breach_North_Warn", enabled=True, looping=False)
-            safe_call(t_warn_forest_n.new_condition.timer, timer=wave_time - 15)
+            safe_call(t_warn_forest_n.new_condition.timer, timer=w_time - 15)
             add_spawn_and_attack_effect(
                 t_warn_forest_n, PlayerId.SIX, [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 8)],
                 spawn_x=78, spawn_y=90, target_x=78, target_y=95,
@@ -813,7 +913,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             all_settlement_wave_triggers["G2_Snipers"].append(t_warn_forest_n)
 
             t_breach_n = tm.add_trigger("03_W09_Forest_Breach_North_Execute", enabled=True, looping=False)
-            safe_call(t_breach_n.new_condition.timer, timer=wave_time)
+            safe_call(t_breach_n.new_condition.timer, timer=w_time)
             for tr_u in north_breach_trees:
                 safe_call(t_breach_n.new_effect.remove_object, selected_object_ids=[tr_u.reference_id])
             add_spawn_and_attack_effect(
@@ -828,9 +928,9 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             )
             all_settlement_wave_triggers["G2_Snipers"].append(t_breach_n)
 
-        if wave_num == 12:
+        if w_num == 12:
             t_warn_forest_e = tm.add_trigger("03_W12_Forest_Breach_East_Warn", enabled=True, looping=False)
-            safe_call(t_warn_forest_e.new_condition.timer, timer=wave_time - 15)
+            safe_call(t_warn_forest_e.new_condition.timer, timer=w_time - 15)
             add_spawn_and_attack_effect(
                 t_warn_forest_e, PlayerId.SIX, [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 10)],
                 spawn_x=114, spawn_y=140, target_x=109, target_y=140,
@@ -843,7 +943,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             all_settlement_wave_triggers["G2_Snipers"].append(t_warn_forest_e)
 
             t_breach_e = tm.add_trigger("03_W12_Forest_Breach_East_Execute", enabled=True, looping=False)
-            safe_call(t_breach_e.new_condition.timer, timer=wave_time)
+            safe_call(t_breach_e.new_condition.timer, timer=w_time)
             for tr_u in east_breach_trees:
                 safe_call(t_breach_e.new_effect.remove_object, selected_object_ids=[tr_u.reference_id])
             add_spawn_and_attack_effect(
@@ -858,34 +958,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             )
             all_settlement_wave_triggers["G2_Snipers"].append(t_breach_e)
 
-        if wave_num == 14:
-            t_endless_sapper = tm.add_trigger("03_W14_Endless_Forest_Breach_Assault", enabled=False, looping=True)
-            safe_call(t_endless_sapper.new_condition.timer, timer=cond_time)
-            add_spawn_and_attack_effect(
-                t_endless_sapper, PlayerId.SIX,
-                [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14), (ELITE_BERSERK_ID, 8)],
-                spawn_x=78, spawn_y=94, target_x=68, target_y=130,
-            )
-            add_spawn_and_attack_effect(
-                t_endless_sapper, PlayerId.SIX,
-                [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14), (UnitInfo.HUSKARL.ID, 10)],
-                spawn_x=110, spawn_y=140, target_x=68, target_y=146,
-            )
-            all_settlement_wave_triggers["G2_Snipers"].append(t_endless_sapper)
-
-            t_en_sap = tm.add_trigger("03_Enable_Endless_Sapper", enabled=True, looping=False)
-            safe_call(t_en_sap.new_condition.timer, timer=wave_time)
-            safe_call(t_en_sap.new_effect.activate_trigger, trigger_id=t_endless_sapper.trigger_id)
-            all_settlement_wave_triggers["G2_Snipers"].append(t_en_sap)
-
-    ctx["ai_p"] = ai_p
     ctx["all_settlement_wave_triggers"] = all_settlement_wave_triggers
     ctx["deep_target_center"] = deep_target_center
-    ctx["s_key"] = s_key
-    ctx["sx"] = sx
-    ctx["sy"] = sy
-    ctx["tier_0_wave_triggers"] = tier_0_wave_triggers
-    ctx["tier_m1_wave_triggers"] = tier_m1_wave_triggers
-    ctx["tier_p1_wave_triggers"] = tier_p1_wave_triggers
-    ctx["tier_p2_wave_triggers"] = tier_p2_wave_triggers
-    ctx["u_id"] = u_id
+    ctx["state_markers"] = state_markers
+    ctx["t_sanc_unlocked"] = t_sanc_unlocked

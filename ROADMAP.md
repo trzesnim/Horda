@@ -208,7 +208,7 @@ def scale_comp_for_level(comp: list[tuple[int, int]], level: int) -> list[tuple[
 
 ---
 
-## Etap 3A: Znaczniki Stanu Trudności, Blokada `State_Sanctuary_Unlocked` i Test Minimalnego Dispatchu
+## Etap 3A: Znaczniki Stanu Trudności, Blokada `State_Sanctuary_Unlocked` i Test Minimalnego Dispatchu [DONE / WDROŻONE]
 **Oznaczenie trudności:** `[ARCHITECT-REVIEW]`  
 **Modyfikowane pliki:** `horde_waves.py`, `horde_quests.py`
 
@@ -230,7 +230,7 @@ def scale_comp_for_level(comp: list[tuple[int, int]], level: int) -> list[tuple[
 
 ---
 
-## Etap 3B: Jednorazowy harmonogram Fal 1–14 z samozamykającym oknem dispatchu i snapshotem trudności (`BUG-01`, `BUG-03`)
+## Etap 3B: Jednorazowy harmonogram Fal 1–14 z samozamykającym oknem dispatchu i snapshotem trudności (`BUG-01`, `BUG-03`) [DONE / WDROŻONE]
 **Oznaczenie trudności:** `[ARCHITECT-REVIEW]`  
 **Modyfikowane pliki:** `horde_waves.py`
 
@@ -261,7 +261,7 @@ W `horde_waves.py` zastąp stary system 5 warstw dla Fal 1–14 (włącznie z Fa
 
 ---
 
-## Etap 3C: Indywidualne Bramki Endless (`03_Endless_Gate_{s_key}`) i jednorazowe warianty dispatchu Endless
+## Etap 3C: Indywidualne Bramki Endless (`03_Endless_Gate_{s_key}`) i jednorazowe warianty dispatchu Endless [DONE / WDROŻONE]
 **Oznaczenie trudności:** `[ARCHITECT-REVIEW]`  
 **Modyfikowane pliki:** `horde_waves.py`, `horde_quests.py`
 

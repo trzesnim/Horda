@@ -117,7 +117,7 @@ Wszyscy 4 gracze AI są w sojuszu między sobą i w stanie wojny (`DiplomacyStat
 
 ## 4. Lista znanych błędów (Bugs) z playtestów i audytu technicznego
 
-### BUG-01 [KRYTYCZNY — potwierdzony w playteście v6.2]: Zwiększenie trudności o `+1` na starcie gry uruchamia Falę 14 (Endgame Endless) już w ~6. minucie gry przed Falą 1
+### BUG-01 [KRYTYCZNY — WDROŻONY / NAPRAWIONY w Etapie 3A+3B]: Zwiększenie trudności o `+1` na starcie gry uruchamia Falę 14 (Endgame Endless) już w ~6. minucie gry przed Falą 1
 - **Objaw w grze:** Gdy na początku meczu Gracz 1 przesunie Króla w Sanktuarium Balansu na górną flagę (`+1`), po 5,5 minuty (w ~6. minucie gry, jeszcze przed Falą 1 z `8:30`!) na bazę uderzają Huskarle, specjalni Berserkerzy, Siege Ramy, Moździerze Oblężnicze, Paladyni, Imamowie i Żelazne Słonie 1450 HP, a atak ten powtarza się cyklicznie co 5,5 minuty.
 - **Miejsce w kodzie:** `setup_init_aura_and_waves()` w `horde_waves.py` oraz `wire_difficulty_transition()` w `horde_quests.py`.
 - **Przyczyna techniczna:**
@@ -131,7 +131,7 @@ Wszyscy 4 gracze AI są w sojuszu między sobą i w stanie wojny (`DiplomacyStat
 - **Miejsce w kodzie:** `01b_Apply_Specialized_Unit_Archetypes` w `horde_waves.py`.
 - **Przyczyna techniczna:** Jednostka `Siege Onager` (`588`) ma w silniku Genie domyślnie `Blast Attack Level = 1` (pociski ścinają drzewa, które mają `Blast Defense Level = 1`). Aby pociski Moździerza raniły jednostki i budynki, ale nie ścinały drzew (tak jak u zwykłego Mangonela), należy ustawić atrybut **`ATTR_BLAST_ATTACK_LEVEL = 44`** na wartość **`2`** *(UWAGA: atrybut o ID `21` to `AMOUNT_OF_1ST_RESOURCE_STORAGE` — nie wolno mylić `21` z `44`!)*.
 
-### BUG-03 [KRYTYCZNY — wykryty w audycie kodu]: Główne warstwy Fali 14 (`Base`, `TierM1`, `Tier0`) są martwe i nigdy się nie aktywują
+### BUG-03 [KRYTYCZNY — WDROŻONY / NAPRAWIONY w Etapie 3B+3C]: Główne warstwy Fali 14 (`Base`, `TierM1`, `Tier0`) są martwe i nigdy się nie aktywują
 - **Objaw w grze:** W `78:30` (Fala 14) na domyślnym poziomie `0` główne oddziały z 6 Settlementów w ogóle się nie pojawiają (wychodzą tylko Szakale, atak na Trade Line i Saperzy).
 - **Miejsce w kodzie:** `setup_init_aura_and_waves()` w `horde_waves.py` (pętla `for layer_name, l_comp, start_enabled, layer_list in layer_specs:`).
 - **Przyczyna techniczna:** Dla Fali 14 `is_endless_last = True`, więc dla warstw `Base`, `TierM1` i `Tier0` ustawiane jest `start_enabled = not is_endless_last` (`False`), a warunek tworzenia triggera uzbrajającego pętlę Endless brzmi `if is_endless_last and start_enabled:` (`True and False`), przez co triggery `03_Enable_Endless_*` nigdy nie powstają.
@@ -232,3 +232,48 @@ Dzięki temu przejście `0 -> -1` odejmuje dokładnie `hp_delta_down` (ok. 15% b
   - Testy jednostkowe `scale_comp_for_level`: puste składy `[]`, poziom `0` zachowany, poziom `+1` poprawnie zaokrąglony w górę, zachowanie `mandatory_min_one`.
   - `06_Quest1`: potwierdzono obecność `remove_object` (effect_type 15) dla wież P5 oraz 95 segmentów muru na `y = 186` i 6 baszt Keep na `y = 184`.
   - Analiza obiektów mapy: dokładnie 0 drzew w pasie `x = 105..199, y = 183..188`.
+
+### Wdrożenie 3: Etap 3A, Etap 3B (`BUG-01`), Etap 3C (`BUG-03`) [STATUS: OK]
+- **Etap 3A (Znaczniki Stanu Trudności i Zamek Sanktuarium):**
+  - Utworzono 5 triggerów stanu trudności `State_Diff_Lvl_{M2, M1, 0, P1, P2}` (`enabled = (lvl == 0)`, `looping = False`, `timer = 999999`) oraz znacznik `State_Sanctuary_Unlocked` (`enabled = True`, `looping = False`, `timer = 999999`).
+  - W `wire_difficulty_transition` dodano warunek `trigger_active(State_Sanctuary_Unlocked)`.
+  - Przebudowano przejścia trudności: przełączają one wyłącznie `state_markers[from_lvl]` -> `state_markers[to_lvl]` i nie dotykają żadnych triggerów fal (zero `activate_trigger`/`deactivate_trigger` na falach).
+  - W `apply_king_reset_and_safe_stat_shift` dodano `teleport_object` oraz `stop_object` dla Króla P1 na `(sanctuary_cx, sanctuary_cy)`.
+- **Etap 3B (Jednorazowy harmonogram Fal 1–14 – naprawa `BUG-01`):**
+  - Zastąpiono system 5 warstw układem Zegarów Fali Settlementu (`03_W{w_num:02d}_{s_key}_Clock`, `enabled = True`, `looping = False`, `timer = w_time`) oraz 5 jednorazowych wariantów (`03_W{w_num:02d}_{s_key}_Diff_{lvl_tag}`, `enabled = False`, `looping = False`, warunek `trigger_active(state_markers[lvl])`).
+  - Usunięto przestarzałą funkcję pomocniczą `scale_comp()`.
+  - Zaimplementowano bezpiecznik `03_W{w_num:02d}_Close_Window` (`timer = w_time + 1`), który deaktywuje niewykorzystane warianty i re-aktywuje `State_Sanctuary_Unlocked`.
+- **Etap 3C (Indywidualne Bramki Endless – naprawa `BUG-03`):**
+  - Dla każdego z 6 Settlementów utworzono indywidualną pętlową Bramkę Endless `03_Endless_Gate_{s_key}` (`enabled = False`, `looping = True`, `timer = 330`), uzbrajaną przez zegar Fali 14 w `4710s` (`78:30`).
+  - Dla każdego Settlementu utworzono 5 jednorazowych/odnawianych wariantów dispatchu Endless `03_Endless_{s_key}_Diff_{lvl_tag}` (warunek `trigger_active(state_markers[lvl])`).
+  - Wydzielone ataki Endless (Szakale P7, Szlak Handlowy P8, Saperzy P6) powiązano ściśle z bramkami ich macierzystych Settlementów.
+  - W `05_Settlement_Destroyed_{s_key}` zburzenie obozu deaktywuje wszystkie zegary 1–14, warianty, ataki specjalne oraz pętlową Bramkę Endless `03_Endless_Gate_{s_key}`.
+- **Weryfikacja binarna wyjściowego `.aoe2scenario`:**
+  - Potwierdzono 5 znaczników stanu trudności oraz `State_Sanctuary_Unlocked` (`enabled = 1`, `looping = 0`).
+  - Potwierdzono 16 triggerów trudności `09_Diff_*`: żaden nie dotyka triggerów `03_W*` ani `03_Endless*`, a wszystkie 8 głównych przejść posiada warunek `trigger_active(State_Sanctuary_Unlocked)`.
+  - Potwierdzono poprawne uzbrojenie zegarów Fal 1–14 (`enabled = 1`) oraz wariantów `Diff_*` (`enabled = 0`, warunek `trigger_active`).
+  - Potwierdzono pełny spawn Fali 14 w `4710s` na poziomie `0` oraz uzbrojenie bramek Endless (`timer = 330`, `enabled = 0`, `looping = 1`).
+  - Potwierdzono pełną deaktywację wszystkich zegarów Fal 1–14 oraz `03_Endless_Gate_{s_key}` przy zniszczeniu każdego z 6 Settlementów.
+
+
+### Wdrożenie 3: Etap 3A, Etap 3B (`BUG-01`), Etap 3C (`BUG-03`) [STATUS: OK]
+- **Etap 3A (Znaczniki Stanu Trudności i Zamek Sanktuarium):**
+  - Utworzono 5 triggerów stanu trudności `State_Diff_Lvl_{M2, M1, 0, P1, P2}` (`enabled = (lvl == 0)`, `looping = False`, `timer = 999999`) oraz znacznik `State_Sanctuary_Unlocked` (`enabled = True`, `looping = False`, `timer = 999999`).
+  - W `wire_difficulty_transition` dodano warunek `trigger_active(State_Sanctuary_Unlocked)`.
+  - Przebudowano przejścia trudności: przełączają one wyłącznie `state_markers[from_lvl]` -> `state_markers[to_lvl]` i nie dotykają żadnych triggerów fal (zero `activate_trigger`/`deactivate_trigger` na falach).
+  - W `apply_king_reset_and_safe_stat_shift` dodano `teleport_object` oraz `stop_object` dla Króla P1 na `(sanctuary_cx, sanctuary_cy)`.
+- **Etap 3B (Jednorazowy harmonogram Fal 1–14 – naprawa `BUG-01`):**
+  - Zastąpiono system 5 warstw układem Zegarów Fali Settlementu (`03_W{w_num:02d}_{s_key}_Clock`, `enabled = True`, `looping = False`, `timer = w_time`) oraz 5 jednorazowych wariantów (`03_W{w_num:02d}_{s_key}_Diff_{lvl_tag}`, `enabled = False`, `looping = False`, warunek `trigger_active(state_markers[lvl])`).
+  - Usunięto przestarzałą funkcję pomocniczą `scale_comp()`.
+  - Zaimplementowano bezpiecznik `03_W{w_num:02d}_Close_Window` (`timer = w_time + 1`), który deaktywuje niewykorzystane warianty i re-aktywuje `State_Sanctuary_Unlocked`.
+- **Etap 3C (Indywidualne Bramki Endless – naprawa `BUG-03`):**
+  - Dla każdego z 6 Settlementów utworzono indywidualną pętlową Bramkę Endless `03_Endless_Gate_{s_key}` (`enabled = False`, `looping = True`, `timer = 330`), uzbrajaną przez zegar Fali 14 w `4710s` (`78:30`).
+  - Dla każdego Settlementu utworzono 5 jednorazowych/odnawianych wariantów dispatchu Endless `03_Endless_{s_key}_Diff_{lvl_tag}` (warunek `trigger_active(state_markers[lvl])`).
+  - Wydzielone ataki Endless (Szakale P7, Szlak Handlowy P8, Saperzy P6) powiązano ściśle z bramkami ich macierzystych Settlementów.
+  - W `05_Settlement_Destroyed_{s_key}` zburzenie obozu deaktywuje wszystkie zegary 1–14, warianty, ataki specjalne oraz pętlową Bramkę Endless `03_Endless_Gate_{s_key}`.
+- **Weryfikacja binarna wyjściowego `.aoe2scenario`:**
+  - Potwierdzono 5 znaczników stanu trudności oraz `State_Sanctuary_Unlocked` (`enabled = 1`, `looping = 0`).
+  - Potwierdzono 16 triggerów trudności `09_Diff_*`: żaden nie dotyka triggerów `03_W*` ani `03_Endless*`, a wszystkie 8 głównych przejść posiada warunek `trigger_active(State_Sanctuary_Unlocked)`.
+  - Potwierdzono poprawne uzbrojenie zegarów Fal 1–14 (`enabled = 1`) oraz wariantów `Diff_*` (`enabled = 0`, warunek `trigger_active`).
+  - Potwierdzono pełny spawn Fali 14 w `4710s` na poziomie `0` oraz uzbrojenie bramek Endless (`timer = 330`, `enabled = 0`, `looping = 1`).
+  - Potwierdzono pełną deaktywację wszystkich zegarów Fal 1–14 oraz `03_Endless_Gate_{s_key}` przy zniszczeniu każdego z 6 Settlementów.
