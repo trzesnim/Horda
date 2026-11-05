@@ -197,42 +197,104 @@ TECH_THUMB_RING = 437
 TECH_SIEGE_ENGINEERS = 377
 
 
+PLAYER_RANGED_UNITS = [
+    UnitInfo.ARCHER.ID,
+    UnitInfo.CROSSBOWMAN.ID,
+    UnitInfo.ARBALESTER.ID,
+    UnitInfo.SKIRMISHER.ID,
+    UnitInfo.ELITE_SKIRMISHER.ID,
+    UnitInfo.CAVALRY_ARCHER.ID,
+    UnitInfo.HEAVY_CAVALRY_ARCHER.ID,
+    UnitInfo.HAND_CANNONEER.ID,
+]
+
+PLAYER_CAVALRY_UNITS = [
+    UnitInfo.SCOUT_CAVALRY.ID,
+    UnitInfo.LIGHT_CAVALRY.ID,
+    HUSSAR_ID,
+    UnitInfo.KNIGHT.ID,
+    UnitInfo.CAVALIER.ID,
+    UnitInfo.PALADIN.ID,
+    UnitInfo.STEPPE_LANCER.ID,
+    UnitInfo.ELITE_STEPPE_LANCER.ID,
+    UnitInfo.CAMEL_RIDER.ID,
+    UnitInfo.HEAVY_CAMEL_RIDER.ID,
+]
+
+PLAYER_INFANTRY_UNITS = [
+    UnitInfo.MILITIA.ID,
+    UnitInfo.MAN_AT_ARMS.ID,
+    UnitInfo.LONG_SWORDSMAN.ID,
+    UnitInfo.TWO_HANDED_SWORDSMAN.ID,
+    UnitInfo.CHAMPION.ID,
+    UnitInfo.SPEARMAN.ID,
+    UnitInfo.PIKEMAN.ID,
+    UnitInfo.HALBERDIER.ID,
+    UnitInfo.EAGLE_SCOUT.ID,
+    UnitInfo.EAGLE_WARRIOR.ID,
+    UnitInfo.ELITE_EAGLE_WARRIOR.ID,
+]
+
+PLAYER_PROD_BUILDINGS = [
+    BuildingInfo.BARRACKS.ID,
+    BuildingInfo.STABLE.ID,
+    BuildingInfo.ARCHERY_RANGE.ID,
+    BuildingInfo.CASTLE.ID,
+    BuildingInfo.SIEGE_WORKSHOP.ID,
+]
+
+
 def populate_ingame_scenario_descriptions(scenario):
     mm_msg = getattr(scenario, "message_manager", None)
     if mm_msg is None:
         return
 
     instructions_text = (
-        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v6.2 - 4P Co-op)\n\n"
+        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v6.3 - 4P Co-op)\n\n"
         "SANKTUARIUM BALANSU (Wspolrzedne 6, 150 w zachodnim lesie):\n"
         "- Gracz 1 posiada odizolowanego Inzyniera Balansu (Krola) na (6, 150).\n"
-        "- Wejscie Krolem na GORNA flage (6, 146) ZWIEKSZA trudnosc (+25% liczebnosci fal, +15 HP, +2 Ataku wroga).\n"
-        "- Wejscie Krolem na DOLNA flage (6, 154) ZMNIEJSZA trudnosc (-20% liczebnosci fal, -15% HP wroga).\n"
-        "- Po kazdej zmianie Krol wraca na srodek, a czat wypisuje numer korekty!\n\n"
+        "- Wejscie Krolem na GORNA flage (6, 146) ZWIEKSZA trudnosc (+25% fal, +15 HP, +2 Ataku wroga na poziom).\n"
+        "- Wejscie Krolem na DOLNA flage (6, 154) ZMNIEJSZA trudnosc (-20% fal, -15% HP wroga na poziom).\n"
+        "- Dokladne poziomy trudnosci:\n"
+        "  * Poziom -2 (Bardzo Latwy): -40% fal, -30% HP wroga.\n"
+        "  * Poziom -1 (Latwy): -20% fal, -15% HP wroga.\n"
+        "  * Poziom  0 (Domyslny): 100% wielkosci fal i statystyk bazowych.\n"
+        "  * Poziom +1 (Trudny): +25% fal, +15 HP, +2 Ataku wroga.\n"
+        "  * Poziom +2 (Ekstremalny): +50% fal, +30 HP, +4 Ataku wroga.\n"
+        "- Po kazdej zmianie Krol jest automatycznie zatrzymywany i wraca na srodek, a Sanktuarium blokuje sie na czas wybuchu fal.\n\n"
         "SZLAK HANDLOWY I PLAC GRACZY (Lewy dolny rog mapy x=2..24, y=176..198):\n"
         "- W lewym dolnym rogu bazy znajduje sie duzy, czysty Plac pod Targowiska graczy.\n"
-        "- Zburzenie Q1 (Karawanseraj) stawia pojedyncze Targowisko sojusznicze w prawym rogu (195, 194) oraz buduje Mur Obronny z Basztami wzdluz 10-kratkowego korytarza handlowego!\n\n"
+        "- Zburzenie Q1 (Karawanseraj) stawia pojedyncze Targowisko sojusznicze w prawym rogu (195, 194) oraz buduje Kamienny Mur Obronny na y=186 z Basztami na y=184!\n\n"
         "ZASADY ROZGRYWKI (Horyzont 60-90 minut):\n"
         "- Fala 1 w 8:30 (bez taranow), Fala 2 w 13:00 (z taranem/mangonelem, bez mutantow), Fala 3 w 18:00, kolejne co 5,5 min.\n"
-        "- Od 45. minuty (Fale 8-14) co druga fala wysyla szturm na SZLAK HANDLOWY, a w Falach 9 i 12 Onagery WYRABUJA PRZESIEKI W LESIE!\n"
+        "- Trzypoziomowa eskalacja czasowa (natychmiastowy 1. tick i powtorzenie co 5 min):\n"
+        "  * 20:00: +10 HP, +1 Atak.\n"
+        "  * 45:00: +15 HP, +1 Atak.\n"
+        "  * 55:00: +25 HP, +2 Atak.\n"
+        "- Od 45. minuty (Fale 8-14) co druga fala wysyla szturm na SZLAK HANDLOWY.\n"
+        "- W Falach 9 (51:00) i 12 (67:30) Saperzy wyrabuja przesieki w lesie (6x11 na polnocy, 11x6 na wschodzie)!\n"
     )
 
     hints_text = (
         "BESTIARIUSZ HORDY (WYSPECJALIZOWANE JEDNOSTKI Z POSWIATA BOHATERA):\n"
-        "1. Taran-Zolw / Zelazny Slon (P8 - Tank): 1450 HP, +10/+12 pancerza, odporny na konwersje. Zadaje tylko 3 dmg jednostkom, ale +220 dmg budynkom!\n"
-        "2. Szakale Dywersyjne (Huzarzy P7 - Eco-Raiders): Szybkosc 1.62, +6 pancerza na strzaly, tylko 2 ataku. Wjezdzaja pod TC atakowac chlopow!\n"
-        "3. Arcymag Tarczy (Imam P7 - Globalny Support): W promieniu 25 kratek przed Brama Centralna daje +30/+30 Pancerza i leczy (+15 HP/3s) WSZYSTKIE frakcje Hordy (P5-P8)! Ma 240 HP i regeneracje 5 HP/s.\n"
-        "4. Mozdzierz Oblezniczy (Onager P6): 350 HP, 21 zasiegu, wybuch co 10s, MARTWA STREFA 6 kratek.\n"
+        "1. Taran-Zolw / Zelazny Slon (P8 - Tank): 1450 HP, +10/+12 pancerza, odporny na konwersje. Zadaje zawsze 3 dmg jednostkom (odpornosc na buffy ataku), ale +220 dmg budynkom!\n"
+        "2. Szakale Dywersyjne (Huzarzy P7 - Eco-Raiders): Szybkosc 1.62, +6 pancerza na strzaly, zawsze 2 ataku (skaluja wylacznie HP). Wjezdzaja pod TC atakowac chlopow!\n"
+        "3. Arcymag Tarczy (Imam P7 - Globalny Support): W promieniu 25 kratek przed Brama Centralna daje +30/+30 Pancerza i leczy (+15 HP/3s) WSZYSTKIE frakcje Hordy (P5-P8)! Ma 240 HP i regeneracje 5 HP/s. Zabicie go zdejmuje aure z calej Hordy!\n"
+        "4. Mozdzierz Oblezniczy (Onager P6): 350 HP, 21 zasiegu, wybuch co 10s, MARTWA STREFA 6 kratek. Pociski maja Blast Attack Level = 2 (nie scinaja drzew wokol bram).\n"
         "5. Snajperzy (Janczarzy P6): 90 HP, 19 zasiegu, ~107 dmg w 1 cel.\n"
         "6. Berserkerzy i Kamikaze (P5): Szybkie jednostki szturmowe o zerowym pancerzu na strzaly.\n"
     )
 
     scouts_text = (
         "RAPORT ZWIADOWCZY - 4 QUESTY I 6 SETTLEMENTOW:\n"
-        "- Q1 Karawanseraj (154, 190): Buduje Kamienny Mur Handlowy i stawia sojuszniczy Market w prawym rogu (195, 194), daje +30 Popu i +20% szybszych Wiesniakow.\n"
-        "- Q2 Klif Artylerii (28, 32): Balistyka, Chemia, +2 Zasiegu strzelcow, +12% szybkosci jazdy.\n"
-        "- Q3 Skarbiec (142, 118): +20 Popu i duzy staly dochod co minute (+250F, +250W, +200G, +40S).\n"
-        "- Q4 Krwawy Oltarz (105, 20): +30% HP armii, +2/+2 pancerza i +40% szybsza produkcja.\n"
+        "- Q1 Karawanseraj (154, 190): Mur Handlowy (y=186, baszty y=184) i sojuszniczy Market P2 w prawym rogu (195, 194), +30 Popu, +20% szybszych Wiesniakow i 4 szybkie wozy handlowe.\n"
+        "- Q2 Klif Artylerii (28, 32): Balistyka, Chemia, Siege Engineers, Thumb Ring; +2 Zasiegu i +4 Ataku strzelcow; +12% szybkosci i +4 Ataku jazdy (w tym Elite Steppe Lancer i Heavy Camel).\n"
+        "- Q3 Skarbiec (142, 118): +20 Popu i staly dochod co minute (+250F, +250W, +200G, +40S).\n"
+        "- Q4 Krwawy Oltarz (105, 20): +30% HP armii, +2/+2 pancerza (w tym Militia i linia Eagle Warrior), +40% szybsza produkcja wojska (w tym Siege Workshop); obnizenie HP Arcymaga do 120 HP.\n"
+        "- Stopniowanie Furii Settlementow (zburzenie obozu wycofuje jego wojska z fal, daje +600F/+600G i wywoluje kontratak):\n"
+        "  * Grade 1 (G1 Polnocny, G1 Wschodni): +8 HP, +1 Atak wroga, odwet 8 Cavalier + 10 Pikeman.\n"
+        "  * Grade 2 (G2 Akademia, G2 Klasztor): +12 HP, +1 Atak wroga, odwet 10 Cavalier + 12 Halberdier.\n"
+        "  * Grade 3 (G3 Cytadela Pln., G3 Cytadela Wsch.): +16 HP, +2 Atak wroga, odwet 1 Zelazny Slon + 12 Paladin + 14 Halberdier.\n"
     )
 
     if hasattr(mm_msg, "instructions"):

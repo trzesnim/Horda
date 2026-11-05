@@ -17,6 +17,10 @@ from horde_config import (
     HUSSAR_ID,
     IMAM_UNIT_ID,
     MAP_SIZE,
+    PLAYER_CAVALRY_UNITS,
+    PLAYER_INFANTRY_UNITS,
+    PLAYER_PROD_BUILDINGS,
+    PLAYER_RANGED_UNITS,
     RES_BONUS_POP_CAP,
     RES_FOOD,
     RES_GOLD,
@@ -337,22 +341,12 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     safe_call(t_q2.new_condition.destroy_object, unit_object=q2_bldg.reference_id)
     research_techs(t_q2, human_players, [TECH_BALLISTICS, TECH_CHEMISTRY, TECH_SIEGE_ENGINEERS, TECH_THUMB_RING])
 
-    ranged_units = [
-        UnitInfo.ARCHER.ID, UnitInfo.CROSSBOWMAN.ID, UnitInfo.ARBALESTER.ID,
-        UnitInfo.SKIRMISHER.ID, UnitInfo.ELITE_SKIRMISHER.ID,
-        UnitInfo.CAVALRY_ARCHER.ID, UnitInfo.HEAVY_CAVALRY_ARCHER.ID, UnitInfo.HAND_CANNONEER.ID,
-    ]
-    cavalry_units = [
-        UnitInfo.SCOUT_CAVALRY.ID, UnitInfo.LIGHT_CAVALRY.ID, HUSSAR_ID,
-        UnitInfo.KNIGHT.ID, UnitInfo.CAVALIER.ID, UnitInfo.PALADIN.ID,
-        UnitInfo.STEPPE_LANCER.ID, UnitInfo.CAMEL_RIDER.ID,
-    ]
     for h_p in human_players:
-        for r_id in ranged_units:
+        for r_id in PLAYER_RANGED_UNITS:
             safe_modify_attribute(t_q2, h_p, r_id, ATTR_MAXIMUM_RANGE, Operation.ADD, 2)
             safe_modify_attribute(t_q2, h_p, r_id, ATTR_SEARCH_RADIUS, Operation.ADD, 2)
             safe_modify_attribute(t_q2, h_p, r_id, ATTR_ATTACK, Operation.ADD, 4, armor_class=3)
-        for c_id in cavalry_units:
+        for c_id in PLAYER_CAVALRY_UNITS:
             safe_modify_attribute(t_q2, h_p, c_id, ATTR_MOVEMENT_SPEED, Operation.MULTIPLY, 1.12)
             safe_modify_attribute(t_q2, h_p, c_id, ATTR_ATTACK, Operation.ADD, 4, armor_class=4)
 
@@ -397,19 +391,15 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     t_q4 = tm.add_trigger("06_Quest4_Blood_Altar_Super_Army", enabled=True, looping=False)
     set_as_objective(t_q4, "Q4 - Krwawy Oltarz (+30% HP Armii i +40% Produkcji)", order=96)
     safe_call(t_q4.new_condition.destroy_object, unit_object=q4_bldg.reference_id)
-    safe_modify_attribute(t_q4, PlayerId.SEVEN, IMAM_UNIT_ID, ATTR_HIT_POINTS, Operation.SET, 140)
+    safe_modify_attribute(t_q4, PlayerId.SEVEN, IMAM_UNIT_ID, ATTR_HIT_POINTS, Operation.SET, 120)
 
-    infantry_units = [
-        UnitInfo.MAN_AT_ARMS.ID, UnitInfo.LONG_SWORDSMAN.ID, UnitInfo.TWO_HANDED_SWORDSMAN.ID, UnitInfo.CHAMPION.ID,
-        UnitInfo.SPEARMAN.ID, UnitInfo.PIKEMAN.ID, UnitInfo.HALBERDIER.ID,
-    ]
-    prod_buildings = [BuildingInfo.BARRACKS.ID, BuildingInfo.STABLE.ID, BuildingInfo.ARCHERY_RANGE.ID, BuildingInfo.CASTLE.ID]
+    all_player_combat_units = PLAYER_RANGED_UNITS + PLAYER_CAVALRY_UNITS + PLAYER_INFANTRY_UNITS
     for h_p in human_players:
-        for u_id in ranged_units + cavalry_units + infantry_units:
+        for u_id in all_player_combat_units:
             safe_modify_attribute(t_q4, h_p, u_id, ATTR_HIT_POINTS, Operation.MULTIPLY, 1.30)
             safe_modify_attribute(t_q4, h_p, u_id, ATTR_ARMOR, Operation.ADD, 2, armor_class=4)
             safe_modify_attribute(t_q4, h_p, u_id, ATTR_ARMOR, Operation.ADD, 2, armor_class=3)
-        for b_id in prod_buildings:
+        for b_id in PLAYER_PROD_BUILDINGS:
             safe_modify_attribute(t_q4, h_p, b_id, ATTR_WORK_RATE, Operation.MULTIPLY, 1.40)
 
     add_enemy_combat_buff(t_q4, ai_players, hp_add=10, atk_add=1)
@@ -422,22 +412,28 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     )
 
     # ==============================================================================
-    # 11. ZNISZCZENIE 6 SETTLEMENTÓW (+15 HP i +2 ATAKU ZA ZBURZONY OBÓZ)
+    # 11. ZNISZCZENIE 6 SETTLEMENTÓW (GRADACJA FURII GRADE 1-3)
     # ==============================================================================
     t_obj_header_s = tm.add_trigger("00_Obj_Header_Settlements", enabled=True, looping=False)
     safe_call(t_obj_header_s.new_condition.timer, timer=99999)
     set_as_objective(t_obj_header_s, "-- SETTLEMENTY HORDY --", order=90, is_header=True)
 
     settlement_defs = [
-        ("G1_North", s_g1_north, "G1 - Polnocny (usuwa Berserkerow i Petardy)", 89, *s_coords["G1_North"]),
-        ("G1_East",  s_g1_east,  "G1 - Wschodni (usuwa Huskarlow i Wielblady)", 88, *s_coords["G1_East"]),
-        ("G2_Snipers", s_g2_snipers, "G2 - Akademia (usuwa Snajperow i Mozdzierze)", 87, *s_coords["G2_Snipers"]),
-        ("G2_Mages",   s_g2_mages,   "G2 - Klasztor (usuwa Magow i Szakale)", 86, *s_coords["G2_Mages"]),
-        ("G3_North", s_g3_north, "G3 - Cytadela Pln. (usuwa Slonie-Tanki Pln.)", 85, *s_coords["G3_North"]),
-        ("G3_East",  s_g3_east,  "G3 - Cytadela Wsch. (usuwa Slonie-Tanki Wsch.)", 84, *s_coords["G3_East"]),
+        ("G1_North", s_g1_north, "G1 - Polnocny (usuwa Berserkerow i Petardy)", 89, 1, 8, 1,
+         [(UnitInfo.CAVALIER.ID, 8), (UnitInfo.PIKEMAN.ID, 10)], *s_coords["G1_North"]),
+        ("G1_East",  s_g1_east,  "G1 - Wschodni (usuwa Huskarlow i Wielblady)", 88, 1, 8, 1,
+         [(UnitInfo.CAVALIER.ID, 8), (UnitInfo.PIKEMAN.ID, 10)], *s_coords["G1_East"]),
+        ("G2_Snipers", s_g2_snipers, "G2 - Akademia (usuwa Snajperow i Mozdzierze)", 87, 2, 12, 1,
+         [(UnitInfo.CAVALIER.ID, 10), (UnitInfo.HALBERDIER.ID, 12)], *s_coords["G2_Snipers"]),
+        ("G2_Mages",   s_g2_mages,   "G2 - Klasztor (usuwa Magow i Szakale)", 86, 2, 12, 1,
+         [(UnitInfo.CAVALIER.ID, 10), (UnitInfo.HALBERDIER.ID, 12)], *s_coords["G2_Mages"]),
+        ("G3_North", s_g3_north, "G3 - Cytadela Pln. (usuwa Slonie-Tanki Pln.)", 85, 3, 16, 2,
+         [(ELITE_BATTLE_ELEPHANT_ID, 1), (UnitInfo.PALADIN.ID, 12), (UnitInfo.HALBERDIER.ID, 14)], *s_coords["G3_North"]),
+        ("G3_East",  s_g3_east,  "G3 - Cytadela Wsch. (usuwa Slonie-Tanki Wsch.)", 84, 3, 16, 2,
+         [(ELITE_BATTLE_ELEPHANT_ID, 1), (UnitInfo.PALADIN.ID, 12), (UnitInfo.HALBERDIER.ID, 14)], *s_coords["G3_East"]),
     ]
 
-    for s_key, core_unit, obj_label, obj_order, sx, sy in settlement_defs:
+    for s_key, core_unit, obj_label, obj_order, grade, g_hp, g_atk, counter_comp, sx, sy in settlement_defs:
         t_destroy = tm.add_trigger(f"05_Settlement_Destroyed_{s_key}", enabled=True, looping=False)
         set_as_objective(t_destroy, obj_label, order=obj_order)
         safe_call(t_destroy.new_condition.destroy_object, unit_object=core_unit.reference_id)
@@ -451,23 +447,24 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
             add_player_resource(t_destroy, h_p, RES_GOLD, 600)
             add_player_resource(t_destroy, h_p, RES_FOOD, 600)
 
-        add_enemy_combat_buff(t_destroy, ai_players, hp_add=15, atk_add=2)
+        add_enemy_combat_buff(t_destroy, ai_players, hp_add=g_hp, atk_add=g_atk)
 
         add_spawn_and_attack_effect(
             t_destroy, PlayerId.EIGHT,
-            [(ELITE_BATTLE_ELEPHANT_ID, 1), (UnitInfo.CAVALIER.ID, 12), (UnitInfo.HALBERDIER.ID, 16)],
+            counter_comp,
             spawn_x=118, spawn_y=114, target_x=deep_target_center[0], target_y=deep_target_center[1],
         )
 
         send_highlight_chat(
             t_destroy, "<AQUA>",
-            f"=== [SETTLEMENT ZNISZCZONY: {s_key}] === Jego oddzialy znikaja z fal (+600 Zlota/Zywnosci), a pozostale obozy zyskuja +15 HP i +2 Ataku!",
+            f"=== [SETTLEMENT ZNISZCZONY: {s_key} (Stopien {grade})] === Jego oddzialy znikaja z fal (+600 Zlota/Zywnosci), a pozostale obozy zyskuja +{g_hp} HP i +{g_atk} Ataku!",
             flare_x=sx, flare_y=sy,
         )
 
     # 12. Warunki Zwycięstwa i Porażki
     t_win = tm.add_trigger("07_Victory_All_6_Settlements_Destroyed", enabled=True, looping=False)
-    for _, core_unit, _, _, _, _ in settlement_defs:
+    for s_def in settlement_defs:
+        core_unit = s_def[1]
         safe_call(t_win.new_condition.destroy_object, unit_object=core_unit.reference_id)
     for h_p in human_players:
         safe_call(t_win.new_effect.declare_victory, source_player=h_p, enabled=1)

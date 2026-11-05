@@ -371,7 +371,7 @@ W `horde_quests.py` w triggerze `06_Quest1_Build_Trade_Wall_And_Pop` (`t_q1`):
 
 ---
 
-## Etap 6C: Uzupełnienie list nagród Q2/Q4 oraz stopniowanie Furii Settlementów (`Grade 1–3`) z użyciem `ENEMY_UNIT_REGISTRY`
+## Etap 6C: Uzupełnienie list nagród Q2/Q4 oraz stopniowanie Furii Settlementów (`Grade 1–3`) z użyciem `ENEMY_UNIT_REGISTRY` [DONE / WDROŻONE]
 **Oznaczenie trudności:** `[FLASH-SAFE]`  
 **Modyfikowane pliki:** `horde_quests.py`
 
@@ -390,7 +390,7 @@ W `horde_quests.py` w triggerze `06_Quest1_Build_Trade_Wall_And_Pop` (`t_q1`):
 
 ---
 
-## Etap 7: Kompleksowy walidator strukturalny scenariusza (`test_horde_scenario.py`)
+## Etap 7: Kompleksowy walidator strukturalny scenariusza (`test_horde_scenario.py`) [DONE / WDROŻONE]
 **Oznaczenie trudności:** `[FLASH-SAFE]`  
 **Modyfikowane pliki:** nowy plik `test_horde_scenario.py`
 
@@ -416,7 +416,7 @@ Utwórz skrypt `test_horde_scenario.py`, który wykonuje:
 
 ---
 
-## Etap 8: Aktualizacja dokumentacji `horda.md` oraz opisów w grze (`populate_ingame_scenario_descriptions`)
+## Etap 8: Aktualizacja dokumentacji `horda.md` oraz opisów w grze (`populate_ingame_scenario_descriptions`) [DONE / WDROŻONE]
 **Oznaczenie trudności:** `[FLASH-SAFE]`  
 **Modyfikowane pliki:** `horde_config.py`, `horda.md`
 

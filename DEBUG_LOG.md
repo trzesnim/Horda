@@ -253,23 +253,19 @@ Dzięki temu przejście `0 -> -1` odejmuje dokładnie `hp_delta_down` (ok. 15% b
   - Potwierdzono stany początkowe automatu Arcymaga (`02a`: `enabled=1, looping=0`, `02d`: `enabled=0, looping=0` z `inverted=1` na obszarze Bramy Centralnej) oraz brak jakichkolwiek aktywacji `02a` z poziomu fal `03_W*`.
   - Potwierdzono deaktywację wszystkich 10 garnizonów (60 powiązań deaktywujących: 10× `Garrison_Spawn`, 10× `Garrison_Leash`, 40× `Garrison_Detect`).
 
-
-
-### Wdrożenie 4: Etap 4 (`BUG-07`, `BUG-08`), Etap 5 (`BUG-05`), Etap 6A (`BUG-06`) [STATUS: OK]
-- **Etap 4 (Odwracalne delty HP i korekta 1. ticku eskalacji – naprawa `BUG-07`, `BUG-08`):**
-  - W `apply_king_reset_and_safe_stat_shift` w `horde_quests.py` zastąpiono mnożenie floatami (`0.85` / `1.18`) stałymi liczbami całkowitymi `Operation.SUBTRACT` / `Operation.ADD` z `spec.hp_delta_down` z `ENEMY_UNIT_REGISTRY`.
-  - W `horde_waves.py` w triggerach `04a_Enable_Escalation_At_20m`, `04c_Enable_LateGame_Escalation_At_45m` oraz `04e_Enable_Endgame_Escalation_At_55m` dodano natychmiastowe nałożenie pierwszego buffa `add_enemy_combat_buff` oraz powiadomienie czatu (punkty czasowe `20:00`, `45:00`, `55:00`).
-- **Etap 5 (Dwustanowy automat Aury Arcymaga – naprawa `BUG-05`):**
-  - W `horde_waves.py` triggery `02a` i `02d` przebudowano w automat skończony oparty na liście jednostek z `spec.receives_mage_shield` z `ENEMY_UNIT_REGISTRY`.
-  - `02a_Mage_Global_Horde_Shield_On` ustawiono na starcie jako `enabled = True`, `looping = False`.
-  - `02d_Mage_Global_Horde_Shield_Off` ustawiono na starcie jako `enabled = False`, `looping = False` z warunkiem `objects_in_area` (Imam P7 na 25 kratek wokół Bramy Centralnej) z `inverted = 1`, który po zniknięciu Imama zdejmuje pancerz i re-aktywuje `02a`.
-  - Usunięto z triggerów fal jakiekolwiek aktywacje `02a`.
-- **Etap 6A (Dezaktywacja garnizonów i smyczy po zniszczeniu – naprawa `BUG-06`):**
-  - `add_guarded_camp_with_leash` zwraca teraz `(t_spawn, t_leash, detect_triggers)`, a uchwyty 10 obozów są przekazywane przez `ctx["camp_leash_handles"]`.
-  - W `horde_quests.py` zdefiniowano `deactivate_camp_handles` i podpięto wyłączenie spawnu, smyczy oraz 4 detektorów graczy pod zniszczenie każdego z 4 Questów (`t_q1`, `t_q2`, `t_q3_unlock`, `t_q4`) oraz 6 Settlementów (`05_Settlement_Destroyed_*`).
-  - Oczyszczono słownik zwracany przez `horde_map.py` ze zmiennych tymczasowych pętli.
-- **Weryfikacja binarna wyjściowego `.aoe2scenario`:**
-  - Przetestowano pełną symulację cyklu trudności `0 -> +1 -> +2 -> +1 -> 0 -> -1 -> -2 -> -1 -> 0` (928 efektów `modify_attribute`): dla wszystkich 26 jednostek z rejestru wykazano **dokładnie zerowy dryf statystyk ($\Delta\text{HP} == 0, \Delta\text{Atk} == 0$)**.
-  - Potwierdzono obecność efektów `modify_attribute` oraz czatu w `04a`, `04c`, `04e` dla natychmiastowego pierwszego ticku eskalacji.
-  - Potwierdzono stany początkowe automatu Arcymaga (`02a`: `enabled=1, looping=0`, `02d`: `enabled=0, looping=0` z `inverted=1` na obszarze Bramy Centralnej) oraz brak jakichkolwiek aktywacji `02a` z poziomu fal `03_W*`.
-  - Potwierdzono deaktywację wszystkich 10 garnizonów (60 powiązań deaktywujących: 10× `Garrison_Spawn`, 10× `Garrison_Leash`, 40× `Garrison_Detect`).
+### Wdrożenie 5: Etap 6C, Etap 7, Etap 8 [STATUS: OK] – ZAMKNIĘCIE ROADMAPY v6.3
+- **Etap 6C (Nagrody Q2/Q4 i stopniowanie Furii Settlementów Grade 1–3):**
+  - W `horde_config.py` wyeksportowano scentralizowane listy: `PLAYER_RANGED_UNITS`, `PLAYER_CAVALRY_UNITS`, `PLAYER_INFANTRY_UNITS`, `PLAYER_PROD_BUILDINGS`.
+  - W `horde_quests.py` zaktualizowano triggery Q2 i Q4 (obejmując m.in. `Elite Steppe Lancer`, `Heavy Camel Rider`, `Siege Workshop`, `Militia` oraz linię `Eagle Warrior`).
+  - W Q4 ustawiono docelowe HP Imama (`PlayerId.SEVEN`) na `120`.
+  - Wdrożono trójstopniową gradację Furii Settlementów i kontrataków (`settlement_defs`):
+    * **Grade 1 (`G1_North`, `G1_East`):** `+8 HP, +1 Atak`, odwet: `8x Cavalier + 10x Pikeman`.
+    * **Grade 2 (`G2_Snipers`, `G2_Mages`):** `+12 HP, +1 Atak`, odwet: `10x Cavalier + 12x Halberdier`.
+    * **Grade 3 (`G3_North`, `G3_East`):** `+16 HP, +2 Atak`, odwet: `1x Zelazny Slon + 12x Paladin + 14x Halberdier`.
+- **Etap 7 (Kompleksowy walidator `test_horde_scenario.py`):**
+  - Utworzono stały skrypt `test_horde_scenario.py` (19 testów jednostkowych, integracyjnych i binarnych w module `unittest`).
+  - Pokrycie: algorytm `scale_comp_for_level` (puste składy, wielokrotne redukcje, monotoniczność 14 fal × 6 obozów × 5 poziomów), kompletność `ENEMY_UNIT_REGISTRY` (wszystkie 26 jednostek), matematyczny zerowy dryf Sanktuarium Balansu ($\Delta\text{HP} == 0, \Delta\text{Atk} == 0$), asercje binarne `.aoe2scenario` (znaczniki, izolacja BUG-01, zegary i bramki Endless BUG-03, automat Arcymaga BUG-05, deaktywacje garnizonów BUG-06, reset Kuźni, Blast Attack Level = 2 BUG-02, eskalacja BUG-08, mur i wieże Q1 BUG-09, gradacja Furii i nagrody Q2/Q4).
+  - Wynik testu: **19/19 testów zaliczonych sukcesem (OK)**.
+- **Etap 8 (Synchronizacja opisów i dokumentacji):**
+  - Zaktualizowano `populate_ingame_scenario_descriptions` w `horde_config.py` oraz całą dokumentację `horda.md` do specyfikacji v6.3.
+  - Zastosowano ścisłą precyzję matematyczną delty HP: **`-15% HP` na poziomie `-1`** oraz **`-30% HP` na poziomie `-2`** (dwukrotność delty 15%), natychmiastowe pierwsze ticki eskalacji w 20:00, 45:00 i 55:00 oraz dokładne wymiary wyrębu lasu (`6×11` na północy, `11×6` na wschodzie).
