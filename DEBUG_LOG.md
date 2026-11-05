@@ -1,7 +1,7 @@
-# DEBUG_LOG.md — Dokumentacja Architektury, Stanu Bazowego i Błędów (`Kroniki Rubieży: Horda i Ekspedycje` v6.2)
+# DEBUG_LOG.md — Dokumentacja Architektury, Stanu Bazowego i Błędów (`Kroniki Rubieży: Horda i Ekspedycje` v6.3 -> v6.4)
 
 ## 0. Identyfikacja stanu bazowego i zasady dla Agenta IDE (Antigravity / VS Code)
-- **Repozytorium bazowe:** `https://github.com/trzesnim/AoE_Scenarios/tree/main` (stan odpowiadający wersji `v6.2` po podziale monolitu na 5 modułów `.py`).
+- **Repozytorium bazowe:** `https://github.com/trzesnim/AoE_Scenarios/tree/main` (stan odpowiadający wersji `v6.3 -> v6.4` po audycie kodu i testów).
 - **Zasady nienaruszalne dla Agenta (AGY Initialization Rules):**
   1. Przed pierwszą edycją odczytaj wszystkie 5 plików `.py` z dysku i zapisz hash commitu (`git rev-parse HEAD`).
   2. Nie modyfikuj elementów oznaczonych w Sekcji 3 jako **STREFA CHRONIONA**.
@@ -169,6 +169,42 @@ Wszyscy 4 gracze AI są w sojuszu między sobą i w stanie wojny (`DiplomacyStat
 ### BUG-10 [NISKI — WDROŻONY / NAPRAWIONY w Etapie 1B]: Duplikacja `wave_definitions` i zanieczyszczenie słownika `ctx`
 - **Miejsce w kodzie:** W `horde_waves.py` znajduje się zduplikowana tablica `wave_definitions`, a słownik `ctx` przekazuje z `horde_map.py` i `horde_waves.py` zmienne tymczasowe z pętli (`ai_p`, `h_p`, `m_id`, `r_id`, `s_key`, `sx`, `sy`, `u_id`, `wx`).
 
+### BUG-11 [ŚREDNI — WDROŻONY / NAPRAWIONY w Etapie R3]: Kolizja spawnów i rozkazów `Szakale_EcoRaid` (`P7`) z armią `G2_Mages` na `(116, 114)`
+- **Objaw w grze:** W falach nieparzystych oraz trybie Endless Szakale spawnowały się na tych samych współrzędnych `(116, 114)` co główna armia z Klasztoru `G2_Mages`, a rozkaz `move` wydawany Szakalom w promieniu 8 kratek nadpisywał `attack_move` armii głównej.
+- **Naprawa:** Rozdzielono punkty spawnu: w falach nieparzystych i Endless Szakale spawnują się na `(52, 86)` pod Bramą Północną, a w falach parzystych na `(116, 162)`.
+
+### BUG-12 [ŚREDNI — PLANOWANY w Etapie R4]: Blokowanie Sanktuarium Balansu przez `State_Sanctuary_Unlocked` i brak skalowania rajdów
+- **Objaw w grze:** Gracz 1 może zmienić poziom trudności wyłącznie w wąskich oknach czasowych między falami (`State_Sanctuary_Unlocked`), a rajdy Szakali i Ataki na Szlak Handlowy nie skalują się z poziomem trudności.
+- **Planowana naprawa:** Całkowite odblokowanie Sanktuarium (usunięcie bramek czasowych) oraz dodanie skalowania dla ataków specjalnych w Etapie R4.
+
+### BUG-13 [NISKI — PLANOWANY w Etapie R5]: Rozbieżność wartości eskalacji w dokumentacji i komunikatach czatu
+- **Objaw w grze:** Teksty w `horda.md` i czacie podają inne przyrosty HP eskalacji niż stałe zaimplementowane w słowniku `BALANCE` (`+5/+9/+10 HP`).
+- **Planowana naprawa:** Ujednolicenie dokumentacji i komunikatów w Etapie R5.
+
+### BUG-14 [NISKI — PLANOWANY w Etapie R5]: Błędne współrzędne Settlementów w `horda.md`
+- **Objaw w grze:** Dokumentacja `horda.md` podaje historyczne współrzędne obozów sprzed optymalizacji ukształtowania terenu.
+- **Planowana naprawa:** Aktualizacja współrzędnych w dokumentacji w Etapie R5.
+
+### BUG-15 [NISKI — WDROŻONY / NAPRAWIONY w Etapie R1]: Zduplikowane listy `PLAYER_*` oraz cichy filtr nieznanych argumentów w `safe_call`
+- **Objaw w kodzie:** Podwójna definicja `PLAYER_RANGED_UNITS` itp. w `horde_config.py` oraz ukrywanie literówek w argumentach funkcji parsera przez `safe_call`.
+- **Naprawa:** Usunięto duplikaty oparte na surowych ID, uszczelniono `safe_call` rzucający `TypeError` przy nieznanych kluczach oraz usunięto błędny parametr `object_list_unit_id` w `objects_in_area`.
+
+### BUG-16 [ŚREDNI — PLANOWANY w Etapie R6]: Luki w testach jednostkowych (`all()` na pustych kolekcjach i pominięte ID)
+- **Objaw w testach:** Asercje `all(...)` przechodzą na pustych kolekcjach (vacuous truth), a testy perków nie pokrywają pełnego drzewa jednostek.
+- **Planowana naprawa:** Uszczelnienie asercji i weryfikacja niepustych kolekcji w Etapie R6.
+
+### BUG-17 [ŚREDNI — WDROŻONY / NAPRAWIONY w Etapie R3]: Przechwytywanie nowo narodzonych fal przez smycze garnizonowe (`Garrison_Leash_*`)
+- **Objaw w grze:** Wcześniejszy promień smyczy (`ring_inner=9, ring_outer=20`) kolidował ze spawnami fal Settlementów położonymi zbyt blisko obozów (np. `(120, 162)` przy `G1_East`), co powodowało zawracanie jednostek fali do wnętrza obozu.
+- **Naprawa:** Zwiększono `ring_inner` do `14`, dodano zabezpieczenie przed degenerate bounding box (`ax1 >= ax2 or ay1 >= ay2`) oraz odsunięto wszystkie punkty spawnu fal na odległość Czebyszewa `>= 24` od obozów danego gracza AI.
+
+### BUG-18 [ŚREDNI — WDROŻONY / NAPRAWIONY w Etapie R2]: Brak mutacji archetypów `01b` dla wszystkich graczy AI i nadpisywanie statystyk przez technologie Kuźni/Stajni/Uniwersytetu (`01d–01f`)
+- **Objaw w grze:** Jednostki specjalne należące do innych graczy AI (np. Onagery P8 z `G3_East`, Berserkerzy P6 z wyłomów) nie otrzymywały archetypów specjalnych i `ATTR_BLAST_ATTACK_LEVEL = 2`. Ponadto zbadanie technologii Kuźni/Stajni w `01d–01f` nadpisywało zbalansowane statystyki (np. atak i pancerz Żelaznego Słonia, Szakala, Berserkera, Kamikaze).
+- **Naprawa:** Zastosowano mutacje `01b` w pętli dla wszystkich `ai_players` (P5–P8), wdrożono `TECH_BLOODLINES` w `01d` dla wszystkich AI z korektą `-20 HP` dla Szakala, oraz wprowadzono funkcję `enforce_specialized_unit_caps` wymuszającą stałe pułapy statystyk na końcu `01d`, `01e` i `01f`.
+
+### BUG-19 [NISKI — WDROŻONY / NAPRAWIONY w Etapie R3]: Brak buffa prędkości dla `TRADE_CART_FULL`, brak `PlayerId.SEVEN` w `02e` oraz ryzyko zablokowania budowy muru Q1 przez jednostki
+- **Objaw w grze:** Po zrobieniu Q1 pełne wozy handlowe jeździły z bazową prędkością, jednostki P7 przed bramami nie były spychane w głąb bazy w `02e`, a jednostki stojące na linii budowy muru na `y=186` mogły zablokować spawn segmentów muru.
+- **Naprawa:** Dodano `teleport_object` dla pasa `105..199, 183..187`, dodano buff dla `TRADE_CART_FULL` w Q1 oraz włączono P7 do pętli `02e`.
+
 ---
 
 ## 5. Definicja Bazowego HP, Centralny Rejestr Jednostek i Balans
@@ -269,3 +305,56 @@ Dzięki temu przejście `0 -> -1` odejmuje dokładnie `hp_delta_down` (ok. 15% b
 - **Etap 8 (Synchronizacja opisów i dokumentacji):**
   - Zaktualizowano `populate_ingame_scenario_descriptions` w `horde_config.py` oraz całą dokumentację `horda.md` do specyfikacji v6.3.
   - Zastosowano ścisłą precyzję matematyczną delty HP: **`-15% HP` na poziomie `-1`** oraz **`-30% HP` na poziomie `-2`** (dwukrotność delty 15%), natychmiastowe pierwsze ticki eskalacji w 20:00, 45:00 i 55:00 oraz dokładne wymiary wyrębu lasu (`6×11` na północy, `11×6` na wschodzie).
+
+### Wdrożenie 6: Etapy R1, R2 oraz R3 (Audyt v6.3 -> v6.4) [STATUS: OK]
+- **Etap R1 (Czyszczenie konfiguracji, usunięcie duplikatów i uszczelnienie parsera – BUG-15):**
+  - W `horde_config.py` usunięto zduplikowane bloki list `PLAYER_RANGED_UNITS`, `PLAYER_CAVALRY_UNITS`, `PLAYER_INFANTRY_UNITS`, `PLAYER_PROD_BUILDINGS` oparte na surowych identyfikatorach liczbowych.
+  - W `horde_map.py` usunięto redundantne wywołanie oraz import `populate_ingame_scenario_descriptions`.
+  - W `horde_quests.py` w `wire_difficulty_transition` usunięto nieistniejący parametr `object_list_unit_id` z `objects_in_area`.
+  - W `horde_waves.py` przepisano `safe_call` na ścisłą kontrolę sygnatury z rzucaniem `TypeError` oraz zastąpiono blok `try...except` w `safe_modify_attribute` jawną inspekcją parametrów funkcji.
+- **Etap R2 (Unifikacja archetypów i enforcement pułapów statystyk po technologiach AI – BUG-18):**
+  - W triggerze `01b_Apply_Specialized_Unit_Archetypes` objęto mutacjami wszystkich 6 archetypów (Żelazny Słoń, Szakal, Arcymag, Moździerz, Snajper, Berserker/Kamikaze włącznie z `ATTR_BLAST_ATTACK_LEVEL = 2`) wszystkich czterech graczy AI (`PlayerId.FIVE..EIGHT`).
+  - W triggerze `01d_AI_Techs_Feudal_8m30s` zbadano `TECH_BLOODLINES` dla wszystkich AI i natychmiast skorygowano HP Szakala o `-20 HP` (`Operation.SUBTRACT`), gwarantując spójność z `ENEMY_UNIT_REGISTRY`.
+  - Zaimplementowano funkcję `enforce_specialized_unit_caps(trig, ai_players)` i podpięto ją na końcu triggerów `01d`, `01e` oraz `01f`, trwale zabezpieczając statystyki jednostek specjalnych przed nadpisaniem przez technologie Kuźni, Stajni i Uniwersytetu.
+- **Etap R3 (Separacja spawnów P7, korekta geometrii smyczy i poprawki Q1/02e/W14 – BUG-11, BUG-17, BUG-19):**
+  - W `03_Endless_Szakale_EcoRaid` przeniesiono spawn Szakali na `(52, 86)`, a w `03_W{w_num:02d}_Szakale_EcoRaid` ustawiono spawn pod Bramą Północną `(52, 86)` w falach nieparzystych i pod Bramą Wschodnią `(116, 162)` w falach parzystych, w 100% eliminując kolizję rozkazów `move` z armią główną `G2_Mages` na `(116, 114)`.
+  - W `add_guarded_camp_with_leash` powiększono `ring_inner` do `14` oraz dodano walidację przed degenerate bounding box (`ax1 >= ax2 or ay1 >= ay2`).
+  - Zaktualizowano punkty spawnu fal 6 Settlementów (`settlement_spawn_configs` oraz `per_settlement_wave`): `"G1_East"` -> `(108, 162)`, `"G2_Snipers"` -> `(68, 60)`, `"G3_North"` -> `(106, 72)`, `"G3_East"` -> `(136, 82)`. Wszystkie punkty mają odległość Czebyszewa `>= 24` od każdego obozu danego gracza AI.
+  - W `horde_map.py` zarejestrowano nowe punkty zbiórki w `grid.mark_no_trees(sx, sy, radius=6)`.
+  - W `02e_Push_Gate_Units_Deep_Into_Base` włączono `PlayerId.SEVEN` do pętli spychającej.
+  - W `06_Quest1_Build_Trade_Wall_And_Pop` dodano oczyszczenie pasa budowy muru przez `teleport_object` na `(154, 192)` oraz przyspieszenie `+25%` dla pełnego wozu handlowego (`TRADE_CART_FULL`).
+  - W `horde_config.py` skorygowano tag Fali 14, usuwając błędną zapowiedź przebicia przez las.
+- **Weryfikacja binarna wyjściowego `.aoe2scenario`:**
+  - `01b`: potwierdzono obecność 228 efektów `MODIFY_ATTRIBUTE` (dokładnie 57 na gracza AI dla wszystkich 4 graczy AI), w tym `ATTR_BLAST_ATTACK_LEVEL == 2` dla wszystkich 4 graczy AI.
+  - `01d`, `01e`, `01f`: potwierdzono obecność odpowiednio 60, 56 i 56 efektów `MODIFY_ATTRIBUTE` z wymuszeniem pułapów statystyk jednostek specjalnych dla wszystkich 4 graczy AI (w tym reset ataku Słonia do `3` i Szakala do `2`).
+  - Potwierdzono odległości Czebyszewa `>= 24` dla wszystkich 6 spawnów fal Settlementów od obozów danego gracza AI.
+  - Potwierdzono obecność `teleport_object` oraz modyfikacji `TRADE_CART_FULL` w triggerze `Q1`.
+  - Zestaw testów `test_horde_scenario.py`: 19/19 zaliczonych (OK).
+  - Linter Ruff: 0 błędów (`All checks passed!`).
+
+
+### Wdrożenie 6: Etapy R1, R2 oraz R3 (Audyt v6.3 -> v6.4) [STATUS: OK]
+- **Etap R1 (Czyszczenie konfiguracji, usunięcie duplikatów i uszczelnienie parsera – BUG-15):**
+  - W `horde_config.py` usunięto zduplikowane bloki list `PLAYER_RANGED_UNITS`, `PLAYER_CAVALRY_UNITS`, `PLAYER_INFANTRY_UNITS`, `PLAYER_PROD_BUILDINGS` oparte na surowych identyfikatorach liczbowych.
+  - W `horde_map.py` usunięto redundantne wywołanie oraz import `populate_ingame_scenario_descriptions`.
+  - W `horde_quests.py` w `wire_difficulty_transition` usunięto nieistniejący parametr `object_list_unit_id` z `objects_in_area`.
+  - W `horde_waves.py` przepisano `safe_call` na ścisłą kontrolę sygnatury z rzucaniem `TypeError` oraz zastąpiono blok `try...except` w `safe_modify_attribute` jawną inspekcją parametrów funkcji.
+- **Etap R2 (Unifikacja archetypów i enforcement pułapów statystyk po technologiach AI – BUG-18):**
+  - W triggerze `01b_Apply_Specialized_Unit_Archetypes` objęto mutacjami wszystkich 6 archetypów (Żelazny Słoń, Szakal, Arcymag, Moździerz, Snajper, Berserker/Kamikaze włącznie z `ATTR_BLAST_ATTACK_LEVEL = 2`) wszystkich czterech graczy AI (`PlayerId.FIVE..EIGHT`).
+  - W triggerze `01d_AI_Techs_Feudal_8m30s` zbadano `TECH_BLOODLINES` dla wszystkich AI i natychmiast skorygowano HP Szakala o `-20 HP` (`Operation.SUBTRACT`), gwarantując spójność z `ENEMY_UNIT_REGISTRY`.
+  - Zaimplementowano funkcję `enforce_specialized_unit_caps(trig, ai_players)` i podpięto ją na końcu triggerów `01d`, `01e` oraz `01f`, trwale zabezpieczając statystyki jednostek specjalnych przed nadpisaniem przez technologie Kuźni, Stajni i Uniwersytetu.
+- **Etap R3 (Separacja spawnów P7, korekta geometrii smyczy i poprawki Q1/02e/W14 – BUG-11, BUG-17, BUG-19):**
+  - W `03_Endless_Szakale_EcoRaid` przeniesiono spawn Szakali na `(52, 86)`, a w `03_W{w_num:02d}_Szakale_EcoRaid` ustawiono spawn pod Bramą Północną `(52, 86)` w falach nieparzystych i pod Bramą Wschodnią `(116, 162)` w falach parzystych, w 100% eliminując kolizję rozkazów `move` z armią główną `G2_Mages` na `(116, 114)`.
+  - W `add_guarded_camp_with_leash` powiększono `ring_inner` do `14` oraz dodano walidację przed degenerate bounding box (`ax1 >= ax2 or ay1 >= ay2`).
+  - Zaktualizowano punkty spawnu fal 6 Settlementów (`settlement_spawn_configs` oraz `per_settlement_wave`): `"G1_East"` -> `(108, 162)`, `"G2_Snipers"` -> `(68, 60)`, `"G3_North"` -> `(106, 72)`, `"G3_East"` -> `(136, 82)`. Wszystkie punkty mają odległość Czebyszewa `>= 24` od każdego obozu danego gracza AI.
+  - W `horde_map.py` zarejestrowano nowe punkty zbiórki w `grid.mark_no_trees(sx, sy, radius=6)`.
+  - W `02e_Push_Gate_Units_Deep_Into_Base` włączono `PlayerId.SEVEN` do pętli spychającej.
+  - W `06_Quest1_Build_Trade_Wall_And_Pop` dodano oczyszczenie pasa budowy muru przez `teleport_object` na `(154, 192)` oraz przyspieszenie `+25%` dla pełnego wozu handlowego (`TRADE_CART_FULL`).
+  - W `horde_config.py` skorygowano tag Fali 14, usuwając błędną zapowiedź przebicia przez las.
+- **Weryfikacja binarna wyjściowego `.aoe2scenario`:**
+  - `01b`: potwierdzono obecność 228 efektów `MODIFY_ATTRIBUTE` (dokładnie 57 na gracza AI dla wszystkich 4 graczy AI), w tym `ATTR_BLAST_ATTACK_LEVEL == 2` dla wszystkich 4 graczy AI.
+  - `01d`, `01e`, `01f`: potwierdzono obecność odpowiednio 60, 56 i 56 efektów `MODIFY_ATTRIBUTE` z wymuszeniem pułapów statystyk jednostek specjalnych dla wszystkich 4 graczy AI (w tym reset ataku Słonia do `3` i Szakala do `2`).
+  - Potwierdzono odległości Czebyszewa `>= 24` dla wszystkich 6 spawnów fal Settlementów od obozów danego gracza AI.
+  - Potwierdzono obecność `teleport_object` oraz modyfikacji `TRADE_CART_FULL` w triggerze `Q1`.
+  - Zestaw testów `test_horde_scenario.py`: 19/19 zaliczonych (OK).
+  - Linter Ruff: 0 błędów (`All checks passed!`).

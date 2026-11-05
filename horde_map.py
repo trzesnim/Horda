@@ -22,7 +22,6 @@ from horde_config import (
     TORCH_ID,
     TREE_OAK_ID,
     TREE_PINE_ID,
-    populate_ingame_scenario_descriptions,
 )
 
 
@@ -360,8 +359,6 @@ def build_map_and_entities(scenario) -> dict:
     um.units = [[] for _ in range(9)]
     mm.map_size = MAP_SIZE
 
-    populate_ingame_scenario_descriptions(scenario)
-
     grid = SafeMapGrid(MAP_SIZE)
 
     human_players = [PlayerId.ONE, PlayerId.TWO, PlayerId.THREE, PlayerId.FOUR]
@@ -509,6 +506,7 @@ def build_map_and_entities(scenario) -> dict:
     for sx, sy in [
         (48, 86), (118, 114), (120, 162), (76, 84), (120, 152),
         (68, 48), (134, 78), (128, 36), (160, 62), (162, 180), (78, 90), (114, 140),
+        (52, 86), (108, 162), (68, 60), (106, 72), (136, 82),
     ]:
         grid.mark_no_trees(sx, sy, radius=6)
 

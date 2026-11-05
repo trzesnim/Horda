@@ -14,7 +14,6 @@ from horde_config import (
     BALANCE,
     ELITE_BATTLE_ELEPHANT_ID,
     ENEMY_UNIT_REGISTRY,
-    HUSSAR_ID,
     IMAM_UNIT_ID,
     MAP_SIZE,
     PLAYER_CAVALRY_UNITS,
@@ -148,7 +147,6 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
             trig.new_condition.objects_in_area,
             source_player=PlayerId.ONE,
             object_list=UnitInfo.KING.ID,
-            object_list_unit_id=UnitInfo.KING.ID,
             area_x1=bx1,
             area_y1=by1,
             area_x2=bx2,
@@ -282,6 +280,18 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         area_y2=195,
     )
 
+    for p_clear in human_players + [PlayerId.FIVE]:
+        safe_call(
+            t_q1.new_effect.teleport_object,
+            source_player=p_clear,
+            area_x1=105,
+            area_y1=183,
+            area_x2=199,
+            area_y2=187,
+            location_x=154,
+            location_y=192,
+        )
+
     # Ciągły Kamienny Mur Obronny z Basztami wzdłuż korytarza handlowego (y = 186, baszty y = 184)
     keep_x_positions = {115, 130, 145, 160, 175, 190}
     for wx in range(105, MAP_SIZE):
@@ -316,6 +326,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         for vil_id in [UnitInfo.VILLAGER_MALE.ID, UnitInfo.VILLAGER_FEMALE.ID]:
             safe_modify_attribute(t_q1, h_p, vil_id, ATTR_WORK_RATE, Operation.MULTIPLY, 1.20)
         safe_modify_attribute(t_q1, h_p, UnitInfo.TRADE_CART_EMPTY.ID, ATTR_MOVEMENT_SPEED, Operation.MULTIPLY, 1.25)
+        safe_modify_attribute(t_q1, h_p, UnitInfo.TRADE_CART_FULL.ID, ATTR_MOVEMENT_SPEED, Operation.MULTIPLY, 1.25)
         for i in range(4):
             px, py = p_coords[h_p]
             safe_call(

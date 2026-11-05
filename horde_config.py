@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
-
 from AoE2ScenarioParser.datasets.units import UnitInfo
 
 TREE_OAK_ID = 349
@@ -524,52 +523,6 @@ ENEMY_UNIT_REGISTRY: dict[int, EnemyUnitSpec] = {
     ),
 }
 
-PLAYER_RANGED_UNITS = [
-    UnitInfo.ARCHER.ID,
-    UnitInfo.CROSSBOWMAN.ID,
-    UnitInfo.ARBALESTER.ID,
-    UnitInfo.SKIRMISHER.ID,
-    UnitInfo.ELITE_SKIRMISHER.ID,
-    UnitInfo.CAVALRY_ARCHER.ID,
-    UnitInfo.HEAVY_CAVALRY_ARCHER.ID,
-    UnitInfo.HAND_CANNONEER.ID,
-]
-
-PLAYER_CAVALRY_UNITS = [
-    UnitInfo.SCOUT_CAVALRY.ID,
-    UnitInfo.LIGHT_CAVALRY.ID,
-    HUSSAR_ID,
-    UnitInfo.KNIGHT.ID,
-    UnitInfo.CAVALIER.ID,
-    UnitInfo.PALADIN.ID,
-    UnitInfo.STEPPE_LANCER.ID,
-    1372,  # ELITE_STEPPE_LANCER
-    UnitInfo.CAMEL_RIDER.ID,
-    330,   # HEAVY_CAMEL_RIDER
-]
-
-PLAYER_INFANTRY_UNITS = [
-    74,    # MILITIA
-    UnitInfo.MAN_AT_ARMS.ID,
-    UnitInfo.LONG_SWORDSMAN.ID,
-    UnitInfo.TWO_HANDED_SWORDSMAN.ID,
-    UnitInfo.CHAMPION.ID,
-    UnitInfo.SPEARMAN.ID,
-    UnitInfo.PIKEMAN.ID,
-    UnitInfo.HALBERDIER.ID,
-    751,   # EAGLE_SCOUT
-    753,   # EAGLE_WARRIOR
-    752,   # ELITE_EAGLE_WARRIOR
-]
-
-PLAYER_PROD_BUILDINGS = [
-    BuildingInfo.BARRACKS.ID,
-    BuildingInfo.STABLE.ID,
-    BuildingInfo.ARCHERY_RANGE.ID,
-    BuildingInfo.CASTLE.ID,
-    BuildingInfo.SIEGE_WORKSHOP.ID,
-]
-
 
 def get_wave_definitions() -> list[WaveDefinition]:
     wave_definitions = [
@@ -658,7 +611,7 @@ def get_wave_definitions() -> list[WaveDefinition]:
         extra_tag = ""
         if w_late in (10, 12, 14):
             extra_tag += " + ATAK NA TRADE LINE"
-        if w_late in (12, 14):
+        if w_late == 12:
             extra_tag += " + PRZEBICIE PRZEZ LAS"
         wave_definitions.append((
             w_late, wave_sec,

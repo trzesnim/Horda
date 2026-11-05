@@ -435,3 +435,14 @@ Zaktualizuj `horda.md` oraz teksty w `populate_ingame_scenario_descriptions()` (
 
 ### Kryterium akceptacji:
 - Pełna zgodność wszystkich reguł i liczb między `horda.md`, `populate_ingame_scenario_descriptions()` oraz kodem źródłowym.
+
+---
+
+## Plan Naprawczy Po Audycie v6.3 -> v6.4 (Etapy R1–R6)
+
+- **Etap R1 `[FLASH-SAFE]` `[DONE / WDROŻONE]`:** Czyszczenie konfiguracji, usunięcie duplikatów `PLAYER_*` i `populate_ingame_scenario_descriptions`, usunięcie błędnego `object_list_unit_id` z `objects_in_area`, uszczelnienie `safe_call` i usunięcie `try...except` z `safe_modify_attribute`.
+- **Etap R2 `[FLASH-SAFE]` `[DONE / WDROŻONE]`:** Unifikacja mutacji 6 archetypów w `01b` dla wszystkich `ai_players` (`P5–P8`), `TECH_BLOODLINES` dla wszystkich `ai_players` w `01d` (z korektą `-20 HP` dla Szakala) oraz `enforce_specialized_unit_caps` w `01d`, `01e`, `01f`.
+- **Etap R3 `[FLASH-SAFE]` `[DONE / WDROŻONE]`:** Separacja spawnów i rozkazów `Szakale_EcoRaid` (`P7`) od `G2_Mages` (`BUG-11`), korekta smyczy `ring_inner=14, ring_outer=20` i odsunięcie spawnów fal 6 Settlementów poza promień smyczy (`BUG-17`), uzupełnienie `P7` w `02e`, pełny wóz handlowy i czyszczenie pasa muru w `Q1` oraz korekta tagu Fali 14.
+- **Etap R4 `[ARGON/SONNET-REQUIRED]` `[TODO]`:** Przebudowa Sanktuarium Balansu — całkowite usunięcie blokad czasowych (`State_Sanctuary_Unlocked`, `03_W*_Close_Window`, `09_Diff_*_Relay2s`) oraz skalowanie `Szakale_EcoRaid` i `Trade_Line_Attack` (`BUG-12`).
+- **Etap R5 `[FLASH-SAFE]` `[TODO]`:** Synchronizacja dokumentacji `horda.md`, `populate_ingame_scenario_descriptions` i komunikatów czatu z wartościami eskalacji z `BALANCE` (`+5/+9/+10 HP`) oraz rzeczywistymi współrzędnymi 6 Settlementów (`BUG-13`, `BUG-14`).
+- **Etap R6 `[ARGON/SONNET-REQUIRED]` `[TODO]`:** Rozbudowa i uszczelnienie `test_horde_scenario.py` (naprawa `all()` na pustych kolekcjach `BUG-16`, właściwe ID `557`, pełny skan `CREATE_OBJECT` przeciwko `ENEMY_UNIT_REGISTRY`, testy geometrii smyczy i spawnów P7, testy odblokowanego Sanktuarium).

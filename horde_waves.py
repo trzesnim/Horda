@@ -57,15 +57,16 @@ from horde_config import (
     TECH_SCALE_MAIL,
     TECH_SIEGE_ENGINEERS,
     TECH_SQUIRES,
-    WaveDefinition,
     get_wave_definitions,
 )
 
 
 def safe_call(func, **kwargs):
     sig = inspect.signature(func)
-    valid_kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
-    return func(**valid_kwargs)
+    invalid_keys = [k for k in kwargs if k not in sig.parameters]
+    if invalid_keys:
+        raise TypeError(f"Nieprawidlowe argumenty {invalid_keys} dla funkcji {func.__qualname__}")
+    return func(**kwargs)
 
 
 def safe_modify_attribute(trigger, source_player, unit_id, attr_id, operation, val, armor_class=None):
@@ -77,20 +78,20 @@ def safe_modify_attribute(trigger, source_player, unit_id, attr_id, operation, v
         "operation": operation,
     }
     if armor_class is not None:
-        try:
+        sig_params = inspect.signature(fn).parameters
+        if "armour_attack_quantity" in sig_params:
             return safe_call(
                 fn,
                 **base_kwargs,
                 armour_attack_class=armor_class,
                 armour_attack_quantity=int(val),
             )
-        except (ValueError, TypeError):
-            return safe_call(
-                fn,
-                **base_kwargs,
-                armour_attack_class=armor_class,
-                quantity=val,
-            )
+        return safe_call(
+            fn,
+            **base_kwargs,
+            armour_attack_class=armor_class,
+            quantity=val,
+        )
     return safe_call(fn, **base_kwargs, quantity=val)
 
 
@@ -172,7 +173,7 @@ def add_guarded_camp_with_leash(tm, enable_parent_trigger, name: str, ai_player:
 
     t_leash = tm.add_trigger(f"Garrison_Leash_{name}", enabled=False, looping=True)
     safe_call(t_leash.new_condition.timer, timer=3)
-    ring_inner = 9
+    ring_inner = 14
     ring_outer = 20
     leash_strips = [
         (cx - ring_outer, cy - ring_outer, cx + ring_outer, cy - ring_inner),
@@ -181,13 +182,19 @@ def add_guarded_camp_with_leash(tm, enable_parent_trigger, name: str, ai_player:
         (cx + ring_inner, cy - ring_inner, cx + ring_outer, cy + ring_inner),
     ]
     for sx1, sy1, sx2, sy2 in leash_strips:
+        ax1 = max(0, min(MAP_SIZE - 1, sx1))
+        ay1 = max(0, min(MAP_SIZE - 1, sy1))
+        ax2 = max(0, min(MAP_SIZE - 1, sx2))
+        ay2 = max(0, min(MAP_SIZE - 1, sy2))
+        if ax1 >= ax2 or ay1 >= ay2:
+            continue
         safe_call(
             t_leash.new_effect.attack_move,
             source_player=ai_player,
-            area_x1=max(0, sx1),
-            area_y1=max(0, sy1),
-            area_x2=min(MAP_SIZE - 1, sx2),
-            area_y2=min(MAP_SIZE - 1, sy2),
+            area_x1=ax1,
+            area_y1=ay1,
+            area_x2=ax2,
+            area_y2=ay2,
             location_x=cx,
             location_y=cy,
         )
@@ -301,6 +308,32 @@ def scale_comp_for_level(comp: list[tuple[int, int]], level: int) -> list[tuple[
     return [(u_id, cnt) for (u_id, _), cnt in zip(active_comp, allocations) if cnt > 0]
 
 
+def enforce_specialized_unit_caps(trig, ai_players: list[PlayerId]) -> None:
+    for ai_p in ai_players:
+        # ELITE_BATTLE_ELEPHANT_ID:
+        safe_modify_attribute(trig, ai_p, ELITE_BATTLE_ELEPHANT_ID, ATTR_ATTACK, Operation.SET, BALANCE["tank_unit_atk"], armor_class=4)
+        safe_modify_attribute(trig, ai_p, ELITE_BATTLE_ELEPHANT_ID, ATTR_ARMOR, Operation.SET, BALANCE["tank_melee_armor"], armor_class=4)
+        safe_modify_attribute(trig, ai_p, ELITE_BATTLE_ELEPHANT_ID, ATTR_ARMOR, Operation.SET, BALANCE["tank_pierce_armor"], armor_class=3)
+
+        # HUSSAR_ID:
+        safe_modify_attribute(trig, ai_p, HUSSAR_ID, ATTR_ATTACK, Operation.SET, BALANCE["raider_atk"], armor_class=4)
+        safe_modify_attribute(trig, ai_p, HUSSAR_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["raider_speed"])
+        safe_modify_attribute(trig, ai_p, HUSSAR_ID, ATTR_ARMOR, Operation.SET, BALANCE["raider_pierce_armor"], armor_class=3)
+        safe_modify_attribute(trig, ai_p, HUSSAR_ID, ATTR_ARMOR, Operation.SET, 0, armor_class=4)
+
+        # ELITE_BERSERK_ID:
+        safe_modify_attribute(trig, ai_p, ELITE_BERSERK_ID, ATTR_ARMOR, Operation.SET, 0, armor_class=3)
+        safe_modify_attribute(trig, ai_p, ELITE_BERSERK_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["berserk_speed"])
+
+        # PETARD_ID oraz FLAMING_CAMEL_ID:
+        for kamikaze_id in [PETARD_ID, FLAMING_CAMEL_ID]:
+            safe_modify_attribute(trig, ai_p, kamikaze_id, ATTR_ARMOR, Operation.SET, 0, armor_class=3)
+            safe_modify_attribute(trig, ai_p, kamikaze_id, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["kamikaze_speed"])
+
+        # SIEGE_ONAGER_ID:
+        safe_modify_attribute(trig, ai_p, SIEGE_ONAGER_ID, ATTR_MAXIMUM_RANGE, Operation.SET, BALANCE["mortar_range"])
+
+
 def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     ai_players = ctx["ai_players"]
     allied_citadel = ctx["allied_citadel"]
@@ -360,11 +393,12 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_ai_smith_feudal.new_condition.timer, timer=510)
     research_techs(t_ai_smith_feudal, [PlayerId.FIVE], [TECH_SCALE_MAIL])
     research_techs(t_ai_smith_feudal, [PlayerId.SIX], [TECH_FLETCHING])
-    research_techs(t_ai_smith_feudal, [PlayerId.SEVEN], [TECH_FORGING, TECH_BLOODLINES])
+    research_techs(t_ai_smith_feudal, [PlayerId.SEVEN], [TECH_FORGING])
     research_techs(t_ai_smith_feudal, [PlayerId.EIGHT], [TECH_FORGING, TECH_SCALE_BARDING])
-    safe_modify_attribute(
-        t_ai_smith_feudal, PlayerId.EIGHT, ELITE_BATTLE_ELEPHANT_ID, ATTR_ATTACK, Operation.SET, BALANCE["tank_unit_atk"], armor_class=4
-    )
+    research_techs(t_ai_smith_feudal, ai_players, [TECH_BLOODLINES])
+    for ai_p in ai_players:
+        safe_modify_attribute(t_ai_smith_feudal, ai_p, HUSSAR_ID, ATTR_HIT_POINTS, Operation.SUBTRACT, 20)
+    enforce_specialized_unit_caps(t_ai_smith_feudal, ai_players)
 
     t_ai_smith_castle = tm.add_trigger("01e_AI_Techs_Castle_18m", enabled=True, looping=False)
     safe_call(t_ai_smith_castle.new_condition.timer, timer=1080)
@@ -372,9 +406,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     research_techs(t_ai_smith_castle, [PlayerId.SIX], [TECH_BODKIN_ARROW, TECH_BALLISTICS])
     research_techs(t_ai_smith_castle, [PlayerId.SEVEN], [TECH_IRON_CASTING, TECH_HUSBANDRY])
     research_techs(t_ai_smith_castle, [PlayerId.EIGHT], [TECH_IRON_CASTING, TECH_CHAIN_BARDING])
-    safe_modify_attribute(
-        t_ai_smith_castle, PlayerId.EIGHT, ELITE_BATTLE_ELEPHANT_ID, ATTR_ATTACK, Operation.SET, BALANCE["tank_unit_atk"], armor_class=4
-    )
+    enforce_specialized_unit_caps(t_ai_smith_castle, ai_players)
 
     t_ai_smith_imp = tm.add_trigger("01f_AI_Techs_Imperial_34m30s", enabled=True, looping=False)
     safe_call(t_ai_smith_imp.new_condition.timer, timer=2070)
@@ -382,9 +414,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     research_techs(t_ai_smith_imp, [PlayerId.SIX], [TECH_BRACER, TECH_CHEMISTRY, TECH_SIEGE_ENGINEERS])
     research_techs(t_ai_smith_imp, [PlayerId.SEVEN], [TECH_BLAST_FURNACE])
     research_techs(t_ai_smith_imp, [PlayerId.EIGHT], [TECH_BLAST_FURNACE, TECH_PLATE_BARDING, TECH_SIEGE_ENGINEERS])
-    safe_modify_attribute(
-        t_ai_smith_imp, PlayerId.EIGHT, ELITE_BATTLE_ELEPHANT_ID, ATTR_ATTACK, Operation.SET, BALANCE["tank_unit_atk"], armor_class=4
-    )
+    enforce_specialized_unit_caps(t_ai_smith_imp, ai_players)
 
     building_labels = [
         (balance_king, "Inzynier Balansu (Gora = Trudniej, Dol = Latwiej)"),
@@ -420,65 +450,65 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             safe_modify_attribute(t_mutate, ai_p, monk_id, ATTR_MAXIMUM_RANGE, Operation.SET, 0)
             safe_modify_attribute(t_mutate, ai_p, monk_id, ATTR_WORK_RATE, Operation.SET, 0)
 
-    # 1. TARAN-ŻÓŁW / ŻELAZNY SŁOŃ (Tank P8)
-    safe_modify_attribute(t_mutate, PlayerId.EIGHT, ELITE_BATTLE_ELEPHANT_ID, ATTR_HIT_POINTS, Operation.SET, BALANCE["tank_hp"])
-    safe_modify_attribute(t_mutate, PlayerId.EIGHT, ELITE_BATTLE_ELEPHANT_ID, ATTR_HERO_STATUS, Operation.SET, 1)
-    safe_modify_attribute(t_mutate, PlayerId.EIGHT, ELITE_BATTLE_ELEPHANT_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["tank_speed"])
-    safe_modify_attribute(t_mutate, PlayerId.EIGHT, ELITE_BATTLE_ELEPHANT_ID, ATTR_ATTACK, Operation.SET, BALANCE["tank_unit_atk"], armor_class=4)
-    safe_modify_attribute(t_mutate, PlayerId.EIGHT, ELITE_BATTLE_ELEPHANT_ID, ATTR_ATTACK, Operation.ADD, BALANCE["tank_bldg_bonus"], armor_class=11)
-    safe_modify_attribute(t_mutate, PlayerId.EIGHT, ELITE_BATTLE_ELEPHANT_ID, ATTR_ATTACK, Operation.ADD, BALANCE["tank_bldg_bonus"], armor_class=21)
-    safe_modify_attribute(t_mutate, PlayerId.EIGHT, ELITE_BATTLE_ELEPHANT_ID, ATTR_ARMOR, Operation.SET, BALANCE["tank_melee_armor"], armor_class=4)
-    safe_modify_attribute(t_mutate, PlayerId.EIGHT, ELITE_BATTLE_ELEPHANT_ID, ATTR_ARMOR, Operation.SET, BALANCE["tank_pierce_armor"], armor_class=3)
+        # 1. TARAN-ŻÓŁW / ŻELAZNY SŁOŃ
+        safe_modify_attribute(t_mutate, ai_p, ELITE_BATTLE_ELEPHANT_ID, ATTR_HIT_POINTS, Operation.SET, BALANCE["tank_hp"])
+        safe_modify_attribute(t_mutate, ai_p, ELITE_BATTLE_ELEPHANT_ID, ATTR_HERO_STATUS, Operation.SET, 1)
+        safe_modify_attribute(t_mutate, ai_p, ELITE_BATTLE_ELEPHANT_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["tank_speed"])
+        safe_modify_attribute(t_mutate, ai_p, ELITE_BATTLE_ELEPHANT_ID, ATTR_ATTACK, Operation.SET, BALANCE["tank_unit_atk"], armor_class=4)
+        safe_modify_attribute(t_mutate, ai_p, ELITE_BATTLE_ELEPHANT_ID, ATTR_ATTACK, Operation.ADD, BALANCE["tank_bldg_bonus"], armor_class=11)
+        safe_modify_attribute(t_mutate, ai_p, ELITE_BATTLE_ELEPHANT_ID, ATTR_ATTACK, Operation.ADD, BALANCE["tank_bldg_bonus"], armor_class=21)
+        safe_modify_attribute(t_mutate, ai_p, ELITE_BATTLE_ELEPHANT_ID, ATTR_ARMOR, Operation.SET, BALANCE["tank_melee_armor"], armor_class=4)
+        safe_modify_attribute(t_mutate, ai_p, ELITE_BATTLE_ELEPHANT_ID, ATTR_ARMOR, Operation.SET, BALANCE["tank_pierce_armor"], armor_class=3)
 
-    # 2. SZAKAL DYWERSYJNY (Eco-Raider Huzar P7)
-    safe_modify_attribute(t_mutate, PlayerId.SEVEN, HUSSAR_ID, ATTR_HIT_POINTS, Operation.SET, BALANCE["raider_hp"])
-    safe_modify_attribute(t_mutate, PlayerId.SEVEN, HUSSAR_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["raider_speed"])
-    safe_modify_attribute(t_mutate, PlayerId.SEVEN, HUSSAR_ID, ATTR_ATTACK, Operation.SET, BALANCE["raider_atk"], armor_class=4)
-    safe_modify_attribute(t_mutate, PlayerId.SEVEN, HUSSAR_ID, ATTR_ARMOR, Operation.SET, BALANCE["raider_pierce_armor"], armor_class=3)
-    safe_modify_attribute(t_mutate, PlayerId.SEVEN, HUSSAR_ID, ATTR_ARMOR, Operation.SET, 0, armor_class=4)
+        # 2. SZAKAL DYWERSYJNY (Eco-Raider Huzar)
+        safe_modify_attribute(t_mutate, ai_p, HUSSAR_ID, ATTR_HIT_POINTS, Operation.SET, BALANCE["raider_hp"])
+        safe_modify_attribute(t_mutate, ai_p, HUSSAR_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["raider_speed"])
+        safe_modify_attribute(t_mutate, ai_p, HUSSAR_ID, ATTR_ATTACK, Operation.SET, BALANCE["raider_atk"], armor_class=4)
+        safe_modify_attribute(t_mutate, ai_p, HUSSAR_ID, ATTR_ARMOR, Operation.SET, BALANCE["raider_pierce_armor"], armor_class=3)
+        safe_modify_attribute(t_mutate, ai_p, HUSSAR_ID, ATTR_ARMOR, Operation.SET, 0, armor_class=4)
 
-    # 3. ARCYMAG TARCZY (Imam P7)
-    safe_modify_attribute(t_mutate, PlayerId.SEVEN, IMAM_UNIT_ID, ATTR_HIT_POINTS, Operation.SET, BALANCE["mage_hp"])
-    safe_modify_attribute(t_mutate, PlayerId.SEVEN, IMAM_UNIT_ID, ATTR_HERO_STATUS, Operation.SET, 1)
-    safe_modify_attribute(t_mutate, PlayerId.SEVEN, IMAM_UNIT_ID, ATTR_REGENERATION_RATE, Operation.SET, BALANCE["mage_regen_per_min"])
-    safe_modify_attribute(t_mutate, PlayerId.SEVEN, IMAM_UNIT_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["mage_speed"])
-    safe_modify_attribute(t_mutate, PlayerId.SEVEN, IMAM_UNIT_ID, ATTR_ARMOR, Operation.SET, BALANCE["mage_pierce_armor"], armor_class=3)
-    safe_modify_attribute(t_mutate, PlayerId.SEVEN, IMAM_UNIT_ID, ATTR_ARMOR, Operation.SET, BALANCE["mage_melee_armor"], armor_class=4)
+        # 3. ARCYMAG TARCZY (Imam)
+        safe_modify_attribute(t_mutate, ai_p, IMAM_UNIT_ID, ATTR_HIT_POINTS, Operation.SET, BALANCE["mage_hp"])
+        safe_modify_attribute(t_mutate, ai_p, IMAM_UNIT_ID, ATTR_HERO_STATUS, Operation.SET, 1)
+        safe_modify_attribute(t_mutate, ai_p, IMAM_UNIT_ID, ATTR_REGENERATION_RATE, Operation.SET, BALANCE["mage_regen_per_min"])
+        safe_modify_attribute(t_mutate, ai_p, IMAM_UNIT_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["mage_speed"])
+        safe_modify_attribute(t_mutate, ai_p, IMAM_UNIT_ID, ATTR_ARMOR, Operation.SET, BALANCE["mage_pierce_armor"], armor_class=3)
+        safe_modify_attribute(t_mutate, ai_p, IMAM_UNIT_ID, ATTR_ARMOR, Operation.SET, BALANCE["mage_melee_armor"], armor_class=4)
 
-    # 4. MOŹDZIERZ OBLĘŻNICZY (Siege Onager P6)
-    safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_HIT_POINTS, Operation.SET, BALANCE["mortar_hp"])
-    safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_HERO_STATUS, Operation.SET, 1)
-    safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_MAXIMUM_RANGE, Operation.SET, BALANCE["mortar_range"])
-    safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_MINIMUM_RANGE, Operation.SET, BALANCE["mortar_min_range"])
-    safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_SEARCH_RADIUS, Operation.SET, 23)
-    safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_LINE_OF_SIGHT, Operation.SET, 23)
-    safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_ATTACK_RELOAD_TIME, Operation.SET, BALANCE["mortar_reload"])
-    safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_BLAST_WIDTH, Operation.SET, BALANCE["mortar_blast_width"])
-    safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_BLAST_ATTACK_LEVEL, Operation.SET, 2)
-    safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["mortar_speed"])
-    safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_ATTACK, Operation.ADD, BALANCE["mortar_bonus_atk"], armor_class=4)
+        # 4. MOŹDZIERZ OBLĘŻNICZY (Siege Onager)
+        safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_HIT_POINTS, Operation.SET, BALANCE["mortar_hp"])
+        safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_HERO_STATUS, Operation.SET, 1)
+        safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_MAXIMUM_RANGE, Operation.SET, BALANCE["mortar_range"])
+        safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_MINIMUM_RANGE, Operation.SET, BALANCE["mortar_min_range"])
+        safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_SEARCH_RADIUS, Operation.SET, 23)
+        safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_LINE_OF_SIGHT, Operation.SET, 23)
+        safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_ATTACK_RELOAD_TIME, Operation.SET, BALANCE["mortar_reload"])
+        safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_BLAST_WIDTH, Operation.SET, BALANCE["mortar_blast_width"])
+        safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_BLAST_ATTACK_LEVEL, Operation.SET, 2)
+        safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["mortar_speed"])
+        safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_ATTACK, Operation.ADD, BALANCE["mortar_bonus_atk"], armor_class=4)
 
-    # 5. SNAJPER IMPERIALNY (Elitarny Janczar P6)
-    safe_modify_attribute(t_mutate, PlayerId.SIX, UnitInfo.ELITE_JANISSARY.ID, ATTR_HIT_POINTS, Operation.SET, BALANCE["sniper_hp"])
-    safe_modify_attribute(t_mutate, PlayerId.SIX, UnitInfo.ELITE_JANISSARY.ID, ATTR_HERO_STATUS, Operation.SET, 1)
-    safe_modify_attribute(t_mutate, PlayerId.SIX, UnitInfo.ELITE_JANISSARY.ID, ATTR_MAXIMUM_RANGE, Operation.SET, BALANCE["sniper_range"])
-    safe_modify_attribute(t_mutate, PlayerId.SIX, UnitInfo.ELITE_JANISSARY.ID, ATTR_SEARCH_RADIUS, Operation.SET, 21)
-    safe_modify_attribute(t_mutate, PlayerId.SIX, UnitInfo.ELITE_JANISSARY.ID, ATTR_LINE_OF_SIGHT, Operation.SET, 21)
-    safe_modify_attribute(t_mutate, PlayerId.SIX, UnitInfo.ELITE_JANISSARY.ID, ATTR_ATTACK_RELOAD_TIME, Operation.SET, BALANCE["sniper_reload"])
-    safe_modify_attribute(t_mutate, PlayerId.SIX, UnitInfo.ELITE_JANISSARY.ID, ATTR_ATTACK, Operation.ADD, BALANCE["sniper_bonus_atk"], armor_class=3)
+        # 5. SNAJPER IMPERIALNY (Elitarny Janczar)
+        safe_modify_attribute(t_mutate, ai_p, UnitInfo.ELITE_JANISSARY.ID, ATTR_HIT_POINTS, Operation.SET, BALANCE["sniper_hp"])
+        safe_modify_attribute(t_mutate, ai_p, UnitInfo.ELITE_JANISSARY.ID, ATTR_HERO_STATUS, Operation.SET, 1)
+        safe_modify_attribute(t_mutate, ai_p, UnitInfo.ELITE_JANISSARY.ID, ATTR_MAXIMUM_RANGE, Operation.SET, BALANCE["sniper_range"])
+        safe_modify_attribute(t_mutate, ai_p, UnitInfo.ELITE_JANISSARY.ID, ATTR_SEARCH_RADIUS, Operation.SET, 21)
+        safe_modify_attribute(t_mutate, ai_p, UnitInfo.ELITE_JANISSARY.ID, ATTR_LINE_OF_SIGHT, Operation.SET, 21)
+        safe_modify_attribute(t_mutate, ai_p, UnitInfo.ELITE_JANISSARY.ID, ATTR_ATTACK_RELOAD_TIME, Operation.SET, BALANCE["sniper_reload"])
+        safe_modify_attribute(t_mutate, ai_p, UnitInfo.ELITE_JANISSARY.ID, ATTR_ATTACK, Operation.ADD, BALANCE["sniper_bonus_atk"], armor_class=3)
 
-    # 6. BERSERKERZY I KAMIKAZE (P5)
-    for kamikaze_id in [PETARD_ID, FLAMING_CAMEL_ID]:
-        safe_modify_attribute(t_mutate, PlayerId.FIVE, kamikaze_id, ATTR_HIT_POINTS, Operation.SET, BALANCE["kamikaze_hp"])
-        safe_modify_attribute(t_mutate, PlayerId.FIVE, kamikaze_id, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["kamikaze_speed"])
-        safe_modify_attribute(t_mutate, PlayerId.FIVE, kamikaze_id, ATTR_BLAST_WIDTH, Operation.SET, BALANCE["kamikaze_blast_width"])
-        safe_modify_attribute(t_mutate, PlayerId.FIVE, kamikaze_id, ATTR_ATTACK, Operation.ADD, BALANCE["kamikaze_bonus_atk"], armor_class=4)
-        safe_modify_attribute(t_mutate, PlayerId.FIVE, kamikaze_id, ATTR_ARMOR, Operation.SET, 0, armor_class=3)
+        # 6. BERSERKERZY I KAMIKAZE
+        for kamikaze_id in [PETARD_ID, FLAMING_CAMEL_ID]:
+            safe_modify_attribute(t_mutate, ai_p, kamikaze_id, ATTR_HIT_POINTS, Operation.SET, BALANCE["kamikaze_hp"])
+            safe_modify_attribute(t_mutate, ai_p, kamikaze_id, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["kamikaze_speed"])
+            safe_modify_attribute(t_mutate, ai_p, kamikaze_id, ATTR_BLAST_WIDTH, Operation.SET, BALANCE["kamikaze_blast_width"])
+            safe_modify_attribute(t_mutate, ai_p, kamikaze_id, ATTR_ATTACK, Operation.ADD, BALANCE["kamikaze_bonus_atk"], armor_class=4)
+            safe_modify_attribute(t_mutate, ai_p, kamikaze_id, ATTR_ARMOR, Operation.SET, 0, armor_class=3)
 
-    safe_modify_attribute(t_mutate, PlayerId.FIVE, ELITE_BERSERK_ID, ATTR_HIT_POINTS, Operation.SET, BALANCE["berserk_hp"])
-    safe_modify_attribute(t_mutate, PlayerId.FIVE, ELITE_BERSERK_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["berserk_speed"])
-    safe_modify_attribute(t_mutate, PlayerId.FIVE, ELITE_BERSERK_ID, ATTR_ATTACK, Operation.ADD, BALANCE["berserk_bonus_atk"], armor_class=4)
-    safe_modify_attribute(t_mutate, PlayerId.FIVE, ELITE_BERSERK_ID, ATTR_ARMOR, Operation.SET, 0, armor_class=3)
+        safe_modify_attribute(t_mutate, ai_p, ELITE_BERSERK_ID, ATTR_HIT_POINTS, Operation.SET, BALANCE["berserk_hp"])
+        safe_modify_attribute(t_mutate, ai_p, ELITE_BERSERK_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["berserk_speed"])
+        safe_modify_attribute(t_mutate, ai_p, ELITE_BERSERK_ID, ATTR_ATTACK, Operation.ADD, BALANCE["berserk_bonus_atk"], armor_class=4)
+        safe_modify_attribute(t_mutate, ai_p, ELITE_BERSERK_ID, ATTR_ARMOR, Operation.SET, 0, armor_class=3)
 
     t_arm_garrisons = tm.add_trigger("01c_Arm_Garrison_Detectors_At_4s", enabled=True, looping=False)
     safe_call(t_arm_garrisons.new_condition.timer, timer=4)
@@ -621,7 +651,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         (74, 94, 82, 108, 68, 130),
         (98, 135, 112, 144, 68, 146),
     ]
-    for ai_p in [PlayerId.FIVE, PlayerId.SIX, PlayerId.EIGHT]:
+    for ai_p in ai_players:
         for gx1, gy1, gx2, gy2, p_tx, p_ty in gate_push_zones:
             safe_call(
                 t_push_inside.new_effect.attack_move,
@@ -730,11 +760,11 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     # ------------------------------------------------------------------------------
     settlement_spawn_configs = {
         "G1_North":   (PlayerId.FIVE,  48, 86,  *deep_target_north),
-        "G1_East":    (PlayerId.FIVE,  120, 162, *deep_target_east),
-        "G2_Snipers": (PlayerId.SIX,   68, 48,  *deep_target_north),
+        "G1_East":    (PlayerId.FIVE,  108, 162, *deep_target_east),
+        "G2_Snipers": (PlayerId.SIX,   68, 60,  *deep_target_north),
         "G2_Mages":   (PlayerId.SEVEN, 116, 114, *deep_target_center),
-        "G3_North":   (PlayerId.EIGHT, 128, 36, *deep_target_center),
-        "G3_East":    (PlayerId.EIGHT, 160, 62, *deep_target_east),
+        "G3_North":   (PlayerId.EIGHT, 106, 72, *deep_target_center),
+        "G3_East":    (PlayerId.EIGHT, 136, 82, *deep_target_east),
     }
 
     wave_definitions = get_wave_definitions()
@@ -784,7 +814,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     t_endless_szakale = tm.add_trigger("03_Endless_Szakale_EcoRaid", enabled=False, looping=False)
     add_spawn_and_attack_effect(
         t_endless_szakale, PlayerId.SEVEN, [(HUSSAR_ID, w14_def.raider_count)],
-        spawn_x=116, spawn_y=114,
+        spawn_x=52, spawn_y=86,
         target_x=eco_raid_targets[0][0], target_y=eco_raid_targets[0][1],
         ignore_frontline_move_only=True,
     )
@@ -856,11 +886,11 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
         per_settlement_wave = [
             ("G1_North",   PlayerId.FIVE,  w_def.g1_north, 48, 86,  *deep_target_north),
-            ("G1_East",    PlayerId.FIVE,  w_def.g1_east, 120, 162, *deep_target_east),
-            ("G2_Snipers", PlayerId.SIX,   w_def.g2_snipers, 68, 48,  *deep_target_north),
+            ("G1_East",    PlayerId.FIVE,  w_def.g1_east, 108, 162, *deep_target_east),
+            ("G2_Snipers", PlayerId.SIX,   w_def.g2_snipers, 68, 60,  *deep_target_north),
             ("G2_Mages",   PlayerId.SEVEN, w_def.g2_mages, 116, 114, *deep_target_center),
-            ("G3_North",   PlayerId.EIGHT, w_def.g3_north, 128, 36, *deep_target_center),
-            ("G3_East",    PlayerId.EIGHT, w_def.g3_east, 160, 62, *deep_target_east),
+            ("G3_North",   PlayerId.EIGHT, w_def.g3_north, 106, 72, *deep_target_center),
+            ("G3_East",    PlayerId.EIGHT, w_def.g3_east, 136, 82, *deep_target_east),
         ]
 
         wave_variants_all_settlements = []
@@ -910,7 +940,8 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             safe_call(t_raid.new_condition.timer, timer=w_time)
             add_spawn_and_attack_effect(
                 t_raid, PlayerId.SEVEN, [(HUSSAR_ID, w_def.raider_count)],
-                spawn_x=116, spawn_y=162 if w_num % 2 == 0 else 114,
+                spawn_x=116 if w_num % 2 == 0 else 52,
+                spawn_y=162 if w_num % 2 == 0 else 86,
                 target_x=eco_tx, target_y=eco_ty,
                 ignore_frontline_move_only=True,
             )

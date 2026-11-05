@@ -4,28 +4,25 @@ oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Hor
 """
 
 import unittest
-from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
-from AoE2ScenarioParser.datasets.units import UnitInfo
+
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
+from AoE2ScenarioParser.datasets.conditions import ConditionId
+from AoE2ScenarioParser.datasets.effects import EffectId
 from AoE2ScenarioParser.datasets.players import PlayerId
 from AoE2ScenarioParser.datasets.trigger_lists import Operation
-from AoE2ScenarioParser.datasets.effects import EffectId
-from AoE2ScenarioParser.datasets.conditions import ConditionId
+from AoE2ScenarioParser.datasets.units import UnitInfo
+from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 
 from horde_config import (
-    ENEMY_UNIT_REGISTRY,
-    BALANCE,
-    OUTPUT_SCENARIO,
-    IMAM_UNIT_ID,
-    ELITE_BATTLE_ELEPHANT_ID,
-    SIEGE_ONAGER_ID,
+    ATTR_ATTACK,
     ATTR_BLAST_ATTACK_LEVEL,
     ATTR_HIT_POINTS,
-    ATTR_ATTACK,
-    PLAYER_RANGED_UNITS,
-    PLAYER_CAVALRY_UNITS,
-    PLAYER_INFANTRY_UNITS,
-    PLAYER_PROD_BUILDINGS,
+    BALANCE,
+    ELITE_BATTLE_ELEPHANT_ID,
+    ENEMY_UNIT_REGISTRY,
+    IMAM_UNIT_ID,
+    OUTPUT_SCENARIO,
+    SIEGE_ONAGER_ID,
     get_wave_definitions,
 )
 from horde_waves import scale_comp_for_level
