@@ -13,6 +13,7 @@ from horde_config import (
     ATTR_WORK_RATE,
     BALANCE,
     ELITE_BATTLE_ELEPHANT_ID,
+    ENEMY_UNIT_REGISTRY,
     HUSSAR_ID,
     IMAM_UNIT_ID,
     MAP_SIZE,
@@ -44,8 +45,6 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     all_settlement_wave_triggers = ctx["all_settlement_wave_triggers"]
     allied_citadel = ctx["allied_citadel"]
     deep_target_center = ctx["deep_target_center"]
-    enemy_melee_units = ctx["enemy_melee_units"]
-    enemy_ranged_units = ctx["enemy_ranged_units"]
     h_p = ctx["h_p"]
     human_players = ctx["human_players"]
     p_coords = ctx["p_coords"]
@@ -101,17 +100,17 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
             hp_val = BALANCE["diff_step_up_hp"]
             atk_val = BALANCE["diff_step_up_atk"]
             for ai_p in ai_players:
-                for m_id in enemy_melee_units:
-                    safe_modify_attribute(trig, ai_p, m_id, ATTR_HIT_POINTS, op, hp_val)
-                    safe_modify_attribute(trig, ai_p, m_id, ATTR_ATTACK, op, atk_val, armor_class=4)
-                for r_id in enemy_ranged_units:
-                    safe_modify_attribute(trig, ai_p, r_id, ATTR_HIT_POINTS, op, hp_val)
-                    safe_modify_attribute(trig, ai_p, r_id, ATTR_ATTACK, op, atk_val, armor_class=3)
+                for spec in ENEMY_UNIT_REGISTRY.values():
+                    if spec.scales_hp:
+                        safe_modify_attribute(trig, ai_p, spec.unit_id, ATTR_HIT_POINTS, op, hp_val)
+                    if spec.attack_class is not None:
+                        safe_modify_attribute(trig, ai_p, spec.unit_id, ATTR_ATTACK, op, atk_val, armor_class=spec.attack_class)
         else:
             mult_val = 0.85 if mode == "neg_down" else 1.18
             for ai_p in ai_players:
-                for u_id in enemy_melee_units + enemy_ranged_units:
-                    safe_modify_attribute(trig, ai_p, u_id, ATTR_HIT_POINTS, Operation.MULTIPLY, mult_val)
+                for spec in ENEMY_UNIT_REGISTRY.values():
+                    if spec.scales_hp:
+                        safe_modify_attribute(trig, ai_p, spec.unit_id, ATTR_HIT_POINTS, Operation.MULTIPLY, mult_val)
 
     t_up_0_to_p1 = tm.add_trigger("09_Diff_Up_0_to_P1", enabled=True, looping=False)
     t_down_0_to_m1 = tm.add_trigger("09_Diff_Down_0_to_M1", enabled=True, looping=False)
@@ -232,7 +231,18 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     set_as_objective(t_q1, "Q1 - Karawanseraj (Mur Handlowy, +30 Pop, +20% Eko)", order=99)
     safe_call(t_q1.new_condition.destroy_object, unit_object=q1_bldg.reference_id)
 
-    # Ciągły Kamienny Mur Obronny z Basztami wzdłuż 10-kratkowego korytarza handlowego (y = 188)
+    # Usunięcie wież strażniczych wroga P5 wokół zniszczonego Karawanseraju
+    safe_call(
+        t_q1.new_effect.remove_object,
+        source_player=PlayerId.FIVE,
+        object_list_unit_id=BuildingInfo.GUARD_TOWER.ID,
+        area_x1=145,
+        area_y1=182,
+        area_x2=165,
+        area_y2=195,
+    )
+
+    # Ciągły Kamienny Mur Obronny z Basztami wzdłuż korytarza handlowego (y = 186, baszty y = 184)
     keep_x_positions = {115, 130, 145, 160, 175, 190}
     for wx in range(105, MAP_SIZE):
         if wx in keep_x_positions:
@@ -241,14 +251,14 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
                 object_list_unit_id=BuildingInfo.KEEP.ID,
                 source_player=PlayerId.FOUR,
                 location_x=wx,
-                location_y=190,
+                location_y=184,
             )
         safe_call(
             t_q1.new_effect.create_object,
             object_list_unit_id=BuildingInfo.FORTIFIED_WALL.ID,
             source_player=PlayerId.FOUR,
             location_x=wx,
-            location_y=188,
+            location_y=186,
         )
 
     # POJEDYNCZE sojusznicze Targowisko w prawym rogu mapy na (195, 194)
@@ -276,7 +286,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
                 location_y=py + 5,
             )
 
-    add_enemy_combat_buff(t_q1, ai_players, enemy_melee_units, enemy_ranged_units, hp_add=8, atk_add=1)
+    add_enemy_combat_buff(t_q1, ai_players, hp_add=8, atk_add=1)
 
     send_highlight_chat(
         t_q1, "<GREEN>",
@@ -309,7 +319,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
             safe_modify_attribute(t_q2, h_p, c_id, ATTR_MOVEMENT_SPEED, Operation.MULTIPLY, 1.12)
             safe_modify_attribute(t_q2, h_p, c_id, ATTR_ATTACK, Operation.ADD, 4, armor_class=4)
 
-    add_enemy_combat_buff(t_q2, ai_players, enemy_melee_units, enemy_ranged_units, hp_add=8, atk_add=1)
+    add_enemy_combat_buff(t_q2, ai_players, hp_add=8, atk_add=1)
 
     send_highlight_chat(
         t_q2, "<GREEN>",
@@ -328,7 +338,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         add_player_resource(t_q3_unlock, h_p, RES_GOLD, 600)
         add_player_resource(t_q3_unlock, h_p, RES_STONE, 300)
 
-    add_enemy_combat_buff(t_q3_unlock, ai_players, enemy_melee_units, enemy_ranged_units, hp_add=10, atk_add=1)
+    add_enemy_combat_buff(t_q3_unlock, ai_players, hp_add=10, atk_add=1)
 
     send_highlight_chat(
         t_q3_unlock, "<GREEN>",
@@ -363,7 +373,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         for b_id in prod_buildings:
             safe_modify_attribute(t_q4, h_p, b_id, ATTR_WORK_RATE, Operation.MULTIPLY, 1.40)
 
-    add_enemy_combat_buff(t_q4, ai_players, enemy_melee_units, enemy_ranged_units, hp_add=10, atk_add=1)
+    add_enemy_combat_buff(t_q4, ai_players, hp_add=10, atk_add=1)
 
     send_highlight_chat(
         t_q4, "<GREEN>",
@@ -399,7 +409,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
             add_player_resource(t_destroy, h_p, RES_GOLD, 600)
             add_player_resource(t_destroy, h_p, RES_FOOD, 600)
 
-        add_enemy_combat_buff(t_destroy, ai_players, enemy_melee_units, enemy_ranged_units, hp_add=15, atk_add=2)
+        add_enemy_combat_buff(t_destroy, ai_players, hp_add=15, atk_add=2)
 
         add_spawn_and_attack_effect(
             t_destroy, PlayerId.EIGHT,

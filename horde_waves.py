@@ -22,6 +22,7 @@ from horde_config import (
     BALANCE,
     ELITE_BATTLE_ELEPHANT_ID,
     ELITE_BERSERK_ID,
+    ENEMY_UNIT_REGISTRY,
     FEITORIA_ID,
     FLAMING_CAMEL_ID,
     FLARE_UNIT_ID,
@@ -56,6 +57,7 @@ from horde_config import (
     TECH_SCALE_MAIL,
     TECH_SIEGE_ENGINEERS,
     TECH_SQUIRES,
+    WaveDefinition,
     get_wave_definitions,
 )
 
@@ -92,31 +94,15 @@ def safe_modify_attribute(trigger, source_player, unit_id, attr_id, operation, v
     return safe_call(fn, **base_kwargs, quantity=val)
 
 
-def add_enemy_combat_buff(
-    trigger,
-    ai_players: list[PlayerId],
-    melee_units: list[int],
-    ranged_units: list[int],
-    hp_add: int,
-    atk_add: int,
-):
-    """
-    Dodaje HP oraz atak wyłącznie do właściwej klasy ataku danej jednostki:
-    - melee_units -> tylko armor_class=4 (Base Melee),
-    - ranged_units -> tylko armor_class=3 (Base Pierce).
-    Chroni to w 100% przed błędem uint8 underflow (5+247 ataku)!
-    """
+def add_enemy_combat_buff(trigger, ai_players: list[PlayerId], hp_add: int, atk_add: int):
     for ai_p in ai_players:
-        for m_id in melee_units:
-            if hp_add > 0:
-                safe_modify_attribute(trigger, ai_p, m_id, ATTR_HIT_POINTS, Operation.ADD, hp_add)
-            if atk_add > 0:
-                safe_modify_attribute(trigger, ai_p, m_id, ATTR_ATTACK, Operation.ADD, atk_add, armor_class=4)
-        for r_id in ranged_units:
-            if hp_add > 0:
-                safe_modify_attribute(trigger, ai_p, r_id, ATTR_HIT_POINTS, Operation.ADD, hp_add)
-            if atk_add > 0:
-                safe_modify_attribute(trigger, ai_p, r_id, ATTR_ATTACK, Operation.ADD, atk_add, armor_class=3)
+        for spec in ENEMY_UNIT_REGISTRY.values():
+            if spec.scales_hp and hp_add > 0:
+                safe_modify_attribute(trigger, ai_p, spec.unit_id, ATTR_HIT_POINTS, Operation.ADD, hp_add)
+            if spec.attack_class is not None and atk_add > 0:
+                safe_modify_attribute(
+                    trigger, ai_p, spec.unit_id, ATTR_ATTACK, Operation.ADD, atk_add, armor_class=spec.attack_class
+                )
 
 
 def set_as_objective(trigger, text: str, order: int, is_header: bool = False):
@@ -262,6 +248,64 @@ def scale_comp(comp: list[tuple[int, int]], factor: float) -> list[tuple[int, in
     return scaled
 
 
+def scale_comp_for_level(comp: list[tuple[int, int]], level: int) -> list[tuple[int, int]]:
+    if any(cnt < 0 for _, cnt in comp):
+        raise ValueError(f"Ujemna liczebnosc w kompozycji: {comp}")
+    active_comp = [(u_id, cnt) for u_id, cnt in comp if cnt > 0]
+    if not active_comp:
+        return []
+    if level == 0:
+        return list(active_comp)
+
+    pct_map = {-2: 60, -1: 80, 1: 125, 2: 150}
+    if level not in pct_map:
+        raise ValueError(f"Nieobslugiwany poziom trudnosci: {level}")
+    pct = pct_map[level]
+
+    total_orig = sum(cnt for _, cnt in active_comp)
+    raw_target = max(1, (total_orig * pct + 50) // 100)  # Zaokrąglanie HALF_UP
+
+    min_reqs = []
+    allocations = []
+    remainders = []
+    for idx, (u_id, cnt) in enumerate(active_comp):
+        spec = ENEMY_UNIT_REGISTRY.get(u_id)
+        min_req = 1 if (spec is not None and spec.mandatory_min_one) else 0
+        min_reqs.append(min_req)
+        base_alloc = max(min_req, (cnt * pct) // 100)
+        allocations.append(base_alloc)
+        rem = (cnt * pct) - base_alloc * 100
+        remainders.append((rem, idx))
+
+    effective_target = max(raw_target, sum(min_reqs))
+    diff = effective_target - sum(allocations)
+
+    if diff > 0:
+        # Sortowanie malejąco po reszcie; przy remisie pierwszeństwo ma mniejszy indeks (wcześniejsza jednostka)
+        order = sorted(range(len(active_comp)), key=lambda i: (remainders[i][0], -i), reverse=True)
+        for step in range(diff):
+            allocations[order[step % len(order)]] += 1
+    elif diff < 0:
+        # Wieloprzebiegowa redukcja tylko z pozycji posiadających zapas ponad min_reqs[i]
+        order = sorted(range(len(active_comp)), key=lambda i: (remainders[i][0], i))
+        to_reduce = -diff
+        while to_reduce > 0:
+            progressed = False
+            for i in order:
+                if to_reduce <= 0:
+                    break
+                if allocations[i] > min_reqs[i]:
+                    allocations[i] -= 1
+                    to_reduce -= 1
+                    progressed = True
+            if not progressed:
+                break
+
+    assert sum(allocations) == effective_target
+    assert all(a >= m for a, m in zip(allocations, min_reqs))
+    return [(u_id, cnt) for (u_id, _), cnt in zip(active_comp, allocations) if cnt > 0]
+
+
 def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     ai_players = ctx["ai_players"]
     allied_citadel = ctx["allied_citadel"]
@@ -327,6 +371,9 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     research_techs(t_ai_smith_feudal, [PlayerId.SIX], [TECH_FLETCHING])
     research_techs(t_ai_smith_feudal, [PlayerId.SEVEN], [TECH_FORGING, TECH_BLOODLINES])
     research_techs(t_ai_smith_feudal, [PlayerId.EIGHT], [TECH_FORGING, TECH_SCALE_BARDING])
+    safe_modify_attribute(
+        t_ai_smith_feudal, PlayerId.EIGHT, ELITE_BATTLE_ELEPHANT_ID, ATTR_ATTACK, Operation.SET, BALANCE["tank_unit_atk"], armor_class=4
+    )
 
     t_ai_smith_castle = tm.add_trigger("01e_AI_Techs_Castle_18m", enabled=True, looping=False)
     safe_call(t_ai_smith_castle.new_condition.timer, timer=1080)
@@ -334,6 +381,9 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     research_techs(t_ai_smith_castle, [PlayerId.SIX], [TECH_BODKIN_ARROW, TECH_BALLISTICS])
     research_techs(t_ai_smith_castle, [PlayerId.SEVEN], [TECH_IRON_CASTING, TECH_HUSBANDRY])
     research_techs(t_ai_smith_castle, [PlayerId.EIGHT], [TECH_IRON_CASTING, TECH_CHAIN_BARDING])
+    safe_modify_attribute(
+        t_ai_smith_castle, PlayerId.EIGHT, ELITE_BATTLE_ELEPHANT_ID, ATTR_ATTACK, Operation.SET, BALANCE["tank_unit_atk"], armor_class=4
+    )
 
     t_ai_smith_imp = tm.add_trigger("01f_AI_Techs_Imperial_34m30s", enabled=True, looping=False)
     safe_call(t_ai_smith_imp.new_condition.timer, timer=2070)
@@ -341,6 +391,9 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     research_techs(t_ai_smith_imp, [PlayerId.SIX], [TECH_BRACER, TECH_CHEMISTRY, TECH_SIEGE_ENGINEERS])
     research_techs(t_ai_smith_imp, [PlayerId.SEVEN], [TECH_BLAST_FURNACE])
     research_techs(t_ai_smith_imp, [PlayerId.EIGHT], [TECH_BLAST_FURNACE, TECH_PLATE_BARDING, TECH_SIEGE_ENGINEERS])
+    safe_modify_attribute(
+        t_ai_smith_imp, PlayerId.EIGHT, ELITE_BATTLE_ELEPHANT_ID, ATTR_ATTACK, Operation.SET, BALANCE["tank_unit_atk"], armor_class=4
+    )
 
     building_labels = [
         (balance_king, "Inzynier Balansu (Gora = Trudniej, Dol = Latwiej)"),
@@ -571,17 +624,8 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             )
 
     # ==============================================================================
-    # 7. ROZDZIELONE LISTY WRĘCZ / STRZELECKIE I 3-STOPNIOWA ESKALACJA
+    # 7. 3-STOPNIOWA ESKALACJA CZASOWA (ENEMY_UNIT_REGISTRY)
     # ==============================================================================
-    enemy_melee_units = [
-        UnitInfo.MAN_AT_ARMS.ID, UnitInfo.PIKEMAN.ID, UnitInfo.HALBERDIER.ID, UnitInfo.HUSKARL.ID,
-        ELITE_BERSERK_ID,
-        UnitInfo.SCOUT_CAVALRY.ID, UnitInfo.KNIGHT.ID, UnitInfo.CAVALIER.ID, UnitInfo.PALADIN.ID,
-        ELITE_BATTLE_ELEPHANT_ID, SIEGE_ONAGER_ID,
-    ]
-    enemy_ranged_units = [
-        UnitInfo.ARCHER.ID, UnitInfo.CROSSBOWMAN.ID, UnitInfo.ARBALESTER.ID, UnitInfo.ELITE_JANISSARY.ID,
-    ]
 
     t_enable_esc1 = tm.add_trigger("04a_Enable_Escalation_At_20m", enabled=True, looping=False)
     safe_call(t_enable_esc1.new_condition.timer, timer=BALANCE["escalation_start_sec"])
@@ -590,7 +634,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_enable_esc1.new_effect.activate_trigger, trigger_id=t_escalate1.trigger_id)
     safe_call(t_escalate1.new_condition.timer, timer=BALANCE["escalation_interval_sec"])
     add_enemy_combat_buff(
-        t_escalate1, ai_players, enemy_melee_units, enemy_ranged_units,
+        t_escalate1, ai_players,
         hp_add=BALANCE["escalation_hp_add"], atk_add=BALANCE["escalation_atk_add"],
     )
     send_highlight_chat(
@@ -605,7 +649,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_enable_esc2.new_effect.activate_trigger, trigger_id=t_escalate2.trigger_id)
     safe_call(t_escalate2.new_condition.timer, timer=BALANCE["escalation_interval_sec"])
     add_enemy_combat_buff(
-        t_escalate2, ai_players, enemy_melee_units, enemy_ranged_units,
+        t_escalate2, ai_players,
         hp_add=BALANCE["late_escalation_hp_add"], atk_add=1,
     )
     send_highlight_chat(
@@ -620,7 +664,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_enable_esc3.new_effect.activate_trigger, trigger_id=t_escalate3.trigger_id)
     safe_call(t_escalate3.new_condition.timer, timer=BALANCE["escalation_interval_sec"])
     add_enemy_combat_buff(
-        t_escalate3, ai_players, enemy_melee_units, enemy_ranged_units,
+        t_escalate3, ai_players,
         hp_add=BALANCE["endgame_escalation_hp_add"], atk_add=2,
     )
     send_highlight_chat(
@@ -639,106 +683,6 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     tier_0_wave_triggers = []
     tier_p1_wave_triggers = []
     tier_p2_wave_triggers = []
-
-    wave_definitions = [
-        (
-            1, 510, "Fala 1/14 (8:30 - Szturm Feudalny bez taranow)",
-            [(UnitInfo.MAN_AT_ARMS.ID, 6), (UnitInfo.ARCHER.ID, 5)],
-            [(UnitInfo.MAN_AT_ARMS.ID, 6), (UnitInfo.SCOUT_CAVALRY.ID, 5)],
-            [], [], [], [], 0,
-        ),
-        (
-            2, 780, "Fala 2/14 (13:00 - Feudalna z Taranem i Mangonelem, bez jednostek specjalnych)",
-            [(UnitInfo.MAN_AT_ARMS.ID, 8), (UnitInfo.ARCHER.ID, 6), (UnitInfo.BATTERING_RAM.ID, 1)],
-            [(UnitInfo.SPEARMAN.ID, 8), (UnitInfo.SCOUT_CAVALRY.ID, 6), (UnitInfo.MANGONEL.ID, 1)],
-            [], [], [], [], 0,
-        ),
-        (
-            3, 1080, "Fala 3/14 (18:00 - Castle Age + pierwsi Berserkerzy, Snajperzy i Szakale!)",
-            [(UnitInfo.PIKEMAN.ID, 11), (ELITE_BERSERK_ID, 3), (PETARD_ID, 1), (UnitInfo.BATTERING_RAM.ID, 1)],
-            [(UnitInfo.HUSKARL.ID, 8), (UnitInfo.KNIGHT.ID, 5), (FLAMING_CAMEL_ID, 1)],
-            [(UnitInfo.CROSSBOWMAN.ID, 10), (UnitInfo.ELITE_JANISSARY.ID, 2)],
-            [], [], [], 5,
-        ),
-        (
-            4, 1410, "Fala 4/14 (23:30 - Castle Age + Arcymag Tarczy dajacy +30 Pancerza calej Hordzie!)",
-            [(UnitInfo.PIKEMAN.ID, 14), (ELITE_BERSERK_ID, 4), (UnitInfo.BATTERING_RAM.ID, 2)],
-            [(UnitInfo.HUSKARL.ID, 10), (UnitInfo.KNIGHT.ID, 6), (FLAMING_CAMEL_ID, 2)],
-            [(UnitInfo.CROSSBOWMAN.ID, 12), (UnitInfo.ELITE_JANISSARY.ID, 3)],
-            [(IMAM_UNIT_ID, 1), (UnitInfo.KNIGHT.ID, 10), (UnitInfo.BATTERING_RAM.ID, 2)],
-            [], [], 6,
-        ),
-        (
-            5, 1740, "Fala 5/14 (29:00 - Pozny Castle Age + Mozdzierz Oblezniczy!)",
-            [(UnitInfo.PIKEMAN.ID, 16), (ELITE_BERSERK_ID, 4), (PETARD_ID, 2), (UnitInfo.CAPPED_RAM.ID, 2)],
-            [(UnitInfo.HUSKARL.ID, 12), (FLAMING_CAMEL_ID, 2), (UnitInfo.CAPPED_RAM.ID, 2)],
-            [(UnitInfo.CROSSBOWMAN.ID, 14), (UnitInfo.ELITE_JANISSARY.ID, 3), (SIEGE_ONAGER_ID, 1)],
-            [(IMAM_UNIT_ID, 1), (UnitInfo.KNIGHT.ID, 12)],
-            [(UnitInfo.KNIGHT.ID, 8), (UnitInfo.PIKEMAN.ID, 10)],
-            [], 7,
-        ),
-        (
-            6, 2070, "Fala 6/14 (34:30 - Debiut Zelaznego Slonia-Tanka 1450 HP!)",
-            [(UnitInfo.PIKEMAN.ID, 18), (ELITE_BERSERK_ID, 5), (UnitInfo.CAPPED_RAM.ID, 2)],
-            [(UnitInfo.HUSKARL.ID, 14), (FLAMING_CAMEL_ID, 3), (UnitInfo.CAPPED_RAM.ID, 2)],
-            [(UnitInfo.CROSSBOWMAN.ID, 16), (UnitInfo.ELITE_JANISSARY.ID, 3), (SIEGE_ONAGER_ID, 1)],
-            [(IMAM_UNIT_ID, 1), (UnitInfo.CAVALIER.ID, 12), (UnitInfo.CAPPED_RAM.ID, 2)],
-            [(ELITE_BATTLE_ELEPHANT_ID, 1), (UnitInfo.KNIGHT.ID, 10), (UnitInfo.PIKEMAN.ID, 12)],
-            [(UnitInfo.CROSSBOWMAN.ID, 14), (UnitInfo.KNIGHT.ID, 8)],
-            8,
-        ),
-        (
-            7, 2400, "Fala 7/14 (40:00 - Wczesny Imperial Age)",
-            [(UnitInfo.HALBERDIER.ID, 20), (ELITE_BERSERK_ID, 5), (PETARD_ID, 3), (UnitInfo.CAPPED_RAM.ID, 3)],
-            [(UnitInfo.HUSKARL.ID, 16), (FLAMING_CAMEL_ID, 3), (UnitInfo.CAPPED_RAM.ID, 2)],
-            [(UnitInfo.ARBALESTER.ID, 18), (UnitInfo.ELITE_JANISSARY.ID, 4), (SIEGE_ONAGER_ID, 1)],
-            [(IMAM_UNIT_ID, 1), (UnitInfo.CAVALIER.ID, 14)],
-            [(ELITE_BATTLE_ELEPHANT_ID, 2), (UnitInfo.CAVALIER.ID, 12), (UnitInfo.HALBERDIER.ID, 12)],
-            [(ELITE_BATTLE_ELEPHANT_ID, 1), (UnitInfo.ARBALESTER.ID, 16)],
-            9,
-        ),
-        (
-            8, 2730, "Fala 8/14 (45:30 - Imperial Age + UDERZENIE NA SZLAK HANDLOWY!)",
-            [(UnitInfo.HALBERDIER.ID, 22), (ELITE_BERSERK_ID, 6), (UnitInfo.SIEGE_RAM.ID, 3)],
-            [(UnitInfo.HUSKARL.ID, 18), (FLAMING_CAMEL_ID, 3), (UnitInfo.SIEGE_RAM.ID, 3)],
-            [(UnitInfo.ARBALESTER.ID, 20), (UnitInfo.ELITE_JANISSARY.ID, 4), (SIEGE_ONAGER_ID, 2)],
-            [(IMAM_UNIT_ID, 2), (UnitInfo.CAVALIER.ID, 16), (UnitInfo.SIEGE_RAM.ID, 3)],
-            [(ELITE_BATTLE_ELEPHANT_ID, 2), (UnitInfo.CAVALIER.ID, 14), (UnitInfo.HALBERDIER.ID, 14)],
-            [(ELITE_BATTLE_ELEPHANT_ID, 2), (UnitInfo.ARBALESTER.ID, 18), (SIEGE_ONAGER_ID, 1)],
-            10,
-        ),
-        (
-            9, 3060, "Fala 9/14 (51:00 - Imperial Age + PRZEBICIE PRZEZ POLNOCNY LAS!)",
-            [(UnitInfo.HALBERDIER.ID, 25), (ELITE_BERSERK_ID, 7), (PETARD_ID, 3), (UnitInfo.SIEGE_RAM.ID, 3)],
-            [(UnitInfo.HUSKARL.ID, 20), (FLAMING_CAMEL_ID, 4), (UnitInfo.SIEGE_RAM.ID, 3)],
-            [(UnitInfo.ARBALESTER.ID, 22), (UnitInfo.ELITE_JANISSARY.ID, 4), (SIEGE_ONAGER_ID, 2)],
-            [(IMAM_UNIT_ID, 2), (UnitInfo.PALADIN.ID, 16), (UnitInfo.SIEGE_RAM.ID, 3)],
-            [(ELITE_BATTLE_ELEPHANT_ID, 3), (UnitInfo.PALADIN.ID, 15), (UnitInfo.HALBERDIER.ID, 16)],
-            [(ELITE_BATTLE_ELEPHANT_ID, 2), (UnitInfo.ARBALESTER.ID, 20), (SIEGE_ONAGER_ID, 2)],
-            12,
-        ),
-    ]
-
-    for w_late in range(10, 15):
-        m = w_late - 9
-        wave_sec = 3060 + m * 330
-        minute_mark = wave_sec // 60
-        extra_tag = ""
-        if w_late in (10, 12, 14):
-            extra_tag += " + ATAK NA TRADE LINE"
-        if w_late in (12, 14):
-            extra_tag += " + PRZEBICIE PRZEZ LAS"
-        wave_definitions.append((
-            w_late, wave_sec,
-            f"Fala {w_late}/14 ({minute_mark}m - Late Imperial{extra_tag}!)",
-            [(UnitInfo.HALBERDIER.ID, 25 + m * 3), (ELITE_BERSERK_ID, 7 + m), (PETARD_ID, 3 + (m // 2)), (UnitInfo.SIEGE_RAM.ID, 4)],
-            [(UnitInfo.HUSKARL.ID, 20 + m * 3), (FLAMING_CAMEL_ID, 3 + (m // 2)), (UnitInfo.SIEGE_RAM.ID, 4)],
-            [(UnitInfo.ARBALESTER.ID, 22 + m * 3), (UnitInfo.ELITE_JANISSARY.ID, 4 + (m // 2)), (SIEGE_ONAGER_ID, 2 + (m // 3))],
-            [(IMAM_UNIT_ID, 2 + (m // 3)), (UnitInfo.PALADIN.ID, 16 + m * 3), (UnitInfo.SIEGE_RAM.ID, 4)],
-            [(ELITE_BATTLE_ELEPHANT_ID, 3 + (m // 2)), (UnitInfo.PALADIN.ID, 16 + m * 3), (UnitInfo.HALBERDIER.ID, 16 + m * 2)],
-            [(ELITE_BATTLE_ELEPHANT_ID, 3 + (m // 2)), (UnitInfo.ARBALESTER.ID, 20 + m * 3), (SIEGE_ONAGER_ID, 2 + (m // 3))],
-            12 + m,
-        ))
 
     eco_raid_targets = [(32, 118), (76, 120), (32, 168), (76, 172)]
     deep_target_north = (48, 138)
@@ -937,8 +881,6 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     ctx["ai_p"] = ai_p
     ctx["all_settlement_wave_triggers"] = all_settlement_wave_triggers
     ctx["deep_target_center"] = deep_target_center
-    ctx["enemy_melee_units"] = enemy_melee_units
-    ctx["enemy_ranged_units"] = enemy_ranged_units
     ctx["s_key"] = s_key
     ctx["sx"] = sx
     ctx["sy"] = sy

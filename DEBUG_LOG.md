@@ -126,7 +126,7 @@ Wszyscy 4 gracze AI są w sojuszu między sobą i w stanie wojny (`DiplomacyStat
   3. Gdy Gracz 1 wszedł na flagę `+1` w 1. minucie gry, trigger `09_Diff_Up_0_to_P1` wykonał `activate_trigger` na wszystkich triggerach z listy `tier_p1_wave_triggers` — **włączając od razu pętlowe triggery Fali 14 (`TierP1`)**, które wybuchły po 330 sekundach!
   4. Ponadto w silniku AoE2: DE warunek `timer` w triggerze z `enabled=False` nie odlicza czasu od `0:00`, lecz startuje od `0` dopiero w momencie aktywacji triggera, a ponowne wykonanie `activate_trigger` na już wykonanych falach niepętlowych uruchamia je po raz drugi.
 
-### BUG-02 [KRYTYCZNY — potwierdzony w playteście v6.2]: Moździerze Oblężnicze (`SIEGE_ONAGER_ID = 588`) wycinają drzewa przy bramach podczas zwykłego ostrzału
+### BUG-02 [KRYTYCZNY — WDROŻONY / NAPRAWIONY w Etapie 1A]: Moździerze Oblężnicze (`SIEGE_ONAGER_ID = 588`) wycinają drzewa przy bramach podczas zwykłego ostrzału
 - **Objaw w grze:** Moździerze Oblężnicze (`P6`) strzelając w bramy, palisady i wieże graczy niszczą sąsiednie drzewa pasa leśnego, wybijając nieplanowane dziury w lesie.
 - **Miejsce w kodzie:** `01b_Apply_Specialized_Unit_Archetypes` w `horde_waves.py`.
 - **Przyczyna techniczna:** Jednostka `Siege Onager` (`588`) ma w silniku Genie domyślnie `Blast Attack Level = 1` (pociski ścinają drzewa, które mają `Blast Defense Level = 1`). Aby pociski Moździerza raniły jednostki i budynki, ale nie ścinały drzew (tak jak u zwykłego Mangonela), należy ustawić atrybut **`ATTR_BLAST_ATTACK_LEVEL = 44`** na wartość **`2`** *(UWAGA: atrybut o ID `21` to `AMOUNT_OF_1ST_RESOURCE_STORAGE` — nie wolno mylić `21` z `44`!)*.
@@ -136,7 +136,7 @@ Wszyscy 4 gracze AI są w sojuszu między sobą i w stanie wojny (`DiplomacyStat
 - **Miejsce w kodzie:** `setup_init_aura_and_waves()` w `horde_waves.py` (pętla `for layer_name, l_comp, start_enabled, layer_list in layer_specs:`).
 - **Przyczyna techniczna:** Dla Fali 14 `is_endless_last = True`, więc dla warstw `Base`, `TierM1` i `Tier0` ustawiane jest `start_enabled = not is_endless_last` (`False`), a warunek tworzenia triggera uzbrajającego pętlę Endless brzmi `if is_endless_last and start_enabled:` (`True and False`), przez co triggery `03_Enable_Endless_*` nigdy nie powstają.
 
-### BUG-04 [WYSOKI]: Błąd zaokrąglania w `scale_comp()` gubiący jednostki specjalne nawet na domyślnym Poziomie `0` (`100%`)
+### BUG-04 [WYSOKI — WDROŻONY / NAPRAWIONY w Etapie 2]: Błąd zaokrąglania w `scale_comp()` gubiący jednostki specjalne nawet na domyślnym Poziomie `0` (`100%`)
 - **Objaw w grze:** Dla grup liczących `2` jednostki w definicji fali (np. 2 Snajperów w Fali 3, 2 Arcymagów w Falach 8–11, 2 Moździerze w Falach 8–11, 2 Żelazne Słonie w Falach 7–8) na **każdym poziomie trudności od `-2` do `+2` spawnuje się tylko 1 jednostka**. Z kolei dla `3` jednostek na poziomie `0` spawnuje się `4`.
 - **Miejsce w kodzie:** `scale_comp()` w `horde_waves.py`.
 - **Przyczyna techniczna:** Niezależne zaokrąglanie `round()` (ties-to-even) pięciu warstw (`0.60`, `0.20`, `0.20`, `0.25`, `0.25`). Dla `cnt = 2`: `round(1.2) = 1`, `round(0.4) = 0`, `round(0.4) = 0`, `round(0.5) = 0`, co daje w sumie `1` jednostkę zamiast `2` lub `3`.
@@ -162,11 +162,11 @@ Wszyscy 4 gracze AI są w sojuszu między sobą i w stanie wojny (`DiplomacyStat
 - **Miejsce w kodzie:** `04a_Enable_Escalation_At_20m` .. `04f_Endgame_Horde_Escalation_Every_5m` w `horde_waves.py`.
 - **Przyczyna techniczna:** Trigger włączający (`04a`, `04c`, `04e`) jedynie aktywuje trigger pętlowy (`04b`, `04d`, `04f` z `timer=300`), który odlicza swoje pierwsze 300s dopiero od momentu aktywacji.
 
-### BUG-09 [ŚREDNI]: Kolizja Baszt (`KEEP`) i wież strażniczych Karawanseraju (`Q1`) ze szlakiem handlowym
+### BUG-09 [ŚREDNI — WDROŻONY / NAPRAWIONY w Etapie 6B]: Kolizja Baszt (`KEEP`) i wież strażniczych Karawanseraju (`Q1`) ze szlakiem handlowym
 - **Objaw w grze:** Po zburzeniu Targowiska Q1 `(154, 190)` dwie boczne wieże strażnicze P5 na `(149, 187)` i `(159, 187)` nadal ostrzeliwują wozy handlowe w korytarzu `y = 189..199`, a Baszty (`KEEP`) stawiane na `y = 190` wchodzą w światło drogi handlowej.
 - **Miejsce w kodzie:** `06_Quest1_Build_Trade_Wall_And_Pop` w `horde_quests.py`.
 
-### BUG-10 [NISKI]: Duplikacja `wave_definitions` i zanieczyszczenie słownika `ctx`
+### BUG-10 [NISKI — WDROŻONY / NAPRAWIONY w Etapie 1B]: Duplikacja `wave_definitions` i zanieczyszczenie słownika `ctx`
 - **Miejsce w kodzie:** W `horde_waves.py` znajduje się zduplikowana tablica `wave_definitions`, a słownik `ctx` przekazuje z `horde_map.py` i `horde_waves.py` zmienne tymczasowe z pętli (`ai_p`, `h_p`, `m_id`, `r_id`, `s_key`, `sx`, `sy`, `u_id`, `wx`).
 
 ---
@@ -204,3 +204,31 @@ Dzięki temu przejście `0 -> -1` odejmuje dokładnie `hp_delta_down` (ok. 15% b
    - Warunek `new_condition.objects_in_area` przyjmuje `source_player`, `object_list` (ID jednostki), `area_x1`, `area_y1`, `area_x2`, `area_y2`, `quantity`, `inverted`. Nie przekazuj nieistniejącego argumentu `object_list_unit_id` do `objects_in_area`.
 5. **Zgodność z linterem Ruff:**
    - Kod musi przechodzić `ruff check` bez ostrzeżeń (`I001`, `F401`, `PIE808`, `PLR1730`, `SIM102`, `RUF046`, `SIM210`, `S110`, `BLE001`).
+
+---
+
+## 7. Historia wdrożeń i weryfikacji binarnej
+
+### Wdrożenie 1: Etap 0 oraz Etap 1A (`BUG-02`) [STATUS: OK]
+- **Commit bazowy:** `8ed70e5a390b399aab71a059a624b7956f18bd8b`.
+- **Preflight Check (Etap 0):** Serializacja `trigger_active` round-trip powiodła się (`Conds: 1 Target: True`).
+- **BUG-02 (Etap 1A):** Ustawiono `ATTR_BLAST_ATTACK_LEVEL = 44` na wartość `2` dla `SIEGE_ONAGER_ID` (`PlayerId.SIX`) w triggerze `01b_Apply_Specialized_Unit_Archetypes`.
+- **Weryfikacja binarna:** Potwierdzono obecność efektu `modify_attribute` (`object_attributes == 44`, `quantity == 2`) w wyjściowym pliku `.aoe2scenario`.
+
+### Wdrożenie 2: Etap 1B (`BUG-10`, Balans), Etap 2 (`BUG-04`), Etap 6B (`BUG-09`) [STATUS: OK]
+- **BUG-10 & Balans (Etap 1B):**
+  - Utworzono dataclasses `WaveDefinition` i `EnemyUnitSpec` oraz `ENEMY_UNIT_REGISTRY` (26 typów jednostek wroga) w `horde_config.py`.
+  - Zunifikowano funkcję `add_enemy_combat_buff` (wyłącznie `ENEMY_UNIT_REGISTRY`).
+  - W triggerach Kuźni AI `01d`, `01e`, `01f` dodano natychmiastowy reset ataku Żelaznego Słonia (`1134`) do `3` (`BALANCE["tank_unit_atk"]`).
+  - Usunięto 100 linii zduplikowanej tablicy `wave_definitions` z `horde_waves.py` oraz niepotrzebne klucze `enemy_melee_units` / `enemy_ranged_units` z `ctx`.
+- **BUG-04 (Etap 2):**
+  - Zaimplementowano deterministyczny algorytm `scale_comp_for_level` z metodą największych reszt, `HALF_UP` i gwarancją `mandatory_min_one`.
+- **BUG-09 (Etap 6B):**
+  - W `06_Quest1_Build_Trade_Wall_And_Pop` dodano `remove_object` dla wrogich Guard Tower P5 na `(145..165, 182..195)`.
+  - Przesunięto mur na `y = 186` i baszty Keep na `y = 184`.
+  - W `horde_map.py` zabezpieczono pas `x = 104..199, y = 183..188` przed spawnem drzew i nierównościami terenu.
+- **Weryfikacja binarna:**
+  - `01d`, `01e`, `01f`: potwierdzono reset ataku Słonia do `3`.
+  - Testy jednostkowe `scale_comp_for_level`: puste składy `[]`, poziom `0` zachowany, poziom `+1` poprawnie zaokrąglony w górę, zachowanie `mandatory_min_one`.
+  - `06_Quest1`: potwierdzono obecność `remove_object` (effect_type 15) dla wież P5 oraz 95 segmentów muru na `y = 186` i 6 baszt Keep na `y = 184`.
+  - Analiza obiektów mapy: dokładnie 0 drzew w pasie `x = 105..199, y = 183..188`.

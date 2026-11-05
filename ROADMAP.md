@@ -9,7 +9,7 @@
 
 ---
 
-## Etap 0: Kontrola stanu repozytorium i kompatybilności formatu triggerów (Preflight Check)
+## Etap 0: Kontrola stanu repozytorium i kompatybilności formatu triggerów (Preflight Check) [DONE / WDROŻONE]
 **Oznaczenie trudności:** `[FLASH-SAFE]`  
 **Modyfikowane pliki:** Brak (tylko odczyt i test kompatybilności w terminalu)
 
@@ -26,7 +26,7 @@
 
 ---
 
-## Etap 1A: Naprawa ścinania drzew przez Moździerze Oblężnicze (`BUG-02`)
+## Etap 1A: Naprawa ścinania drzew przez Moździerze Oblężnicze (`BUG-02`) [DONE / WDROŻONE]
 **Oznaczenie trudności:** `[FLASH-SAFE]`  
 **Modyfikowane pliki:** `horde_config.py`, `horde_waves.py`
 
@@ -46,7 +46,7 @@
 
 ---
 
-## Etap 1B: Centralny Rejestr Jednostek (`ENEMY_UNIT_REGISTRY`), `WaveDefinition` i pełna unifikacja modyfikacji statystyk (`BUG-10`, Balans)
+## Etap 1B: Centralny Rejestr Jednostek (`ENEMY_UNIT_REGISTRY`), `WaveDefinition` i pełna unifikacja modyfikacji statystyk (`BUG-10`, Balans) [DONE / WDROŻONE]
 **Oznaczenie trudności:** `[FLASH-SAFE]`  
 **Modyfikowane pliki:** `horde_config.py`, `horde_waves.py`, `horde_quests.py`
 
@@ -136,7 +136,7 @@ safe_modify_attribute(
 
 ---
 
-## Etap 2: Zamknięty matematycznie algorytm skalowania składów `scale_comp_for_level()` (`BUG-04`)
+## Etap 2: Zamknięty matematycznie algorytm skalowania składów `scale_comp_for_level()` (`BUG-04`) [DONE / WDROŻONE]
 **Oznaczenie trudności:** `[FLASH-SAFE]`  
 **Modyfikowane pliki:** `horde_waves.py`
 
@@ -349,7 +349,7 @@ W `horde_waves.py` skonfiguruj triggery Aury Arcymaga (`02a`..`02d`) jako dwusta
 
 ---
 
-## Etap 6B: Korekta geometrii i czyszczenia wież Karawanseraju po ukończeniu Q1 (`BUG-09`)
+## Etap 6B: Korekta geometrii i czyszczenia wież Karawanseraju po ukończeniu Q1 (`BUG-09`) [DONE / WDROŻONE]
 **Oznaczenie trudności:** `[FLASH-SAFE]`  
 **Modyfikowane pliki:** `horde_quests.py`
 

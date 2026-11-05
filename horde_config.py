@@ -1,4 +1,7 @@
+from dataclasses import dataclass
 from pathlib import Path
+
+from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 
 from AoE2ScenarioParser.datasets.units import UnitInfo
 
@@ -333,7 +336,180 @@ BALANCE = {
 }
 
 
-def get_wave_definitions() -> list[tuple]:
+@dataclass(frozen=True)
+class WaveDefinition:
+    wave_num: int
+    wave_sec: int
+    wave_title: str
+    g1_north: list[tuple[int, int]]
+    g1_east: list[tuple[int, int]]
+    g2_snipers: list[tuple[int, int]]
+    g2_mages: list[tuple[int, int]]
+    g3_north: list[tuple[int, int]]
+    g3_east: list[tuple[int, int]]
+    raider_count: int
+
+    def __iter__(self):
+        return iter((
+            self.wave_num,
+            self.wave_sec,
+            self.wave_title,
+            self.g1_north,
+            self.g1_east,
+            self.g2_snipers,
+            self.g2_mages,
+            self.g3_north,
+            self.g3_east,
+            self.raider_count,
+        ))
+
+
+@dataclass(frozen=True)
+class EnemyUnitSpec:
+    unit_id: int
+    name: str
+    base_hp: int
+    attack_class: int | None
+    scales_hp: bool
+    receives_mage_shield: bool
+    mandatory_min_one: bool
+
+    @property
+    def hp_delta_down(self) -> int:
+        if not self.scales_hp:
+            return 0
+        return max(2, (self.base_hp * 15 + 50) // 100)
+
+
+ENEMY_UNIT_REGISTRY: dict[int, EnemyUnitSpec] = {
+    UnitInfo.MAN_AT_ARMS.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.MAN_AT_ARMS.ID, name="Man-at-Arms", base_hp=45, attack_class=4, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+    ),
+    UnitInfo.SPEARMAN.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.SPEARMAN.ID, name="Spearman", base_hp=45, attack_class=4, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+    ),
+    UnitInfo.PIKEMAN.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.PIKEMAN.ID, name="Pikeman", base_hp=55, attack_class=4, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+    ),
+    UnitInfo.HALBERDIER.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.HALBERDIER.ID, name="Halberdier", base_hp=60, attack_class=4, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+    ),
+    UnitInfo.HUSKARL.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.HUSKARL.ID, name="Huskarl", base_hp=70, attack_class=4, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+    ),
+    ELITE_BERSERK_ID: EnemyUnitSpec(
+        unit_id=ELITE_BERSERK_ID, name="Berserker Szturmowy", base_hp=185, attack_class=4, scales_hp=True, receives_mage_shield=True, mandatory_min_one=True
+    ),
+    UnitInfo.SCOUT_CAVALRY.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.SCOUT_CAVALRY.ID, name="Scout Cavalry", base_hp=65, attack_class=4, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+    ),
+    UnitInfo.STEPPE_LANCER.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.STEPPE_LANCER.ID, name="Steppe Lancer", base_hp=80, attack_class=4, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+    ),
+    UnitInfo.KNIGHT.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.KNIGHT.ID, name="Knight", base_hp=120, attack_class=4, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+    ),
+    UnitInfo.CAVALIER.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.CAVALIER.ID, name="Cavalier", base_hp=140, attack_class=4, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+    ),
+    UnitInfo.PALADIN.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.PALADIN.ID, name="Paladin", base_hp=180, attack_class=4, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+    ),
+    UnitInfo.ARCHER.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.ARCHER.ID, name="Archer", base_hp=30, attack_class=3, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+    ),
+    UnitInfo.CROSSBOWMAN.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.CROSSBOWMAN.ID, name="Crossbowman", base_hp=35, attack_class=3, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+    ),
+    UnitInfo.ARBALESTER.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.ARBALESTER.ID, name="Arbalester", base_hp=40, attack_class=3, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+    ),
+    UnitInfo.HEAVY_CAVALRY_ARCHER.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.HEAVY_CAVALRY_ARCHER.ID, name="Heavy Cav Archer", base_hp=80, attack_class=3, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+    ),
+    UnitInfo.ELITE_JANISSARY.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.ELITE_JANISSARY.ID, name="Snajper Imperialny", base_hp=90, attack_class=3, scales_hp=True, receives_mage_shield=False, mandatory_min_one=True
+    ),
+    UnitInfo.MANGONEL.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.MANGONEL.ID, name="Mangonel", base_hp=50, attack_class=4, scales_hp=True, receives_mage_shield=False, mandatory_min_one=True
+    ),
+    SIEGE_ONAGER_ID: EnemyUnitSpec(
+        unit_id=SIEGE_ONAGER_ID, name="Mozdzierz Oblezniczy", base_hp=350, attack_class=4, scales_hp=True, receives_mage_shield=False, mandatory_min_one=True
+    ),
+    ELITE_BATTLE_ELEPHANT_ID: EnemyUnitSpec(
+        unit_id=ELITE_BATTLE_ELEPHANT_ID, name="Zelazny Slon-Tank", base_hp=1450, attack_class=None, scales_hp=True, receives_mage_shield=False, mandatory_min_one=True
+    ),
+    HUSSAR_ID: EnemyUnitSpec(
+        unit_id=HUSSAR_ID, name="Szakal Dywersyjny", base_hp=95, attack_class=None, scales_hp=True, receives_mage_shield=False, mandatory_min_one=False
+    ),
+    IMAM_UNIT_ID: EnemyUnitSpec(
+        unit_id=IMAM_UNIT_ID, name="Arcymag Tarczy", base_hp=240, attack_class=None, scales_hp=False, receives_mage_shield=False, mandatory_min_one=True
+    ),
+    PETARD_ID: EnemyUnitSpec(
+        unit_id=PETARD_ID, name="Fanatyk Kamikaze", base_hp=115, attack_class=None, scales_hp=False, receives_mage_shield=False, mandatory_min_one=True
+    ),
+    FLAMING_CAMEL_ID: EnemyUnitSpec(
+        unit_id=FLAMING_CAMEL_ID, name="Plonacy Wielblad", base_hp=115, attack_class=None, scales_hp=False, receives_mage_shield=False, mandatory_min_one=True
+    ),
+    UnitInfo.BATTERING_RAM.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.BATTERING_RAM.ID, name="Battering Ram", base_hp=175, attack_class=None, scales_hp=False, receives_mage_shield=False, mandatory_min_one=True
+    ),
+    UnitInfo.CAPPED_RAM.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.CAPPED_RAM.ID, name="Capped Ram", base_hp=200, attack_class=None, scales_hp=False, receives_mage_shield=True, mandatory_min_one=True
+    ),
+    UnitInfo.SIEGE_RAM.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.SIEGE_RAM.ID, name="Siege Ram", base_hp=270, attack_class=None, scales_hp=False, receives_mage_shield=True, mandatory_min_one=True
+    ),
+}
+
+PLAYER_RANGED_UNITS = [
+    UnitInfo.ARCHER.ID,
+    UnitInfo.CROSSBOWMAN.ID,
+    UnitInfo.ARBALESTER.ID,
+    UnitInfo.SKIRMISHER.ID,
+    UnitInfo.ELITE_SKIRMISHER.ID,
+    UnitInfo.CAVALRY_ARCHER.ID,
+    UnitInfo.HEAVY_CAVALRY_ARCHER.ID,
+    UnitInfo.HAND_CANNONEER.ID,
+]
+
+PLAYER_CAVALRY_UNITS = [
+    UnitInfo.SCOUT_CAVALRY.ID,
+    UnitInfo.LIGHT_CAVALRY.ID,
+    HUSSAR_ID,
+    UnitInfo.KNIGHT.ID,
+    UnitInfo.CAVALIER.ID,
+    UnitInfo.PALADIN.ID,
+    UnitInfo.STEPPE_LANCER.ID,
+    1372,  # ELITE_STEPPE_LANCER
+    UnitInfo.CAMEL_RIDER.ID,
+    330,   # HEAVY_CAMEL_RIDER
+]
+
+PLAYER_INFANTRY_UNITS = [
+    74,    # MILITIA
+    UnitInfo.MAN_AT_ARMS.ID,
+    UnitInfo.LONG_SWORDSMAN.ID,
+    UnitInfo.TWO_HANDED_SWORDSMAN.ID,
+    UnitInfo.CHAMPION.ID,
+    UnitInfo.SPEARMAN.ID,
+    UnitInfo.PIKEMAN.ID,
+    UnitInfo.HALBERDIER.ID,
+    751,   # EAGLE_SCOUT
+    753,   # EAGLE_WARRIOR
+    752,   # ELITE_EAGLE_WARRIOR
+]
+
+PLAYER_PROD_BUILDINGS = [
+    BuildingInfo.BARRACKS.ID,
+    BuildingInfo.STABLE.ID,
+    BuildingInfo.ARCHERY_RANGE.ID,
+    BuildingInfo.CASTLE.ID,
+    BuildingInfo.SIEGE_WORKSHOP.ID,
+]
+
+
+def get_wave_definitions() -> list[WaveDefinition]:
     wave_definitions = [
         (
             1, 510, "Fala 1/14 (8:30 - Szturm Feudalny bez taranow)",
@@ -433,4 +609,4 @@ def get_wave_definitions() -> list[tuple]:
             [(ELITE_BATTLE_ELEPHANT_ID, 3 + (m // 2)), (UnitInfo.ARBALESTER.ID, 20 + m * 3), (SIEGE_ONAGER_ID, 2 + (m // 3))],
             12 + m,
         ))
-    return wave_definitions
+    return [WaveDefinition(*w) for w in wave_definitions]

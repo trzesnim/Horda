@@ -413,10 +413,15 @@ def build_map_and_entities(scenario) -> dict:
     set_box_terrain(mm, 3, 177, 23, MAP_SIZE - 2, TerrainId.DIRT_1)
 
     # 2) DOKŁADNE 10-KRATKOWE WYCIĘCIE WZDŁUŻ CAŁEGO SZLAKU HANDLOWEGO (y: 189..199, od x=2 do x=199)
+    #    ORAZ KORYTARZA POD MUR HANDLOWY (y: 183..188, od x=104 do x=199)
     for x in range(2, MAP_SIZE):
         for y in range(189, MAP_SIZE):
             grid.elev[x][y] = 0
     grid.mark_no_trees_box(2, 189, MAP_SIZE - 1, MAP_SIZE - 1)
+    for x in range(104, MAP_SIZE):
+        for y in range(183, 189):
+            grid.elev[x][y] = 0
+    grid.mark_no_trees_box(104, 183, MAP_SIZE - 1, 188)
     set_road(mm, grid, 3, 194, 198, 194, width=1)
 
     # Rzeka w otwartym polu z 3 szerokimi brodami
