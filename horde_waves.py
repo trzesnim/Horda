@@ -8,6 +8,7 @@ from horde_config import (
     ATTR_ARMOR,
     ATTR_ATTACK,
     ATTR_ATTACK_RELOAD_TIME,
+    ATTR_BLAST_ATTACK_LEVEL,
     ATTR_BLAST_WIDTH,
     ATTR_HERO_STATUS,
     ATTR_HIT_POINTS,
@@ -409,6 +410,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_LINE_OF_SIGHT, Operation.SET, 23)
     safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_ATTACK_RELOAD_TIME, Operation.SET, BALANCE["mortar_reload"])
     safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_BLAST_WIDTH, Operation.SET, BALANCE["mortar_blast_width"])
+    safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_BLAST_ATTACK_LEVEL, Operation.SET, 2)
     safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["mortar_speed"])
     safe_modify_attribute(t_mutate, PlayerId.SIX, SIEGE_ONAGER_ID, ATTR_ATTACK, Operation.ADD, BALANCE["mortar_bonus_atk"], armor_class=4)
 

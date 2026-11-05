@@ -116,6 +116,9 @@ ATTR_SEARCH_RADIUS = 23
 ATTR_HERO_STATUS = 40
 
 
+ATTR_BLAST_ATTACK_LEVEL = 44  # 2 = obrażenia obszarowe ranią jednostki i budynki, ale NIE ścinają drzew
+
+
 ATTR_REGENERATION_RATE = 109
 
 
