@@ -64,11 +64,19 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     sanctuary_cy = ctx["sanctuary_cy"]
     state_markers = ctx["state_markers"]
     t_sanc_unlocked = ctx["t_sanc_unlocked"]
+    camp_leash_handles = ctx["camp_leash_handles"]
     tm = ctx["tm"]
 
     pad_up_box = (sanctuary_cx - 2, sanctuary_cy - 4, sanctuary_cx + 2, sanctuary_cy - 3)
     pad_down_box = (sanctuary_cx - 2, sanctuary_cy + 3, sanctuary_cx + 2, sanctuary_cy + 4)
     full_chamber_box = (sanctuary_cx - 2, sanctuary_cy - 4, sanctuary_cx + 2, sanctuary_cy + 4)
+
+    def deactivate_camp_handles(trig, handle_tuple):
+        t_spawn, t_leash, detect_list = handle_tuple
+        safe_call(trig.new_effect.deactivate_trigger, trigger_id=t_spawn.trigger_id)
+        safe_call(trig.new_effect.deactivate_trigger, trigger_id=t_leash.trigger_id)
+        for d_tr in detect_list:
+            safe_call(trig.new_effect.deactivate_trigger, trigger_id=d_tr.trigger_id)
 
     def apply_king_reset_and_safe_stat_shift(trig, mode: str):
         cx1, cy1, cx2, cy2 = full_chamber_box
@@ -103,12 +111,12 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
                         safe_modify_attribute(trig, ai_p, spec.unit_id, ATTR_HIT_POINTS, op, hp_val)
                     if spec.attack_class is not None:
                         safe_modify_attribute(trig, ai_p, spec.unit_id, ATTR_ATTACK, op, atk_val, armor_class=spec.attack_class)
-        else:
-            mult_val = 0.85 if mode == "neg_down" else 1.18
+        elif mode in ("neg_down", "neg_up"):
+            op = Operation.SUBTRACT if mode == "neg_down" else Operation.ADD
             for ai_p in ai_players:
                 for spec in ENEMY_UNIT_REGISTRY.values():
                     if spec.scales_hp:
-                        safe_modify_attribute(trig, ai_p, spec.unit_id, ATTR_HIT_POINTS, Operation.MULTIPLY, mult_val)
+                        safe_modify_attribute(trig, ai_p, spec.unit_id, ATTR_HIT_POINTS, op, spec.hp_delta_down)
 
     t_up_0_to_p1 = tm.add_trigger("09_Diff_Up_0_to_P1", enabled=True, looping=False)
     t_down_0_to_m1 = tm.add_trigger("09_Diff_Down_0_to_M1", enabled=True, looping=False)
@@ -315,6 +323,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
             )
 
     add_enemy_combat_buff(t_q1, ai_players, hp_add=8, atk_add=1)
+    deactivate_camp_handles(t_q1, camp_leash_handles["Quest1_Caravan"])
 
     send_highlight_chat(
         t_q1, "<GREEN>",
@@ -348,6 +357,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
             safe_modify_attribute(t_q2, h_p, c_id, ATTR_ATTACK, Operation.ADD, 4, armor_class=4)
 
     add_enemy_combat_buff(t_q2, ai_players, hp_add=8, atk_add=1)
+    deactivate_camp_handles(t_q2, camp_leash_handles["Quest2_SniperCliff"])
 
     send_highlight_chat(
         t_q2, "<GREEN>",
@@ -367,6 +377,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         add_player_resource(t_q3_unlock, h_p, RES_STONE, 300)
 
     add_enemy_combat_buff(t_q3_unlock, ai_players, hp_add=10, atk_add=1)
+    deactivate_camp_handles(t_q3_unlock, camp_leash_handles["Quest3_SiegeVault"])
 
     send_highlight_chat(
         t_q3_unlock, "<GREEN>",
@@ -402,6 +413,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
             safe_modify_attribute(t_q4, h_p, b_id, ATTR_WORK_RATE, Operation.MULTIPLY, 1.40)
 
     add_enemy_combat_buff(t_q4, ai_players, hp_add=10, atk_add=1)
+    deactivate_camp_handles(t_q4, camp_leash_handles["Quest4_BloodAltar"])
 
     send_highlight_chat(
         t_q4, "<GREEN>",
@@ -432,6 +444,8 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
 
         for tr_w in all_settlement_wave_triggers[s_key]:
             safe_call(t_destroy.new_effect.deactivate_trigger, trigger_id=tr_w.trigger_id)
+
+        deactivate_camp_handles(t_destroy, camp_leash_handles[s_key])
 
         for h_p in human_players:
             add_player_resource(t_destroy, h_p, RES_GOLD, 600)

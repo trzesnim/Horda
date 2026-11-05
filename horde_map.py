@@ -582,7 +582,6 @@ def build_map_and_entities(scenario) -> dict:
         "gate_center": gate_center,
         "gate_east": gate_east,
         "gate_north": gate_north,
-        "h_p": h_p,
         "human_players": human_players,
         "north_breach_trees": north_breach_trees,
         "p_coords": p_coords,
@@ -603,10 +602,5 @@ def build_map_and_entities(scenario) -> dict:
         "s_g3_north": s_g3_north,
         "sanctuary_cx": sanctuary_cx,
         "sanctuary_cy": sanctuary_cy,
-        "sx": sx,
-        "sy": sy,
         "tm": tm,
-        "tx": tx,
-        "ty": ty,
-        "wx": wx,
     }

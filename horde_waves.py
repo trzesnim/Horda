@@ -193,6 +193,7 @@ def add_guarded_camp_with_leash(tm, enable_parent_trigger, name: str, ai_player:
         )
     safe_call(t_spawn.new_effect.activate_trigger, trigger_id=t_leash.trigger_id)
 
+    detect_triggers = []
     for h_p in [PlayerId.ONE, PlayerId.TWO, PlayerId.THREE, PlayerId.FOUR]:
         req_qty = 2 if h_p == PlayerId.ONE else 1
         t_detect = tm.add_trigger(f"Garrison_Detect_{name}_P{h_p.value}", enabled=False, looping=False)
@@ -204,6 +205,9 @@ def add_guarded_camp_with_leash(tm, enable_parent_trigger, name: str, ai_player:
         )
         safe_call(t_detect.new_effect.activate_trigger, trigger_id=t_spawn.trigger_id)
         safe_call(enable_parent_trigger.new_effect.activate_trigger, trigger_id=t_detect.trigger_id)
+        detect_triggers.append(t_detect)
+
+    return (t_spawn, t_leash, detect_triggers)
 
 
 def add_spawn_and_attack_effect(trigger, ai_player: PlayerId, units_spec: list[tuple[int, int]],
@@ -322,11 +326,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     s_g2_snipers = ctx["s_g2_snipers"]
     s_g3_east = ctx["s_g3_east"]
     s_g3_north = ctx["s_g3_north"]
-    sx = ctx["sx"]
-    sy = ctx["sy"]
     tm = ctx["tm"]
-    tx = ctx["tx"]
-    ty = ctx["ty"]
 
     t_init = tm.add_trigger("01_Init_Diplomacy_And_Cartography", enabled=True, looping=False)
 
@@ -483,43 +483,59 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     t_arm_garrisons = tm.add_trigger("01c_Arm_Garrison_Detectors_At_4s", enabled=True, looping=False)
     safe_call(t_arm_garrisons.new_condition.timer, timer=4)
 
-    add_guarded_camp_with_leash(tm, t_arm_garrisons, "Quest1_Caravan", PlayerId.FIVE, *q1_pos,
-                                units_spec=[(UnitInfo.STEPPE_LANCER.ID, 12), (UnitInfo.CROSSBOWMAN.ID, 10), (ELITE_BERSERK_ID, 4)])
-    add_guarded_camp_with_leash(tm, t_arm_garrisons, "Quest2_SniperCliff", PlayerId.SIX, *q2_pos,
-                                units_spec=[(UnitInfo.ELITE_JANISSARY.ID, 6), (SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14)])
-    add_guarded_camp_with_leash(tm, t_arm_garrisons, "Quest3_SiegeVault", PlayerId.EIGHT, *q3_pos,
-                                units_spec=[(UnitInfo.HALBERDIER.ID, 18), (ELITE_BATTLE_ELEPHANT_ID, 2), (UnitInfo.ARBALESTER.ID, 14)])
-    add_guarded_camp_with_leash(tm, t_arm_garrisons, "Quest4_BloodAltar", PlayerId.EIGHT, *q4_pos,
-                                units_spec=[(UnitInfo.PALADIN.ID, 14), (ELITE_BATTLE_ELEPHANT_ID, 2), (UnitInfo.HALBERDIER.ID, 12)])
-
-    add_guarded_camp_with_leash(tm, t_arm_garrisons, "Settle_G1_North", PlayerId.FIVE, *s_coords["G1_North"],
-                                units_spec=[(UnitInfo.PIKEMAN.ID, 14), (ELITE_BERSERK_ID, 6), (UnitInfo.CROSSBOWMAN.ID, 8)])
-    add_guarded_camp_with_leash(tm, t_arm_garrisons, "Settle_G1_East", PlayerId.FIVE, *s_coords["G1_East"],
-                                units_spec=[(UnitInfo.HUSKARL.ID, 12), (UnitInfo.PIKEMAN.ID, 10), (FLAMING_CAMEL_ID, 3)])
-    add_guarded_camp_with_leash(tm, t_arm_garrisons, "Settle_G2_Snipers", PlayerId.SIX, *s_coords["G2_Snipers"],
-                                units_spec=[(UnitInfo.ELITE_JANISSARY.ID, 7), (SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 16)])
-    add_guarded_camp_with_leash(tm, t_arm_garrisons, "Settle_G2_Mages", PlayerId.SEVEN, *s_coords["G2_Mages"],
-                                units_spec=[(UnitInfo.CAVALIER.ID, 14), (HUSSAR_ID, 8), (IMAM_UNIT_ID, 1)])
-    add_guarded_camp_with_leash(tm, t_arm_garrisons, "Settle_G3_North", PlayerId.EIGHT, *s_coords["G3_North"],
-                                units_spec=[(ELITE_BATTLE_ELEPHANT_ID, 3), (UnitInfo.HALBERDIER.ID, 20), (UnitInfo.PALADIN.ID, 12)])
-    add_guarded_camp_with_leash(tm, t_arm_garrisons, "Settle_G3_East", PlayerId.EIGHT, *s_coords["G3_East"],
-                                units_spec=[(ELITE_BATTLE_ELEPHANT_ID, 3), (UnitInfo.ARBALESTER.ID, 20), (SIEGE_ONAGER_ID, 2)])
+    camp_leash_handles = {
+        "Quest1_Caravan": add_guarded_camp_with_leash(
+            tm, t_arm_garrisons, "Quest1_Caravan", PlayerId.FIVE, *q1_pos,
+            units_spec=[(UnitInfo.STEPPE_LANCER.ID, 12), (UnitInfo.CROSSBOWMAN.ID, 10), (ELITE_BERSERK_ID, 4)],
+        ),
+        "Quest2_SniperCliff": add_guarded_camp_with_leash(
+            tm, t_arm_garrisons, "Quest2_SniperCliff", PlayerId.SIX, *q2_pos,
+            units_spec=[(UnitInfo.ELITE_JANISSARY.ID, 6), (SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14)],
+        ),
+        "Quest3_SiegeVault": add_guarded_camp_with_leash(
+            tm, t_arm_garrisons, "Quest3_SiegeVault", PlayerId.EIGHT, *q3_pos,
+            units_spec=[(UnitInfo.HALBERDIER.ID, 18), (ELITE_BATTLE_ELEPHANT_ID, 2), (UnitInfo.ARBALESTER.ID, 14)],
+        ),
+        "Quest4_BloodAltar": add_guarded_camp_with_leash(
+            tm, t_arm_garrisons, "Quest4_BloodAltar", PlayerId.EIGHT, *q4_pos,
+            units_spec=[(UnitInfo.PALADIN.ID, 14), (ELITE_BATTLE_ELEPHANT_ID, 2), (UnitInfo.HALBERDIER.ID, 12)],
+        ),
+        "G1_North": add_guarded_camp_with_leash(
+            tm, t_arm_garrisons, "Settle_G1_North", PlayerId.FIVE, *s_coords["G1_North"],
+            units_spec=[(UnitInfo.PIKEMAN.ID, 14), (ELITE_BERSERK_ID, 6), (UnitInfo.CROSSBOWMAN.ID, 8)],
+        ),
+        "G1_East": add_guarded_camp_with_leash(
+            tm, t_arm_garrisons, "Settle_G1_East", PlayerId.FIVE, *s_coords["G1_East"],
+            units_spec=[(UnitInfo.HUSKARL.ID, 12), (UnitInfo.PIKEMAN.ID, 10), (FLAMING_CAMEL_ID, 3)],
+        ),
+        "G2_Snipers": add_guarded_camp_with_leash(
+            tm, t_arm_garrisons, "Settle_G2_Snipers", PlayerId.SIX, *s_coords["G2_Snipers"],
+            units_spec=[(UnitInfo.ELITE_JANISSARY.ID, 7), (SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 16)],
+        ),
+        "G2_Mages": add_guarded_camp_with_leash(
+            tm, t_arm_garrisons, "Settle_G2_Mages", PlayerId.SEVEN, *s_coords["G2_Mages"],
+            units_spec=[(UnitInfo.CAVALIER.ID, 14), (HUSSAR_ID, 8), (IMAM_UNIT_ID, 1)],
+        ),
+        "G3_North": add_guarded_camp_with_leash(
+            tm, t_arm_garrisons, "Settle_G3_North", PlayerId.EIGHT, *s_coords["G3_North"],
+            units_spec=[(ELITE_BATTLE_ELEPHANT_ID, 3), (UnitInfo.HALBERDIER.ID, 20), (UnitInfo.PALADIN.ID, 12)],
+        ),
+        "G3_East": add_guarded_camp_with_leash(
+            tm, t_arm_garrisons, "Settle_G3_East", PlayerId.EIGHT, *s_coords["G3_East"],
+            units_spec=[(ELITE_BATTLE_ELEPHANT_ID, 3), (UnitInfo.ARBALESTER.ID, 20), (SIEGE_ONAGER_ID, 2)],
+        ),
+    }
 
     # ==============================================================================
-    # 6. GLOBALNA AURA MAGÓW (USZCZELNIONY CYKL ON <-> OFF)
+    # 6. GLOBALNA AURA MAGÓW (AUTOMAT DWUSTANOWY NA REJESTRZE - ETAP 5 - BUG-05)
     # ==============================================================================
     r_local = BALANCE["mage_local_radius"]
     mx1, my1 = max(0, gate_center[0] - r_local), max(0, gate_center[1] - r_local)
     mx2, my2 = min(MAP_SIZE - 1, gate_center[0] + r_local), min(MAP_SIZE - 1, gate_center[1] + r_local)
 
-    global_shielded_units = [
-        UnitInfo.MAN_AT_ARMS.ID, UnitInfo.PIKEMAN.ID, UnitInfo.HALBERDIER.ID, UnitInfo.HUSKARL.ID,
-        UnitInfo.ARCHER.ID, UnitInfo.CROSSBOWMAN.ID, UnitInfo.ARBALESTER.ID,
-        UnitInfo.KNIGHT.ID, UnitInfo.CAVALIER.ID, UnitInfo.PALADIN.ID,
-        UnitInfo.CAPPED_RAM.ID, UnitInfo.SIEGE_RAM.ID,
-    ]
+    global_shielded_units = [spec.unit_id for spec in ENEMY_UNIT_REGISTRY.values() if spec.receives_mage_shield]
 
-    t_shield_on = tm.add_trigger("02a_Mage_Global_Horde_Shield_On", enabled=False, looping=False)
+    t_shield_on = tm.add_trigger("02a_Mage_Global_Horde_Shield_On", enabled=True, looping=False)
     t_mage_heal_pulse = tm.add_trigger("02b_Mage_AoE_Heal_Pulse_3s", enabled=False, looping=True)
     t_mage_beacon = tm.add_trigger("02c_Mage_Visual_Flare_Beacon_8s", enabled=False, looping=True)
     t_shield_off = tm.add_trigger("02d_Mage_Global_Horde_Shield_Off", enabled=False, looping=False)
@@ -528,7 +544,6 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         t_shield_on.new_condition.objects_in_area,
         source_player=PlayerId.SEVEN,
         object_list=IMAM_UNIT_ID,
-        object_list_unit_id=IMAM_UNIT_ID,
         area_x1=mx1, area_y1=my1, area_x2=mx2, area_y2=my2,
         quantity=1,
     )
@@ -551,7 +566,6 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         t_mage_heal_pulse.new_condition.objects_in_area,
         source_player=PlayerId.SEVEN,
         object_list=IMAM_UNIT_ID,
-        object_list_unit_id=IMAM_UNIT_ID,
         area_x1=mx1, area_y1=my1, area_x2=mx2, area_y2=my2,
         quantity=1,
     )
@@ -568,7 +582,6 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         t_mage_beacon.new_condition.objects_in_area,
         source_player=PlayerId.SEVEN,
         object_list=IMAM_UNIT_ID,
-        object_list_unit_id=IMAM_UNIT_ID,
         area_x1=mx1, area_y1=my1, area_x2=mx2, area_y2=my2,
         quantity=1,
     )
@@ -579,10 +592,12 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     )
 
     safe_call(
-        t_shield_off.new_condition.own_fewer_objects,
+        t_shield_off.new_condition.objects_in_area,
         source_player=PlayerId.SEVEN,
         object_list=IMAM_UNIT_ID,
-        quantity=0,
+        area_x1=mx1, area_y1=my1, area_x2=mx2, area_y2=my2,
+        quantity=1,
+        inverted=1,
     )
     for ai_p in ai_players:
         for u_id in global_shielded_units:
@@ -591,6 +606,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_shield_off.new_effect.deactivate_trigger, trigger_id=t_mage_heal_pulse.trigger_id)
     safe_call(t_shield_off.new_effect.deactivate_trigger, trigger_id=t_mage_beacon.trigger_id)
     safe_call(t_shield_off.new_effect.deactivate_trigger, trigger_id=t_shield_off.trigger_id)
+    safe_call(t_shield_off.new_effect.activate_trigger, trigger_id=t_shield_on.trigger_id)
     send_highlight_chat(
         t_shield_off, "<GREEN>",
         "[BARIERA PRZELAMANA]: Arcymag zabity! Wszystkie armie Hordy (P5, P6, P7, P8) traca +30 Pancerza i leczenie!",
@@ -620,6 +636,14 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     t_enable_esc1 = tm.add_trigger("04a_Enable_Escalation_At_20m", enabled=True, looping=False)
     safe_call(t_enable_esc1.new_condition.timer, timer=BALANCE["escalation_start_sec"])
+    add_enemy_combat_buff(
+        t_enable_esc1, ai_players,
+        hp_add=BALANCE["escalation_hp_add"], atk_add=BALANCE["escalation_atk_add"],
+    )
+    send_highlight_chat(
+        t_enable_esc1, "<ORANGE>",
+        f"[WZROST SILY HORDY]: Jednostki Hordy otrzymuja +{BALANCE['escalation_hp_add']} HP oraz +{BALANCE['escalation_atk_add']} Ataku!",
+    )
 
     t_escalate1 = tm.add_trigger("04b_Global_Horde_Escalation_Every_5m", enabled=False, looping=True)
     safe_call(t_enable_esc1.new_effect.activate_trigger, trigger_id=t_escalate1.trigger_id)
@@ -635,6 +659,14 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     t_enable_esc2 = tm.add_trigger("04c_Enable_LateGame_Escalation_At_45m", enabled=True, looping=False)
     safe_call(t_enable_esc2.new_condition.timer, timer=BALANCE["late_escalation_start_sec"])
+    add_enemy_combat_buff(
+        t_enable_esc2, ai_players,
+        hp_add=BALANCE["late_escalation_hp_add"], atk_add=1,
+    )
+    send_highlight_chat(
+        t_enable_esc2, "<RED>",
+        f"[FURIA LATE-GAME]: Horda wchodzi w faze pelnej mobilizacji (+{BALANCE['late_escalation_hp_add']} HP i +1 Ataku)!",
+    )
 
     t_escalate2 = tm.add_trigger("04d_LateGame_Horde_Overdrive_Every_5m", enabled=False, looping=True)
     safe_call(t_enable_esc2.new_effect.activate_trigger, trigger_id=t_escalate2.trigger_id)
@@ -650,6 +682,14 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     t_enable_esc3 = tm.add_trigger("04e_Enable_Endgame_Escalation_At_55m", enabled=True, looping=False)
     safe_call(t_enable_esc3.new_condition.timer, timer=BALANCE["endgame_escalation_start_sec"])
+    add_enemy_combat_buff(
+        t_enable_esc3, ai_players,
+        hp_add=BALANCE["endgame_escalation_hp_add"], atk_add=2,
+    )
+    send_highlight_chat(
+        t_enable_esc3, "<RED>",
+        f"[ESKALACJA ENDGAME]: Elitarne dywizje Hordy zyskuja kolejne +{BALANCE['endgame_escalation_hp_add']} HP i +2 Ataku!",
+    )
 
     t_escalate3 = tm.add_trigger("04f_Endgame_Horde_Escalation_Every_5m", enabled=False, looping=True)
     safe_call(t_enable_esc3.new_effect.activate_trigger, trigger_id=t_escalate3.trigger_id)
@@ -840,9 +880,6 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
                 scaled_comp = scale_comp_for_level(comp, lvl)
                 add_spawn_and_attack_effect(t_var, ai_p, scaled_comp, spawn_x=sx, spawn_y=sy, target_x=tx, target_y=ty)
 
-                if s_key == "G2_Mages" and any(u == IMAM_UNIT_ID for u, _ in comp):
-                    safe_call(t_var.new_effect.activate_trigger, trigger_id=t_shield_on.trigger_id)
-
                 all_settlement_wave_triggers[s_key].append(t_var)
                 settlement_variants.append(t_var)
                 wave_variants_all_settlements.append(t_var)
@@ -959,6 +996,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             all_settlement_wave_triggers["G2_Snipers"].append(t_breach_e)
 
     ctx["all_settlement_wave_triggers"] = all_settlement_wave_triggers
+    ctx["camp_leash_handles"] = camp_leash_handles
     ctx["deep_target_center"] = deep_target_center
     ctx["state_markers"] = state_markers
     ctx["t_sanc_unlocked"] = t_sanc_unlocked

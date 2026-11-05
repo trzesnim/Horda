@@ -141,23 +141,23 @@ Wszyscy 4 gracze AI są w sojuszu między sobą i w stanie wojny (`DiplomacyStat
 - **Miejsce w kodzie:** `scale_comp()` w `horde_waves.py`.
 - **Przyczyna techniczna:** Niezależne zaokrąglanie `round()` (ties-to-even) pięciu warstw (`0.60`, `0.20`, `0.20`, `0.25`, `0.25`). Dla `cnt = 2`: `round(1.2) = 1`, `round(0.4) = 0`, `round(0.4) = 0`, `round(0.5) = 0`, co daje w sumie `1` jednostkę zamiast `2` lub `3`.
 
-### BUG-05 [WYSOKI]: Błędy w cyklu Globalnej Aury Arcymaga Tarczy (`02a` / `02d`) — blokada wyłączenia przez obozowego Imama oraz ryzyko kumulacji `+60/+60` pancerza
+### BUG-05 [WYSOKI — WDROŻONY / NAPRAWIONY w Etapie 5]: Błędy w cyklu Globalnej Aury Arcymaga Tarczy (`02a` / `02d`) — blokada wyłączenia przez obozowego Imama oraz ryzyko kumulacji `+60/+60` pancerza
 - **Objaw w grze:**
   1. Po zabiciu Imama (`P7`) przed Bramą Centralną `(104, 114)` jednostki Hordy (`P5–P8`) nie tracą bonusu `+30/+30` pancerza, jeśli w obozie `G2_Mages` `(148, 72)` został wcześniej zespawnowany drugi Imam.
   2. Jeśli Imam z Fali 4 przeżyje pod bramą do nadejścia Fali 5, fala ponownie wykonuje `activate_trigger(t_shield_on)`, nakładając bonus `+30/+30` po raz drugi (`+60/+60` pancerza).
 - **Miejsce w kodzie:** `t_shield_on` (`02a`) oraz `t_shield_off` (`02d`) w `horde_waves.py`.
 - **Przyczyna techniczna:** `t_shield_off` używa globalnego warunku `own_fewer_objects(..., quantity=0)` na całą mapę zamiast sprawdzenia strefy 25 kratek wokół Bramy Centralnej (`objects_in_area` z `inverted=1`), a triggery fal bezwarunkowo wywołują `activate_trigger(t_shield_on)`.
 
-### BUG-06 [ŚREDNI]: Smycz terytorialna (`Garrison_Leash_*`) i detektory nie są wyłączane po zniszczeniu Questu lub Settlementu
+### BUG-06 [ŚREDNI — WDROŻONY / NAPRAWIONY w Etapie 6A]: Smycz terytorialna (`Garrison_Leash_*`) i detektory nie są wyłączane po zniszczeniu Questu lub Settlementu
 - **Objaw w grze:** Gdy fala Hordy przechodzi w pobliżu ruin wcześniej zniszczonego Settlementu lub Questu, działający w pętli co 3s trigger `Garrison_Leash_*` przechwytuje jednostki z fali i zawraca je rozkazem `attack_move` do środka ruin. Ponadto zburzenie budynku z daleka zostawia uzbrojony detektor.
 - **Miejsce w kodzie:** `add_guarded_camp_with_leash()` w `horde_waves.py` oraz `t_q1..t_q4` i `t_destroy` w `horde_quests.py`.
 
-### BUG-07 [ŚREDNI]: Kumulacyjny dryf HP przy przełączaniu poziomów ujemnych (`-1`, `-2`) w Sanktuarium Balansu
+### BUG-07 [ŚREDNI — WDROŻONY / NAPRAWIONY w Etapie 4]: Kumulacyjny dryf HP przy przełączaniu poziomów ujemnych (`-1`, `-2`) w Sanktuarium Balansu
 - **Objaw w grze:** Kilkukrotne przejście `0 -> -1 -> 0` w Sanktuarium Balansu trwale zmienia HP jednostek wroga.
 - **Miejsce w kodzie:** `apply_king_reset_and_safe_stat_shift()` w `horde_quests.py`.
 - **Przyczyna techniczna:** Użycie `Operation.MULTIPLY` z `0.85` przy zejściu w dół i `1.18` przy powrocie w górę ($0.85 \times 1.18 = 1.003$ oraz obcinanie części ułamkowych po każdej operacji).
 
-### BUG-08 [ŚREDNI]: Opóźnienie pierwszego ticku wszystkich 3 biegów eskalacji o +5 minut
+### BUG-08 [ŚREDNI — WDROŻONY / NAPRAWIONY w Etapie 4]: Opóźnienie pierwszego ticku wszystkich 3 biegów eskalacji o +5 minut
 - **Objaw w grze:** Pierwszy bonus eskalacji z `20:00` wpada dopiero w `25:00`, drugi bieg z `45:00` dopiero w `50:00`, a trzeci z `55:00` dopiero w `60:00`.
 - **Miejsce w kodzie:** `04a_Enable_Escalation_At_20m` .. `04f_Endgame_Horde_Escalation_Every_5m` w `horde_waves.py`.
 - **Przyczyna techniczna:** Trigger włączający (`04a`, `04c`, `04e`) jedynie aktywuje trigger pętlowy (`04b`, `04d`, `04f` z `timer=300`), który odlicza swoje pierwsze 300s dopiero od momentu aktywacji.
@@ -233,47 +233,43 @@ Dzięki temu przejście `0 -> -1` odejmuje dokładnie `hp_delta_down` (ok. 15% b
   - `06_Quest1`: potwierdzono obecność `remove_object` (effect_type 15) dla wież P5 oraz 95 segmentów muru na `y = 186` i 6 baszt Keep na `y = 184`.
   - Analiza obiektów mapy: dokładnie 0 drzew w pasie `x = 105..199, y = 183..188`.
 
-### Wdrożenie 3: Etap 3A, Etap 3B (`BUG-01`), Etap 3C (`BUG-03`) [STATUS: OK]
-- **Etap 3A (Znaczniki Stanu Trudności i Zamek Sanktuarium):**
-  - Utworzono 5 triggerów stanu trudności `State_Diff_Lvl_{M2, M1, 0, P1, P2}` (`enabled = (lvl == 0)`, `looping = False`, `timer = 999999`) oraz znacznik `State_Sanctuary_Unlocked` (`enabled = True`, `looping = False`, `timer = 999999`).
-  - W `wire_difficulty_transition` dodano warunek `trigger_active(State_Sanctuary_Unlocked)`.
-  - Przebudowano przejścia trudności: przełączają one wyłącznie `state_markers[from_lvl]` -> `state_markers[to_lvl]` i nie dotykają żadnych triggerów fal (zero `activate_trigger`/`deactivate_trigger` na falach).
-  - W `apply_king_reset_and_safe_stat_shift` dodano `teleport_object` oraz `stop_object` dla Króla P1 na `(sanctuary_cx, sanctuary_cy)`.
-- **Etap 3B (Jednorazowy harmonogram Fal 1–14 – naprawa `BUG-01`):**
-  - Zastąpiono system 5 warstw układem Zegarów Fali Settlementu (`03_W{w_num:02d}_{s_key}_Clock`, `enabled = True`, `looping = False`, `timer = w_time`) oraz 5 jednorazowych wariantów (`03_W{w_num:02d}_{s_key}_Diff_{lvl_tag}`, `enabled = False`, `looping = False`, warunek `trigger_active(state_markers[lvl])`).
-  - Usunięto przestarzałą funkcję pomocniczą `scale_comp()`.
-  - Zaimplementowano bezpiecznik `03_W{w_num:02d}_Close_Window` (`timer = w_time + 1`), który deaktywuje niewykorzystane warianty i re-aktywuje `State_Sanctuary_Unlocked`.
-- **Etap 3C (Indywidualne Bramki Endless – naprawa `BUG-03`):**
-  - Dla każdego z 6 Settlementów utworzono indywidualną pętlową Bramkę Endless `03_Endless_Gate_{s_key}` (`enabled = False`, `looping = True`, `timer = 330`), uzbrajaną przez zegar Fali 14 w `4710s` (`78:30`).
-  - Dla każdego Settlementu utworzono 5 jednorazowych/odnawianych wariantów dispatchu Endless `03_Endless_{s_key}_Diff_{lvl_tag}` (warunek `trigger_active(state_markers[lvl])`).
-  - Wydzielone ataki Endless (Szakale P7, Szlak Handlowy P8, Saperzy P6) powiązano ściśle z bramkami ich macierzystych Settlementów.
-  - W `05_Settlement_Destroyed_{s_key}` zburzenie obozu deaktywuje wszystkie zegary 1–14, warianty, ataki specjalne oraz pętlową Bramkę Endless `03_Endless_Gate_{s_key}`.
+
+### Wdrożenie 4: Etap 4 (`BUG-07`, `BUG-08`), Etap 5 (`BUG-05`), Etap 6A (`BUG-06`) [STATUS: OK]
+- **Etap 4 (Odwracalne delty HP i korekta 1. ticku eskalacji – naprawa `BUG-07`, `BUG-08`):**
+  - W `apply_king_reset_and_safe_stat_shift` w `horde_quests.py` zastąpiono mnożenie floatami (`0.85` / `1.18`) stałymi liczbami całkowitymi `Operation.SUBTRACT` / `Operation.ADD` z `spec.hp_delta_down` z `ENEMY_UNIT_REGISTRY`.
+  - W `horde_waves.py` w triggerach `04a_Enable_Escalation_At_20m`, `04c_Enable_LateGame_Escalation_At_45m` oraz `04e_Enable_Endgame_Escalation_At_55m` dodano natychmiastowe nałożenie pierwszego buffa `add_enemy_combat_buff` oraz powiadomienie czatu (punkty czasowe `20:00`, `45:00`, `55:00`).
+- **Etap 5 (Dwustanowy automat Aury Arcymaga – naprawa `BUG-05`):**
+  - W `horde_waves.py` triggery `02a` i `02d` przebudowano w automat skończony oparty na liście jednostek z `spec.receives_mage_shield` z `ENEMY_UNIT_REGISTRY`.
+  - `02a_Mage_Global_Horde_Shield_On` ustawiono na starcie jako `enabled = True`, `looping = False`.
+  - `02d_Mage_Global_Horde_Shield_Off` ustawiono na starcie jako `enabled = False`, `looping = False` z warunkiem `objects_in_area` (Imam P7 na 25 kratek wokół Bramy Centralnej) z `inverted = 1`, który po zniknięciu Imama zdejmuje pancerz i re-aktywuje `02a`.
+  - Usunięto z triggerów fal jakiekolwiek aktywacje `02a`.
+- **Etap 6A (Dezaktywacja garnizonów i smyczy po zniszczeniu – naprawa `BUG-06`):**
+  - `add_guarded_camp_with_leash` zwraca teraz `(t_spawn, t_leash, detect_triggers)`, a uchwyty 10 obozów są przekazywane przez `ctx["camp_leash_handles"]`.
+  - W `horde_quests.py` zdefiniowano `deactivate_camp_handles` i podpięto wyłączenie spawnu, smyczy oraz 4 detektorów graczy pod zniszczenie każdego z 4 Questów (`t_q1`, `t_q2`, `t_q3_unlock`, `t_q4`) oraz 6 Settlementów (`05_Settlement_Destroyed_*`).
+  - Oczyszczono słownik zwracany przez `horde_map.py` ze zmiennych tymczasowych pętli.
 - **Weryfikacja binarna wyjściowego `.aoe2scenario`:**
-  - Potwierdzono 5 znaczników stanu trudności oraz `State_Sanctuary_Unlocked` (`enabled = 1`, `looping = 0`).
-  - Potwierdzono 16 triggerów trudności `09_Diff_*`: żaden nie dotyka triggerów `03_W*` ani `03_Endless*`, a wszystkie 8 głównych przejść posiada warunek `trigger_active(State_Sanctuary_Unlocked)`.
-  - Potwierdzono poprawne uzbrojenie zegarów Fal 1–14 (`enabled = 1`) oraz wariantów `Diff_*` (`enabled = 0`, warunek `trigger_active`).
-  - Potwierdzono pełny spawn Fali 14 w `4710s` na poziomie `0` oraz uzbrojenie bramek Endless (`timer = 330`, `enabled = 0`, `looping = 1`).
-  - Potwierdzono pełną deaktywację wszystkich zegarów Fal 1–14 oraz `03_Endless_Gate_{s_key}` przy zniszczeniu każdego z 6 Settlementów.
+  - Przetestowano pełną symulację cyklu trudności `0 -> +1 -> +2 -> +1 -> 0 -> -1 -> -2 -> -1 -> 0` (928 efektów `modify_attribute`): dla wszystkich 26 jednostek z rejestru wykazano **dokładnie zerowy dryf statystyk ($\Delta\text{HP} == 0, \Delta\text{Atk} == 0$)**.
+  - Potwierdzono obecność efektów `modify_attribute` oraz czatu w `04a`, `04c`, `04e` dla natychmiastowego pierwszego ticku eskalacji.
+  - Potwierdzono stany początkowe automatu Arcymaga (`02a`: `enabled=1, looping=0`, `02d`: `enabled=0, looping=0` z `inverted=1` na obszarze Bramy Centralnej) oraz brak jakichkolwiek aktywacji `02a` z poziomu fal `03_W*`.
+  - Potwierdzono deaktywację wszystkich 10 garnizonów (60 powiązań deaktywujących: 10× `Garrison_Spawn`, 10× `Garrison_Leash`, 40× `Garrison_Detect`).
 
 
-### Wdrożenie 3: Etap 3A, Etap 3B (`BUG-01`), Etap 3C (`BUG-03`) [STATUS: OK]
-- **Etap 3A (Znaczniki Stanu Trudności i Zamek Sanktuarium):**
-  - Utworzono 5 triggerów stanu trudności `State_Diff_Lvl_{M2, M1, 0, P1, P2}` (`enabled = (lvl == 0)`, `looping = False`, `timer = 999999`) oraz znacznik `State_Sanctuary_Unlocked` (`enabled = True`, `looping = False`, `timer = 999999`).
-  - W `wire_difficulty_transition` dodano warunek `trigger_active(State_Sanctuary_Unlocked)`.
-  - Przebudowano przejścia trudności: przełączają one wyłącznie `state_markers[from_lvl]` -> `state_markers[to_lvl]` i nie dotykają żadnych triggerów fal (zero `activate_trigger`/`deactivate_trigger` na falach).
-  - W `apply_king_reset_and_safe_stat_shift` dodano `teleport_object` oraz `stop_object` dla Króla P1 na `(sanctuary_cx, sanctuary_cy)`.
-- **Etap 3B (Jednorazowy harmonogram Fal 1–14 – naprawa `BUG-01`):**
-  - Zastąpiono system 5 warstw układem Zegarów Fali Settlementu (`03_W{w_num:02d}_{s_key}_Clock`, `enabled = True`, `looping = False`, `timer = w_time`) oraz 5 jednorazowych wariantów (`03_W{w_num:02d}_{s_key}_Diff_{lvl_tag}`, `enabled = False`, `looping = False`, warunek `trigger_active(state_markers[lvl])`).
-  - Usunięto przestarzałą funkcję pomocniczą `scale_comp()`.
-  - Zaimplementowano bezpiecznik `03_W{w_num:02d}_Close_Window` (`timer = w_time + 1`), który deaktywuje niewykorzystane warianty i re-aktywuje `State_Sanctuary_Unlocked`.
-- **Etap 3C (Indywidualne Bramki Endless – naprawa `BUG-03`):**
-  - Dla każdego z 6 Settlementów utworzono indywidualną pętlową Bramkę Endless `03_Endless_Gate_{s_key}` (`enabled = False`, `looping = True`, `timer = 330`), uzbrajaną przez zegar Fali 14 w `4710s` (`78:30`).
-  - Dla każdego Settlementu utworzono 5 jednorazowych/odnawianych wariantów dispatchu Endless `03_Endless_{s_key}_Diff_{lvl_tag}` (warunek `trigger_active(state_markers[lvl])`).
-  - Wydzielone ataki Endless (Szakale P7, Szlak Handlowy P8, Saperzy P6) powiązano ściśle z bramkami ich macierzystych Settlementów.
-  - W `05_Settlement_Destroyed_{s_key}` zburzenie obozu deaktywuje wszystkie zegary 1–14, warianty, ataki specjalne oraz pętlową Bramkę Endless `03_Endless_Gate_{s_key}`.
+
+### Wdrożenie 4: Etap 4 (`BUG-07`, `BUG-08`), Etap 5 (`BUG-05`), Etap 6A (`BUG-06`) [STATUS: OK]
+- **Etap 4 (Odwracalne delty HP i korekta 1. ticku eskalacji – naprawa `BUG-07`, `BUG-08`):**
+  - W `apply_king_reset_and_safe_stat_shift` w `horde_quests.py` zastąpiono mnożenie floatami (`0.85` / `1.18`) stałymi liczbami całkowitymi `Operation.SUBTRACT` / `Operation.ADD` z `spec.hp_delta_down` z `ENEMY_UNIT_REGISTRY`.
+  - W `horde_waves.py` w triggerach `04a_Enable_Escalation_At_20m`, `04c_Enable_LateGame_Escalation_At_45m` oraz `04e_Enable_Endgame_Escalation_At_55m` dodano natychmiastowe nałożenie pierwszego buffa `add_enemy_combat_buff` oraz powiadomienie czatu (punkty czasowe `20:00`, `45:00`, `55:00`).
+- **Etap 5 (Dwustanowy automat Aury Arcymaga – naprawa `BUG-05`):**
+  - W `horde_waves.py` triggery `02a` i `02d` przebudowano w automat skończony oparty na liście jednostek z `spec.receives_mage_shield` z `ENEMY_UNIT_REGISTRY`.
+  - `02a_Mage_Global_Horde_Shield_On` ustawiono na starcie jako `enabled = True`, `looping = False`.
+  - `02d_Mage_Global_Horde_Shield_Off` ustawiono na starcie jako `enabled = False`, `looping = False` z warunkiem `objects_in_area` (Imam P7 na 25 kratek wokół Bramy Centralnej) z `inverted = 1`, który po zniknięciu Imama zdejmuje pancerz i re-aktywuje `02a`.
+  - Usunięto z triggerów fal jakiekolwiek aktywacje `02a`.
+- **Etap 6A (Dezaktywacja garnizonów i smyczy po zniszczeniu – naprawa `BUG-06`):**
+  - `add_guarded_camp_with_leash` zwraca teraz `(t_spawn, t_leash, detect_triggers)`, a uchwyty 10 obozów są przekazywane przez `ctx["camp_leash_handles"]`.
+  - W `horde_quests.py` zdefiniowano `deactivate_camp_handles` i podpięto wyłączenie spawnu, smyczy oraz 4 detektorów graczy pod zniszczenie każdego z 4 Questów (`t_q1`, `t_q2`, `t_q3_unlock`, `t_q4`) oraz 6 Settlementów (`05_Settlement_Destroyed_*`).
+  - Oczyszczono słownik zwracany przez `horde_map.py` ze zmiennych tymczasowych pętli.
 - **Weryfikacja binarna wyjściowego `.aoe2scenario`:**
-  - Potwierdzono 5 znaczników stanu trudności oraz `State_Sanctuary_Unlocked` (`enabled = 1`, `looping = 0`).
-  - Potwierdzono 16 triggerów trudności `09_Diff_*`: żaden nie dotyka triggerów `03_W*` ani `03_Endless*`, a wszystkie 8 głównych przejść posiada warunek `trigger_active(State_Sanctuary_Unlocked)`.
-  - Potwierdzono poprawne uzbrojenie zegarów Fal 1–14 (`enabled = 1`) oraz wariantów `Diff_*` (`enabled = 0`, warunek `trigger_active`).
-  - Potwierdzono pełny spawn Fali 14 w `4710s` na poziomie `0` oraz uzbrojenie bramek Endless (`timer = 330`, `enabled = 0`, `looping = 1`).
-  - Potwierdzono pełną deaktywację wszystkich zegarów Fal 1–14 oraz `03_Endless_Gate_{s_key}` przy zniszczeniu każdego z 6 Settlementów.
+  - Przetestowano pełną symulację cyklu trudności `0 -> +1 -> +2 -> +1 -> 0 -> -1 -> -2 -> -1 -> 0` (928 efektów `modify_attribute`): dla wszystkich 26 jednostek z rejestru wykazano **dokładnie zerowy dryf statystyk ($\Delta\text{HP} == 0, \Delta\text{Atk} == 0$)**.
+  - Potwierdzono obecność efektów `modify_attribute` oraz czatu w `04a`, `04c`, `04e` dla natychmiastowego pierwszego ticku eskalacji.
+  - Potwierdzono stany początkowe automatu Arcymaga (`02a`: `enabled=1, looping=0`, `02d`: `enabled=0, looping=0` z `inverted=1` na obszarze Bramy Centralnej) oraz brak jakichkolwiek aktywacji `02a` z poziomu fal `03_W*`.
+  - Potwierdzono deaktywację wszystkich 10 garnizonów (60 powiązań deaktywujących: 10× `Garrison_Spawn`, 10× `Garrison_Leash`, 40× `Garrison_Detect`).

@@ -293,7 +293,7 @@ W `horde_waves.py` zastąp stary system 5 warstw dla Fal 1–14 (włącznie z Fa
 
 ---
 
-## Etap 4: Odwracalne delty HP w Sanktuarium Balansu (wszystkie gałęzie z rejestru) i korekta 1. ticku eskalacji (`BUG-07`, `BUG-08`)
+## Etap 4: Odwracalne delty HP w Sanktuarium Balansu (wszystkie gałęzie z rejestru) i korekta 1. ticku eskalacji (`BUG-07`, `BUG-08`) [DONE / WDROŻONE]
 **Oznaczenie trudności:** `[FLASH-SAFE]`  
 **Modyfikowane pliki:** `horde_waves.py`, `horde_quests.py`
 
@@ -313,7 +313,7 @@ W `horde_waves.py` zastąp stary system 5 warstw dla Fal 1–14 (włącznie z Fa
 
 ---
 
-## Etap 5: Automat skończony dla Globalnej Aury Arcymaga Tarczy (`BUG-05`)
+## Etap 5: Automat skończony dla Globalnej Aury Arcymaga Tarczy (`BUG-05`) [DONE / WDROŻONE]
 **Oznaczenie trudności:** `[FLASH-SAFE]`  
 **Modyfikowane pliki:** `horde_waves.py`
 
@@ -335,7 +335,7 @@ W `horde_waves.py` skonfiguruj triggery Aury Arcymaga (`02a`..`02d`) jako dwusta
 
 ---
 
-## Etap 6A: Dezaktywacja garnizonów, detektorów i smyczy po zniszczeniu celu (`BUG-06`)
+## Etap 6A: Dezaktywacja garnizonów, detektorów i smyczy po zniszczeniu celu (`BUG-06`) [DONE / WDROŻONE]
 **Oznaczenie trudności:** `[FLASH-SAFE]`  
 **Modyfikowane pliki:** `horde_waves.py`, `horde_quests.py`, `horde_map.py`
 
