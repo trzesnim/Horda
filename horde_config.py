@@ -249,7 +249,7 @@ def populate_ingame_scenario_descriptions(scenario):
         return
 
     instructions_text = (
-        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v6.3 - 4P Co-op)\n\n"
+        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v6.4 - 4P Co-op)\n\n"
         "SANKTUARIUM BALANSU (Wspolrzedne 6, 150 w zachodnim lesie):\n"
         "- Gracz 1 posiada odizolowanego Inzyniera Balansu (Krola) na (6, 150).\n"
         "- Wejscie Krolem na GORNA flage (6, 146) ZWIEKSZA trudnosc (+25% fal, +15 HP, +2 Ataku wroga na poziom).\n"
@@ -260,16 +260,16 @@ def populate_ingame_scenario_descriptions(scenario):
         "  * Poziom  0 (Domyslny): 100% wielkosci fal i statystyk bazowych.\n"
         "  * Poziom +1 (Trudny): +25% fal, +15 HP, +2 Ataku wroga.\n"
         "  * Poziom +2 (Ekstremalny): +50% fal, +30 HP, +4 Ataku wroga.\n"
-        "- Po kazdej zmianie Krol jest automatycznie zatrzymywany i wraca na srodek, a Sanktuarium blokuje sie na czas wybuchu fal.\n\n"
+        "- Po kazdej zmianie Krol jest automatycznie zatrzymywany i wraca na srodek (zmiana trudnosci jest dostepna w kazdym momencie gry, bez blokad).\n\n"
         "SZLAK HANDLOWY I PLAC GRACZY (Lewy dolny rog mapy x=2..24, y=176..198):\n"
         "- W lewym dolnym rogu bazy znajduje sie duzy, czysty Plac pod Targowiska graczy.\n"
         "- Zburzenie Q1 (Karawanseraj) stawia pojedyncze Targowisko sojusznicze w prawym rogu (195, 194) oraz buduje Kamienny Mur Obronny na y=186 z Basztami na y=184!\n\n"
         "ZASADY ROZGRYWKI (Horyzont 60-90 minut):\n"
         "- Fala 1 w 8:30 (bez taranow), Fala 2 w 13:00 (z taranem/mangonelem, bez mutantow), Fala 3 w 18:00, kolejne co 5,5 min.\n"
         "- Trzypoziomowa eskalacja czasowa (natychmiastowy 1. tick i powtorzenie co 5 min):\n"
-        "  * 20:00: +10 HP, +1 Atak.\n"
-        "  * 45:00: +15 HP, +1 Atak.\n"
-        "  * 55:00: +25 HP, +2 Atak.\n"
+        "  * Od 20:00: +5 HP, +1 Atak co 5 min.\n"
+        "  * Od 45:00: dodatkowo +9 HP, +1 Atak co 5 min (lacznie +14 HP, +2 Ataku co 5 min).\n"
+        "  * Od 55:00: dodatkowo +10 HP, +2 Atak co 5 min (lacznie +24 HP, +4 Ataku co 5 min).\n"
         "- Od 45. minuty (Fale 8-14) co druga fala wysyla szturm na SZLAK HANDLOWY.\n"
         "- W Falach 9 (51:00) i 12 (67:30) Saperzy wyrabuja przesieki w lesie (6x11 na polnocy, 11x6 na wschodzie)!\n"
     )

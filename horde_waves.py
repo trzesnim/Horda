@@ -439,7 +439,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     send_highlight_chat(
         t_init, "<YELLOW>",
-        "=== KRONIKI RUBIEZY v6.2 === Inzynier Balansu P1 powrocil na (6, 150) w zachodnim lesie! Lewy dolny rog mapy (x=3..23, y=177..198) jest czysty pod Targowiska graczy!",
+        "=== KRONIKI RUBIEZY v6.4 === Inzynier Balansu P1 powrocil na (6, 150) w zachodnim lesie! Lewy dolny rog mapy (x=3..23, y=177..198) jest czysty pod Targowiska graczy!",
     )
 
     t_mutate = tm.add_trigger("01b_Apply_Specialized_Unit_Archetypes", enabled=True, looping=False)
@@ -752,19 +752,13 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         safe_call(trig.new_condition.timer, timer=999999)
         state_markers[lvl] = trig
 
-    t_sanc_unlocked = tm.add_trigger("State_Sanctuary_Unlocked", enabled=True, looping=False)
-    safe_call(t_sanc_unlocked.new_condition.timer, timer=999999)
-
-    # ------------------------------------------------------------------------------
-    # BRAMKI I WARIANTY TRYBU ENDLESS PO FALI 14 (ETAP 3C - NAPRAWA BUG-03)
-    # ------------------------------------------------------------------------------
     settlement_spawn_configs = {
-        "G1_North":   (PlayerId.FIVE,  48, 86,  *deep_target_north),
+        "G1_North":   (PlayerId.FIVE,  48, 86,   *deep_target_north),
         "G1_East":    (PlayerId.FIVE,  108, 162, *deep_target_east),
-        "G2_Snipers": (PlayerId.SIX,   68, 60,  *deep_target_north),
+        "G2_Snipers": (PlayerId.SIX,   68, 60,   *deep_target_north),
         "G2_Mages":   (PlayerId.SEVEN, 116, 114, *deep_target_center),
-        "G3_North":   (PlayerId.EIGHT, 106, 72, *deep_target_center),
-        "G3_East":    (PlayerId.EIGHT, 136, 82, *deep_target_east),
+        "G3_North":   (PlayerId.EIGHT, 106, 72,  *deep_target_center),
+        "G3_East":    (PlayerId.EIGHT, 136, 82,  *deep_target_east),
     }
 
     wave_definitions = get_wave_definitions()
@@ -778,24 +772,11 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         "G3_East":    w14_def.g3_east,
     }
 
-    # Specjalne ataki pętlowe Endless dla wydzielonych obozów
-    t_endless_trade = tm.add_trigger("03_Endless_Trade_Line_Attack", enabled=False, looping=False)
-    trade_raid_comp = [
+    endless_trade_base_comp = [
         (UnitInfo.SIEGE_RAM.ID, 3),
         (UnitInfo.PALADIN.ID, 10 + (14 - 8) * 2),
         (UnitInfo.HEAVY_CAVALRY_ARCHER.ID, 10 + (14 - 8) * 2),
     ]
-    add_spawn_and_attack_effect(
-        t_endless_trade, PlayerId.EIGHT, trade_raid_comp,
-        spawn_x=162, spawn_y=180, target_x=190, target_y=194,
-    )
-    send_highlight_chat(
-        t_endless_trade, "<ORANGE>",
-        "[ATAK NA SZLAK HANDLOWY!]: Wydzielony korpus Hordy z taranami uderza na Mur Handlowy na poludniu (162, 184)!",
-        flare_x=162, flare_y=184,
-    )
-    safe_call(t_endless_trade.new_effect.deactivate_trigger, trigger_id=t_endless_trade.trigger_id)
-    all_settlement_wave_triggers["G3_East"].append(t_endless_trade)
 
     t_endless_sapper = tm.add_trigger("03_Endless_Forest_Breach_Assault", enabled=False, looping=False)
     add_spawn_and_attack_effect(
@@ -811,16 +792,6 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_endless_sapper.new_effect.deactivate_trigger, trigger_id=t_endless_sapper.trigger_id)
     all_settlement_wave_triggers["G2_Snipers"].append(t_endless_sapper)
 
-    t_endless_szakale = tm.add_trigger("03_Endless_Szakale_EcoRaid", enabled=False, looping=False)
-    add_spawn_and_attack_effect(
-        t_endless_szakale, PlayerId.SEVEN, [(HUSSAR_ID, w14_def.raider_count)],
-        spawn_x=52, spawn_y=86,
-        target_x=eco_raid_targets[0][0], target_y=eco_raid_targets[0][1],
-        ignore_frontline_move_only=True,
-    )
-    safe_call(t_endless_szakale.new_effect.deactivate_trigger, trigger_id=t_endless_szakale.trigger_id)
-    all_settlement_wave_triggers["G2_Mages"].append(t_endless_szakale)
-
     # Ogłoszenie cykliczne Endless
     t_end_ann = tm.add_trigger("03_Endless_Announce_Loop", enabled=False, looping=True)
     safe_call(t_end_ann.new_condition.timer, timer=BALANCE["wave_interval_sec"])
@@ -834,7 +805,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_end_gate_ann.new_condition.timer, timer=4710)
     safe_call(t_end_gate_ann.new_effect.activate_trigger, trigger_id=t_end_ann.trigger_id)
 
-    # Indywidualne Bramki Endless dla każdego Settlementu
+    # Indywidualne Bramki Endless dla każdego Settlementu (bez blokowania Sanktuarium)
     endless_gates = {}
     for s_key, (ai_p, sx, sy, tx, ty) in settlement_spawn_configs.items():
         end_gate = tm.add_trigger(f"03_Endless_Gate_{s_key}", enabled=False, looping=True)
@@ -848,29 +819,40 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             safe_call(t_end_var.new_condition.trigger_active, trigger_id=state_markers[lvl].trigger_id)
             end_army = scale_comp_for_level(endless_settlement_comps[s_key], lvl)
             add_spawn_and_attack_effect(t_end_var, ai_p, end_army, spawn_x=sx, spawn_y=sy, target_x=tx, target_y=ty)
+
+            if s_key == "G3_East":
+                scaled_trade = scale_comp_for_level(endless_trade_base_comp, lvl)
+                add_spawn_and_attack_effect(
+                    t_end_var, PlayerId.EIGHT, scaled_trade,
+                    spawn_x=162, spawn_y=180, target_x=190, target_y=194,
+                )
+                send_highlight_chat(
+                    t_end_var, "<ORANGE>",
+                    "[ATAK NA SZLAK HANDLOWY!]: Wydzielony korpus Hordy z taranami uderza na Mur Handlowy na poludniu (162, 184)!",
+                    flare_x=162, flare_y=184,
+                )
+            elif s_key == "G2_Mages":
+                scaled_raiders = scale_comp_for_level([(HUSSAR_ID, w14_def.raider_count)], lvl)
+                add_spawn_and_attack_effect(
+                    t_end_var, PlayerId.SEVEN, scaled_raiders,
+                    spawn_x=52, spawn_y=86,
+                    target_x=eco_raid_targets[0][0], target_y=eco_raid_targets[0][1],
+                    ignore_frontline_move_only=True,
+                )
+
             all_settlement_wave_triggers[s_key].append(t_end_var)
             end_variants.append(t_end_var)
 
-        # Efekty bramki Endless: zamraża Sanktuarium i budzi warianty
-        safe_call(end_gate.new_effect.deactivate_trigger, trigger_id=t_sanc_unlocked.trigger_id)
         for ev in end_variants:
             safe_call(end_gate.new_effect.activate_trigger, trigger_id=ev.trigger_id)
-        if s_key == "G3_East":
-            safe_call(end_gate.new_effect.activate_trigger, trigger_id=t_endless_trade.trigger_id)
-        elif s_key == "G2_Snipers":
+        if s_key == "G2_Snipers":
             safe_call(end_gate.new_effect.activate_trigger, trigger_id=t_endless_sapper.trigger_id)
-        elif s_key == "G2_Mages":
-            safe_call(end_gate.new_effect.activate_trigger, trigger_id=t_endless_szakale.trigger_id)
 
-        # Efekty każdego wariantu Endless: wyłącza braci i odblokowuje Sanktuarium
         for ev in end_variants:
             for brother in end_variants:
                 safe_call(ev.new_effect.deactivate_trigger, trigger_id=brother.trigger_id)
-            safe_call(ev.new_effect.activate_trigger, trigger_id=t_sanc_unlocked.trigger_id)
 
-    # ------------------------------------------------------------------------------
-    # HARMONOGRAM FAL 1–14 Z SAMOZAMYKAJĄCYM OKNEM DISPATCHU (ETAP 3B - NAPRAWA BUG-01)
-    # ------------------------------------------------------------------------------
+    # Harmonogram Fal 1–14 (bez blokowania Sanktuarium i bez Close_Window)
     for w_def in wave_definitions:
         w_num = w_def.wave_num
         w_time = w_def.wave_sec
@@ -885,18 +867,18 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         )
 
         per_settlement_wave = [
-            ("G1_North",   PlayerId.FIVE,  w_def.g1_north, 48, 86,  *deep_target_north),
-            ("G1_East",    PlayerId.FIVE,  w_def.g1_east, 108, 162, *deep_target_east),
-            ("G2_Snipers", PlayerId.SIX,   w_def.g2_snipers, 68, 60,  *deep_target_north),
-            ("G2_Mages",   PlayerId.SEVEN, w_def.g2_mages, 116, 114, *deep_target_center),
-            ("G3_North",   PlayerId.EIGHT, w_def.g3_north, 106, 72, *deep_target_center),
-            ("G3_East",    PlayerId.EIGHT, w_def.g3_east, 136, 82, *deep_target_east),
+            ("G1_North",   PlayerId.FIVE,  w_def.g1_north,   48, 86,   *deep_target_north),
+            ("G1_East",    PlayerId.FIVE,  w_def.g1_east,    108, 162, *deep_target_east),
+            ("G2_Snipers", PlayerId.SIX,   w_def.g2_snipers, 68, 60,   *deep_target_north),
+            ("G2_Mages",   PlayerId.SEVEN, w_def.g2_mages,   116, 114, *deep_target_center),
+            ("G3_North",   PlayerId.EIGHT, w_def.g3_north,   106, 72,  *deep_target_center),
+            ("G3_East",    PlayerId.EIGHT, w_def.g3_east,    136, 82,  *deep_target_east),
         ]
 
-        wave_variants_all_settlements = []
-
         for s_key, ai_p, comp, sx, sy, tx, ty in per_settlement_wave:
-            if not comp:
+            has_raiders = (s_key == "G2_Mages" and w_def.raider_count > 0)
+            has_trade_raid = (s_key == "G3_East" and w_num in (8, 10, 12, 14))
+            if not comp and not has_raiders and not has_trade_raid:
                 continue
 
             t_clock = tm.add_trigger(f"03_W{w_num:02d}_{s_key}_Clock", enabled=True, looping=False)
@@ -907,64 +889,49 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             for lvl, tag in diff_tags.items():
                 t_var = tm.add_trigger(f"03_W{w_num:02d}_{s_key}_Diff_{tag}", enabled=False, looping=False)
                 safe_call(t_var.new_condition.trigger_active, trigger_id=state_markers[lvl].trigger_id)
-                scaled_comp = scale_comp_for_level(comp, lvl)
-                add_spawn_and_attack_effect(t_var, ai_p, scaled_comp, spawn_x=sx, spawn_y=sy, target_x=tx, target_y=ty)
+                if comp:
+                    scaled_comp = scale_comp_for_level(comp, lvl)
+                    add_spawn_and_attack_effect(t_var, ai_p, scaled_comp, spawn_x=sx, spawn_y=sy, target_x=tx, target_y=ty)
+
+                if has_raiders:
+                    eco_tx, eco_ty = eco_raid_targets[w_num % len(eco_raid_targets)]
+                    scaled_raiders = scale_comp_for_level([(HUSSAR_ID, w_def.raider_count)], lvl)
+                    add_spawn_and_attack_effect(
+                        t_var, PlayerId.SEVEN, scaled_raiders,
+                        spawn_x=116 if w_num % 2 == 0 else 52,
+                        spawn_y=162 if w_num % 2 == 0 else 86,
+                        target_x=eco_tx, target_y=eco_ty,
+                        ignore_frontline_move_only=True,
+                    )
+
+                if has_trade_raid:
+                    trade_raid_comp = [
+                        (UnitInfo.SIEGE_RAM.ID, 3),
+                        (UnitInfo.PALADIN.ID, 10 + (w_num - 8) * 2),
+                        (UnitInfo.HEAVY_CAVALRY_ARCHER.ID, 10 + (w_num - 8) * 2),
+                    ]
+                    scaled_trade = scale_comp_for_level(trade_raid_comp, lvl)
+                    add_spawn_and_attack_effect(
+                        t_var, PlayerId.EIGHT, scaled_trade,
+                        spawn_x=162, spawn_y=180, target_x=190, target_y=194,
+                    )
+                    send_highlight_chat(
+                        t_var, "<ORANGE>",
+                        "[ATAK NA SZLAK HANDLOWY!]: Wydzielony korpus Hordy z taranami uderza na Mur Handlowy na poludniu (162, 184)!",
+                        flare_x=162, flare_y=184,
+                    )
 
                 all_settlement_wave_triggers[s_key].append(t_var)
                 settlement_variants.append(t_var)
-                wave_variants_all_settlements.append(t_var)
 
-            # Efekty Zegara Fali Settlementu
-            safe_call(t_clock.new_effect.deactivate_trigger, trigger_id=t_sanc_unlocked.trigger_id)
             for v in settlement_variants:
                 safe_call(t_clock.new_effect.activate_trigger, trigger_id=v.trigger_id)
             if w_num == 14:
                 safe_call(t_clock.new_effect.activate_trigger, trigger_id=endless_gates[s_key].trigger_id)
 
-            # Efekty każdego z 5 wariantów: dezaktywacja braci
             for v in settlement_variants:
                 for brother in settlement_variants:
                     safe_call(v.new_effect.deactivate_trigger, trigger_id=brother.trigger_id)
-
-        # Globalny bezpiecznik zamykający okno dispatchu dla fali
-        t_close = tm.add_trigger(f"03_W{w_num:02d}_Close_Window", enabled=True, looping=False)
-        safe_call(t_close.new_condition.timer, timer=w_time + 1)
-        for v in wave_variants_all_settlements:
-            safe_call(t_close.new_effect.deactivate_trigger, trigger_id=v.trigger_id)
-        safe_call(t_close.new_effect.activate_trigger, trigger_id=t_sanc_unlocked.trigger_id)
-
-        # Ataki specjalne zintegrowane z harmonogramem
-        if w_def.raider_count > 0:
-            eco_tx, eco_ty = eco_raid_targets[w_num % len(eco_raid_targets)]
-            t_raid = tm.add_trigger(f"03_W{w_num:02d}_Szakale_EcoRaid", enabled=True, looping=False)
-            safe_call(t_raid.new_condition.timer, timer=w_time)
-            add_spawn_and_attack_effect(
-                t_raid, PlayerId.SEVEN, [(HUSSAR_ID, w_def.raider_count)],
-                spawn_x=116 if w_num % 2 == 0 else 52,
-                spawn_y=162 if w_num % 2 == 0 else 86,
-                target_x=eco_tx, target_y=eco_ty,
-                ignore_frontline_move_only=True,
-            )
-            all_settlement_wave_triggers["G2_Mages"].append(t_raid)
-
-        if w_num in (8, 10, 12, 14):
-            t_trade_raid = tm.add_trigger(f"03_W{w_num:02d}_Trade_Line_Attack", enabled=True, looping=False)
-            safe_call(t_trade_raid.new_condition.timer, timer=w_time)
-            trade_raid_comp = [
-                (UnitInfo.SIEGE_RAM.ID, 3),
-                (UnitInfo.PALADIN.ID, 10 + (w_num - 8) * 2),
-                (UnitInfo.HEAVY_CAVALRY_ARCHER.ID, 10 + (w_num - 8) * 2),
-            ]
-            add_spawn_and_attack_effect(
-                t_trade_raid, PlayerId.EIGHT, trade_raid_comp,
-                spawn_x=162, spawn_y=180, target_x=190, target_y=194,
-            )
-            send_highlight_chat(
-                t_trade_raid, "<ORANGE>",
-                "[ATAK NA SZLAK HANDLOWY!]: Wydzielony korpus Hordy z taranami uderza na Mur Handlowy na poludniu (162, 184)!",
-                flare_x=162, flare_y=184,
-            )
-            all_settlement_wave_triggers["G3_East"].append(t_trade_raid)
 
         if w_num == 9:
             t_warn_forest_n = tm.add_trigger("03_W09_Forest_Breach_North_Warn", enabled=True, looping=False)
@@ -1030,4 +997,3 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     ctx["camp_leash_handles"] = camp_leash_handles
     ctx["deep_target_center"] = deep_target_center
     ctx["state_markers"] = state_markers
-    ctx["t_sanc_unlocked"] = t_sanc_unlocked

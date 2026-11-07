@@ -66,7 +66,6 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     sanctuary_cx = ctx["sanctuary_cx"]
     sanctuary_cy = ctx["sanctuary_cy"]
     state_markers = ctx["state_markers"]
-    t_sanc_unlocked = ctx["t_sanc_unlocked"]
     camp_leash_handles = ctx["camp_leash_handles"]
     tm = ctx["tm"]
 
@@ -121,16 +120,17 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
                     if spec.scales_hp:
                         safe_modify_attribute(trig, ai_p, spec.unit_id, ATTR_HIT_POINTS, op, spec.hp_delta_down)
 
-    t_up_0_to_p1 = tm.add_trigger("09_Diff_Up_0_to_P1", enabled=True, looping=False)
-    t_down_0_to_m1 = tm.add_trigger("09_Diff_Down_0_to_M1", enabled=True, looping=False)
-
+    # Pad GÓRNY (pad_up_box): P1->P2 (id+0) < 0->P1 (id+1) < M1->0 (id+2) < M2->M1 (id+3)
     t_up_p1_to_p2 = tm.add_trigger("09_Diff_Up_P1_to_P2", enabled=False, looping=False)
+    t_up_0_to_p1 = tm.add_trigger("09_Diff_Up_0_to_P1", enabled=True, looping=False)
+    t_up_m1_to_0 = tm.add_trigger("09_Diff_Up_M1_to_0", enabled=False, looping=False)
+    t_up_m2_to_m1 = tm.add_trigger("09_Diff_Up_M2_to_M1", enabled=False, looping=False)
+
+    # Pad DOLNY (pad_down_box): M1->M2 (id+4) < 0->M1 (id+5) < P1->0 (id+6) < P2->P1 (id+7)
+    t_down_m1_to_m2 = tm.add_trigger("09_Diff_Down_M1_to_M2", enabled=False, looping=False)
+    t_down_0_to_m1 = tm.add_trigger("09_Diff_Down_0_to_M1", enabled=True, looping=False)
     t_down_p1_to_0 = tm.add_trigger("09_Diff_Down_P1_to_0", enabled=False, looping=False)
     t_down_p2_to_p1 = tm.add_trigger("09_Diff_Down_P2_to_P1", enabled=False, looping=False)
-
-    t_up_m1_to_0 = tm.add_trigger("09_Diff_Up_M1_to_0", enabled=False, looping=False)
-    t_down_m1_to_m2 = tm.add_trigger("09_Diff_Down_M1_to_M2", enabled=False, looping=False)
-    t_up_m2_to_m1 = tm.add_trigger("09_Diff_Up_M2_to_M1", enabled=False, looping=False)
 
     def wire_difficulty_transition(
         trig,
@@ -139,7 +139,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         from_lvl: int,
         to_lvl: int,
         to_disable: list,
-        to_enable_after_2s: list,
+        to_enable: list,
         log_msg: str,
     ):
         bx1, by1, bx2, by2 = pad_up_box if is_up else pad_down_box
@@ -153,10 +153,6 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
             area_y2=by2,
             quantity=1,
         )
-        safe_call(
-            trig.new_condition.trigger_active,
-            trigger_id=t_sanc_unlocked.trigger_id,
-        )
         for d_tr in to_disable:
             safe_call(trig.new_effect.deactivate_trigger, trigger_id=d_tr.trigger_id)
 
@@ -166,12 +162,8 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         apply_king_reset_and_safe_stat_shift(trig, mode=stat_mode)
         send_highlight_chat(trig, "<RED>" if is_up else "<AQUA>", log_msg, flare_x=sanctuary_cx, flare_y=sanctuary_cy)
 
-        t_relay = tm.add_trigger(f"{trig.name}_Relay2s", enabled=False, looping=False)
-        safe_call(t_relay.new_condition.timer, timer=2)
-        for e_tr in to_enable_after_2s:
-            safe_call(t_relay.new_effect.activate_trigger, trigger_id=e_tr.trigger_id)
-        safe_call(t_relay.new_effect.deactivate_trigger, trigger_id=t_relay.trigger_id)
-        safe_call(trig.new_effect.activate_trigger, trigger_id=t_relay.trigger_id)
+        for e_tr in to_enable:
+            safe_call(trig.new_effect.activate_trigger, trigger_id=e_tr.trigger_id)
 
     wire_difficulty_transition(
         t_up_0_to_p1,
@@ -180,7 +172,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         from_lvl=0,
         to_lvl=1,
         to_disable=[t_up_0_to_p1, t_down_0_to_m1],
-        to_enable_after_2s=[t_up_p1_to_p2, t_down_p1_to_0],
+        to_enable=[t_up_p1_to_p2, t_down_p1_to_0],
         log_msg="[LOG BALANSU]: Trudnosc ZWIEKSZONA do POZIOMU +1 (TRUDNY: +25% wielkosci fal, +15 HP, +2 Ataku)!",
     )
     wire_difficulty_transition(
@@ -190,7 +182,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         from_lvl=1,
         to_lvl=2,
         to_disable=[t_up_p1_to_p2, t_down_p1_to_0],
-        to_enable_after_2s=[t_down_p2_to_p1],
+        to_enable=[t_down_p2_to_p1],
         log_msg="[LOG BALANSU]: Trudnosc ZWIEKSZONA do POZIOMU +2 (EKSTREMALNY: +50% wielkosci fal, +30 HP, +4 Ataku)!",
     )
     wire_difficulty_transition(
@@ -200,7 +192,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         from_lvl=2,
         to_lvl=1,
         to_disable=[t_down_p2_to_p1],
-        to_enable_after_2s=[t_up_p1_to_p2, t_down_p1_to_0],
+        to_enable=[t_up_p1_to_p2, t_down_p1_to_0],
         log_msg="[LOG BALANSU]: Trudnosc ZMNIEJSZONA z +2 do POZIOMU +1 (TRUDNY: +25% wielkosci fal)!",
     )
     wire_difficulty_transition(
@@ -210,7 +202,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         from_lvl=1,
         to_lvl=0,
         to_disable=[t_up_p1_to_p2, t_down_p1_to_0],
-        to_enable_after_2s=[t_up_0_to_p1, t_down_0_to_m1],
+        to_enable=[t_up_0_to_p1, t_down_0_to_m1],
         log_msg="[LOG BALANSU]: Trudnosc ZMNIEJSZONA z +1 do POZIOMU 0 (DOMYSLNY: 100% wielkosci fal)!",
     )
     wire_difficulty_transition(
@@ -220,7 +212,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         from_lvl=0,
         to_lvl=-1,
         to_disable=[t_up_0_to_p1, t_down_0_to_m1],
-        to_enable_after_2s=[t_up_m1_to_0, t_down_m1_to_m2],
+        to_enable=[t_up_m1_to_0, t_down_m1_to_m2],
         log_msg="[LOG BALANSU]: Trudnosc ZMNIEJSZONA do POZIOMU -1 (LATWY: -20% wielkosci fal, -15% HP wroga)!",
     )
     wire_difficulty_transition(
@@ -230,8 +222,8 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         from_lvl=-1,
         to_lvl=-2,
         to_disable=[t_up_m1_to_0, t_down_m1_to_m2],
-        to_enable_after_2s=[t_up_m2_to_m1],
-        log_msg="[LOG BALANSU]: Trudnosc ZMNIEJSZONA do POZIOMU -2 (BARDZO LATWY: -40% wielkosci fal, -28% HP wroga)!",
+        to_enable=[t_up_m2_to_m1],
+        log_msg="[LOG BALANSU]: Trudnosc ZMNIEJSZONA do POZIOMU -2 (BARDZO LATWY: -40% wielkosci fal, -30% HP wroga)!",
     )
     wire_difficulty_transition(
         t_up_m2_to_m1,
@@ -240,7 +232,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         from_lvl=-2,
         to_lvl=-1,
         to_disable=[t_up_m2_to_m1],
-        to_enable_after_2s=[t_up_m1_to_0, t_down_m1_to_m2],
+        to_enable=[t_up_m1_to_0, t_down_m1_to_m2],
         log_msg="[LOG BALANSU]: Trudnosc ZWIEKSZONA z -2 do POZIOMU -1 (LATWY: -20% wielkosci fal)!",
     )
     wire_difficulty_transition(
@@ -250,7 +242,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         from_lvl=-1,
         to_lvl=0,
         to_disable=[t_up_m1_to_0, t_down_m1_to_m2],
-        to_enable_after_2s=[t_up_0_to_p1, t_down_0_to_m1],
+        to_enable=[t_up_0_to_p1, t_down_0_to_m1],
         log_msg="[LOG BALANSU]: Trudnosc ZWIEKSZONA z -1 do POZIOMU 0 (DOMYSLNY: 100% wielkosci fal)!",
     )
 

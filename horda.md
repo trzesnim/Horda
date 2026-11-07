@@ -1,4 +1,4 @@
-# Scenariusz 3: Kroniki Rubieży — Horda i Ekspedycje (v6.3 — 4P Co-op RPG/RTS)
+# Scenariusz 3: Kroniki Rubieży — Horda i Ekspedycje (v6.4 — 4P Co-op RPG/RTS)
 
 **Plik scenariusza:** `Kroniki_Rubiezy_Horda_Coop.aoe2scenario`  
 **Typ rozgrywki:** Obrona przed 14 falami Hordy + Tryb Endless + Sanktuarium Balansu + 4 Questy poboczne i niszczenie 6 Settlementów (Grades 1–3)  
@@ -14,7 +14,7 @@ W zachodnim lesie Twierdzy `(6, 150)` znajduje się odizolowana skalnymi klifami
 * **Ruch Królem w GÓRĘ `(6, 146)` (Pochodnie Północne):** Zwiększa poziom trudności o **+1 stopień**.
 * **Ruch Królem w DÓŁ `(6, 154)` (Pochodnie Południowe):** Zmniejsza poziom trudności o **-1 stopień**.
 * **Automatyczny powrót i logowanie:** Po wejściu na flagę Król jest natychmiast zatrzymywany rozkazem `stop_object` i teleportowany na środek komnaty `(6, 150)`. Na czacie wyświetla się wpis `[LOG BALANSU]` z aktualnym poziomem trudności.
-* **Blokada wyścigu dispatchu:** W sekundzie wybuchu dowolnej fali Sanktuarium zamraża możliwość zmiany trudności na 1 sekundę (`State_Sanctuary_Unlocked`), gwarantując pełną stabilność silnika.
+* **Brak blokad czasowych:** Zmiana poziomu trudności jest dostępna w każdym momencie gry (brak sztucznych timerów blokujących). Odwrócony porządek topologiczny triggerów w silniku AoE2 zabezpiecza przed wielokrotnym przeskokiem poziomu w jednym ticku. Wszystkie warianty fal, rajdy Szakali oraz szturmy na szlak handlowy są w 100% skalowane do wybranego poziomu trudności.
 * **5 poziomów trudności (z odwracalnymi liczbami całkowitymi delty HP, bez kumulacyjnego dryfu):**
   * **Poziom `-2` (Bardzo Łatwy):** **-40% liczebności kolejnych fal** oraz **-30% HP** wroga (dwukrotność delty 15%).
   * **Poziom `-1` (Łatwy):** **-20% liczebności kolejnych fal** oraz **-15% HP** wroga (pojedyncza delta 15%).
@@ -46,9 +46,9 @@ Wszyscy 4 gracze startują na równych warunkach (500 żywności, 600 drewna, 40
   * **Fala 14 (78:30):** Finałowy szturm kampanii z udziałem wszystkich aktywnych obozów, uzbrajający bramki Trybu Endless (`03_Endless_Gate_*`).
   * **Tryb Endless (od 84:00):** Cykliczne uderzenia co 330s generowane indywidualnie przez ocalałe Settlementy na bieżącym poziomie trudności.
 * **Trzystopniowa eskalacja czasowa (natychmiastowy 1. tick w minucie progowej i powtórzenie co 5 min):**
-  * **20:00:** Pierwsza mobilizacja Hordy: **+10 HP i +1 Ataku**.
-  * **45:00:** Furia Late-Game: **+15 HP i +1 Ataku**.
-  * **55:00:** Eskalacja Endgame: **+25 HP i +2 Ataku**.
+  * **20:00 (Bieg 1):** Pierwsza mobilizacja Hordy: **+5 HP i +1 Ataku** co 5 min.
+  * **45:00 (Bieg 2):** Furia Late-Game: dodatkowo **+9 HP i +1 Ataku** co 5 min (łącznie **+14 HP i +2 Ataku** co 5 min).
+  * **55:00 (Bieg 3):** Eskalacja Endgame: dodatkowo **+10 HP i +2 Ataku** co 5 min (łącznie **+24 HP i +4 Ataku** co 5 min).
 * **Taktyki specjalne Hordy po 45. minucie:**
   * **Co druga fala od 45:00 (Fale 8, 10, 12, 14) — Atak na Trade Line:** Wydzielony korpus z Taranami Oblężniczymi, Paladynami i Konnymi Łucznikami uderza na południowy **Mur Handlowy (`162, 184`) i szlak handlowy**.
   * **Wyrąb lasu przez Saperów Oblężniczych (zapowiedziany alarmem i flarą na 15s przed falą):**
@@ -95,13 +95,13 @@ Wszyscy 4 gracze startują na równych warunkach (500 żywności, 600 drewna, 40
 Zburzenie każdego Settlementu trwale wycofuje jego oddziały z kolejnych fal 1–14 oraz z Trybu Endless, deaktywuje jego garnizony i smycze terytorialne, nagradza drużynę kwotą **+600 Złota i +600 Żywności**, a także wywołuje natychmiastowy kontratak oraz wzmocnienie pozostałych obozów zależne od stopnia obozu (**Grade 1–3**):
 
 * **Grade 1 (Obozy zewnętrzne):**
-  * **`G1 - Północny` `(90, 36)`:** usuwa Berserkerów i Petardy. Kontratak: `8x Cavalier + 10x Pikeman`. Furia: **+8 HP i +1 Ataku** dla pozostałych wrogów.
-  * **`G1 - Wschodni` `(170, 148)`:** usuwa Huskarlów i Płonące Wielbłądy. Kontratak: `8x Cavalier + 10x Pikeman`. Furia: **+8 HP i +1 Ataku**.
+  * **`G1 - Północny` `(76, 72)`:** usuwa Berserkerów i Petardy. Kontratak: `8x Cavalier + 10x Pikeman`. Furia: **+8 HP i +1 Ataku** dla pozostałych wrogów.
+  * **`G1 - Wschodni` `(132, 152)`:** usuwa Huskarlów i Płonące Wielbłądy. Kontratak: `8x Cavalier + 10x Pikeman`. Furia: **+8 HP i +1 Ataku**.
 * **Grade 2 (Obozy wyspecjalizowane):**
-  * **`G2 - Akademia Snajperów` `(148, 28)`:** usuwa Snajperów i Moździerze Oblężnicze. Kontratak: `10x Cavalier + 12x Halberdier`. Furia: **+12 HP i +1 Ataku**.
+  * **`G2 - Akademia Snajperów` `(68, 34)`:** usuwa Snajperów i Moździerze Oblężnicze. Kontratak: `10x Cavalier + 12x Halberdier`. Furia: **+12 HP i +1 Ataku**.
   * **`G2 - Klasztor Magów` `(148, 72)`:** usuwa Arcymagów i Szakale. Kontratak: `10x Cavalier + 12x Halberdier`. Furia: **+12 HP i +1 Ataku**.
 * **Grade 3 (Główne Cytadele Hordy):**
-  * **`G3 - Cytadela Północna` `(122, 16)`:** usuwa Taran-Żółwie / Żelazne Słonie z natarcia północnego. Kontratak: **`1x Żelazny Słoń + 12x Paladin + 14x Halberdier`**. Furia: **+16 HP i +2 Ataku**.
-  * **`G3 - Cytadela Wschodnia` `(186, 96)`:** usuwa Taran-Żółwie / Żelazne Słonie z natarcia wschodniego. Kontratak: **`1x Żelazny Słoń + 12x Paladin + 14x Halberdier`**. Furia: **+16 HP i +2 Ataku**.
+  * **`G3 - Cytadela Północna` `(142, 24)`:** usuwa Taran-Żółwie / Żelazne Słonie z natarcia północnego. Kontratak: **`1x Żelazny Słoń + 12x Paladin + 14x Halberdier`**. Furia: **+16 HP i +2 Ataku**.
+  * **`G3 - Cytadela Wschodnia` `(176, 56)`:** usuwa Taran-Żółwie / Żelazne Słonie z natarcia wschodniego. Kontratak: **`1x Żelazny Słoń + 12x Paladin + 14x Halberdier`**. Furia: **+16 HP i +2 Ataku**.
 
 **Warunek Zwycięstwa:** Zniszczenie wszystkich 6 Settlementów kończy scenariusz natychmiastowym zwycięstwem graczy!

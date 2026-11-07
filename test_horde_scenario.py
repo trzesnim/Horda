@@ -1,6 +1,6 @@
 """
 test_horde_scenario.py - Kompleksowy zestaw testow jednostkowych, integracyjnych
-oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Horda (v6.3).
+oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Horda (v6.4).
 """
 
 import unittest
@@ -20,6 +20,7 @@ from horde_config import (
     BALANCE,
     ELITE_BATTLE_ELEPHANT_ID,
     ENEMY_UNIT_REGISTRY,
+    HUSSAR_ID,
     IMAM_UNIT_ID,
     OUTPUT_SCENARIO,
     SIEGE_ONAGER_ID,
@@ -35,20 +36,21 @@ class TestWaveScalingAlgorithm(unittest.TestCase):
         self.assertEqual(scale_comp_for_level([], -2), [])
         self.assertEqual(scale_comp_for_level([], 0), [])
         self.assertEqual(scale_comp_for_level([], 2), [])
-        self.assertEqual(scale_comp_for_level([(375, 0), (842, 0)], -2), [])
-        self.assertEqual(scale_comp_for_level([(375, 0)], 1), [])
+        self.assertEqual(scale_comp_for_level([(UnitInfo.ELITE_JANISSARY.ID, 0), (IMAM_UNIT_ID, 0)], -2), [])
+        self.assertEqual(scale_comp_for_level([(UnitInfo.ELITE_JANISSARY.ID, 0)], 1), [])
 
     def test_single_unit_scaling(self):
+        u_id = UnitInfo.ELITE_JANISSARY.ID
         # Poziom 0: dokladna tozsamosc
-        self.assertEqual(scale_comp_for_level([(375, 2)], 0), [(375, 2)])
+        self.assertEqual(scale_comp_for_level([(u_id, 2)], 0), [(u_id, 2)])
         # Poziom +1 (+25%): round_half_up(2 * 1.25) = round_half_up(2.5) = 3
-        self.assertEqual(scale_comp_for_level([(375, 2)], 1), [(375, 3)])
+        self.assertEqual(scale_comp_for_level([(u_id, 2)], 1), [(u_id, 3)])
         # Poziom +2 (+50%): 2 * 1.5 = 3
-        self.assertEqual(scale_comp_for_level([(375, 2)], 2), [(375, 3)])
+        self.assertEqual(scale_comp_for_level([(u_id, 2)], 2), [(u_id, 3)])
         # Poziom -1 (-20%): 2 * 0.8 = 1.6 -> 2
-        self.assertEqual(scale_comp_for_level([(375, 2)], -1), [(375, 2)])
+        self.assertEqual(scale_comp_for_level([(u_id, 2)], -1), [(u_id, 2)])
         # Poziom -2 (-40%): 2 * 0.6 = 1.2 -> 1
-        self.assertEqual(scale_comp_for_level([(375, 2)], -2), [(375, 1)])
+        self.assertEqual(scale_comp_for_level([(u_id, 2)], -2), [(u_id, 1)])
 
     def test_multi_pass_reduction_with_mandatory_units(self):
         # 10 pozycji ze specjalistami (mandatory_min_one=True, np. Snajper Imperialny = 557) po 1 szt.
@@ -68,9 +70,9 @@ class TestWaveScalingAlgorithm(unittest.TestCase):
 
     def test_invalid_arguments(self):
         with self.assertRaises(ValueError):
-            scale_comp_for_level([(375, -1)], 0)
+            scale_comp_for_level([(UnitInfo.ELITE_JANISSARY.ID, -1)], 0)
         with self.assertRaises(ValueError):
-            scale_comp_for_level([(375, 2)], 99)
+            scale_comp_for_level([(UnitInfo.ELITE_JANISSARY.ID, 2)], 99)
 
     def test_full_wave_sweep_monotonicity_and_integrity(self):
         """Sprawdza wszystkie 14 fal, wszystkie obozy i poziomy -2..+2 pod katem monotonicznosci."""
@@ -104,27 +106,18 @@ class TestEnemyUnitRegistryAndSanctuary(unittest.TestCase):
     """Testy spojnosci rejestru jednostek oraz odwracalnosci zmian trudnosci w Sanktuarium."""
 
     def test_registry_completeness_across_all_spawns(self):
-        """Wszystkie ID uzywane w scenariuszu musza byc w ENEMY_UNIT_REGISTRY."""
-        wave_defs = get_wave_definitions()
-        used_unit_ids = set()
+        """Wszystkie ID uzywane w triggerach spawnu Hordy P5-P8 musza byc w ENEMY_UNIT_REGISTRY."""
+        scenario = AoE2DEScenario.from_file(str(OUTPUT_SCENARIO))
+        ai_players = {PlayerId.FIVE.value, PlayerId.SIX.value, PlayerId.SEVEN.value, PlayerId.EIGHT.value}
+        spawned_unit_ids = set()
 
-        # Fale
-        for w_def in wave_defs:
-            for s_key in ["g1_north", "g1_east", "g2_snipers", "g2_mages", "g3_north", "g3_east"]:
-                for u_id, _ in getattr(w_def, s_key):
-                    used_unit_ids.add(u_id)
+        for tr in scenario.trigger_manager.triggers:
+            for eff in tr.effects:
+                if eff.effect_type == EffectId.CREATE_OBJECT and eff.source_player in ai_players:
+                    spawned_unit_ids.add(eff.object_list_unit_id)
 
-        # Kontrataki Grade 1-3
-        grade_retaliations = [
-            [(UnitInfo.CAVALIER.ID, 8), (UnitInfo.PIKEMAN.ID, 10)],
-            [(UnitInfo.CAVALIER.ID, 10), (UnitInfo.HALBERDIER.ID, 12)],
-            [(ELITE_BATTLE_ELEPHANT_ID, 1), (UnitInfo.PALADIN.ID, 12), (UnitInfo.HALBERDIER.ID, 14)],
-        ]
-        for r_comp in grade_retaliations:
-            for u_id, _ in r_comp:
-                used_unit_ids.add(u_id)
-
-        for u_id in used_unit_ids:
+        self.assertGreater(len(spawned_unit_ids), 0, "Brak spawnujacych sie jednostek AI!")
+        for u_id in spawned_unit_ids:
             self.assertIn(u_id, ENEMY_UNIT_REGISTRY, f"Brak jednostki ID {u_id} w ENEMY_UNIT_REGISTRY!")
 
     def test_iron_elephant_and_jackal_attack_immunity(self):
@@ -133,7 +126,7 @@ class TestEnemyUnitRegistryAndSanctuary(unittest.TestCase):
         self.assertIsNone(elephant_spec.attack_class)
         self.assertTrue(elephant_spec.scales_hp)
 
-        jackal_spec = ENEMY_UNIT_REGISTRY[441]
+        jackal_spec = ENEMY_UNIT_REGISTRY[HUSSAR_ID]
         self.assertIsNone(jackal_spec.attack_class)
         self.assertTrue(jackal_spec.scales_hp)
 
@@ -182,7 +175,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         cls.t_map = {t.name: t for t in cls.triggers}
 
     def test_state_markers_and_sanctuary_lock(self):
-        """Tylko State_Diff_Lvl_0 i State_Sanctuary_Unlocked sa aktywne na starcie."""
+        """Tylko State_Diff_Lvl_0 jest aktywny na starcie. Mechanizmy blokad i relay zostaly usuniete."""
         for lvl_tag in ["M2", "M1", "0", "P1", "P2"]:
             name = f"State_Diff_Lvl_{lvl_tag}"
             self.assertIn(name, self.t_map)
@@ -191,28 +184,29 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             self.assertEqual(tr.enabled, expected_enabled, f"{name} ma zly stan enabled!")
             self.assertEqual(tr.looping, 0)
 
-        sanc_lock = self.t_map["State_Sanctuary_Unlocked"]
-        self.assertEqual(sanc_lock.enabled, 1)
-        self.assertEqual(sanc_lock.looping, 0)
+        # Upewnij sie, ze stare triggery blokujace i przekaznikowe nie istnieja
+        for t_name in self.t_map:
+            self.assertNotIn("Sanctuary_Unlocked", t_name, f"Znaleziono stary trigger {t_name}!")
+            self.assertNotIn("Close_Window", t_name, f"Znaleziono stary trigger {t_name}!")
+            self.assertNotIn("Relay2s", t_name, f"Znaleziono stary trigger {t_name}!")
 
     def test_difficulty_transitions_isolation_bug01(self):
-        """Asercja anty-regresyjna BUG-01: triggery 09_Diff_* nie dotykaja zadnych fal."""
+        """Asercja anty-regresyjna BUG-01: triggery 09_Diff_* nie dotykaja zadnych fal i maja wlasciwy porzadek topologiczny."""
         diff_names = [
             "09_Diff_Up_0_to_P1", "09_Diff_Up_P1_to_P2", "09_Diff_Down_P2_to_P1", "09_Diff_Down_P1_to_0",
             "09_Diff_Down_0_to_M1", "09_Diff_Down_M1_to_M2", "09_Diff_Up_M2_to_M1", "09_Diff_Up_M1_to_0",
         ]
-        sanc_lock_id = self.t_map["State_Sanctuary_Unlocked"].trigger_id
 
         for d_name in diff_names:
             self.assertIn(d_name, self.t_map)
             tr = self.t_map[d_name]
 
-            # Warunek trigger_active wskazujacy na State_Sanctuary_Unlocked
-            has_sanc_cond = any(
-                c.condition_type == ConditionId.TRIGGER_ACTIVE and c.trigger_id == sanc_lock_id
-                for c in tr.conditions
-            )
-            self.assertTrue(has_sanc_cond, f"{d_name} nie wymaga aktywnego State_Sanctuary_Unlocked!")
+            # Dokladnie 1 warunek: OBJECTS_IN_AREA dla Krola P1
+            self.assertEqual(len(tr.conditions), 1, f"{d_name} powinien miec dokladnie 1 warunek!")
+            cond = tr.conditions[0]
+            self.assertEqual(cond.condition_type, ConditionId.OBJECTS_IN_AREA)
+            self.assertEqual(cond.source_player, PlayerId.ONE.value)
+            self.assertEqual(cond.object_list, UnitInfo.KING.ID)
 
             # Teleport i Stop Krola
             has_teleport = any(e.effect_type == EffectId.TELEPORT_OBJECT for e in tr.effects)
@@ -229,35 +223,78 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                         f"{d_name} modyfikuje trigger fali {target_tr.name}! (Regresja BUG-01)",
                     )
 
+        # Porzadek topologiczny trigger_id
+        # Pad GORNY: P1->P2 (id+0) < 0->P1 (id+1) < M1->0 (id+2) < M2->M1 (id+3)
+        id_up_p1_p2 = self.t_map["09_Diff_Up_P1_to_P2"].trigger_id
+        id_up_0_p1 = self.t_map["09_Diff_Up_0_to_P1"].trigger_id
+        id_up_m1_0 = self.t_map["09_Diff_Up_M1_to_0"].trigger_id
+        id_up_m2_m1 = self.t_map["09_Diff_Up_M2_to_M1"].trigger_id
+        self.assertLess(id_up_p1_p2, id_up_0_p1)
+        self.assertLess(id_up_0_p1, id_up_m1_0)
+        self.assertLess(id_up_m1_0, id_up_m2_m1)
+
+        # Pad DOLNY: M1->M2 (id+4) < 0->M1 (id+5) < P1->0 (id+6) < P2->P1 (id+7)
+        id_down_m1_m2 = self.t_map["09_Diff_Down_M1_to_M2"].trigger_id
+        id_down_0_m1 = self.t_map["09_Diff_Down_0_to_M1"].trigger_id
+        id_down_p1_0 = self.t_map["09_Diff_Down_P1_to_0"].trigger_id
+        id_down_p2_p1 = self.t_map["09_Diff_Down_P2_to_P1"].trigger_id
+        self.assertLess(id_down_m1_m2, id_down_0_m1)
+        self.assertLess(id_down_0_m1, id_down_p1_0)
+        self.assertLess(id_down_p1_0, id_down_p2_p1)
+
     def test_siege_onager_blast_attack_level_bug02(self):
-        """01b musi ustawiac ATTR_BLAST_ATTACK_LEVEL = 44 na 2 dla SIEGE_ONAGER_ID."""
+        """01b musi ustawiac ATTR_BLAST_ATTACK_LEVEL = 44 na 2 dla SIEGE_ONAGER_ID dla wszystkich 4 graczy AI."""
         tr_01b = self.t_map["01b_Apply_Specialized_Unit_Archetypes"]
-        found_blast = False
-        for eff in tr_01b.effects:
+        blast_effects = [
+            eff for eff in tr_01b.effects
             if (
                 eff.effect_type == EffectId.MODIFY_ATTRIBUTE
                 and eff.object_list_unit_id == SIEGE_ONAGER_ID
                 and eff.object_attributes == ATTR_BLAST_ATTACK_LEVEL
-            ):
-                self.assertEqual(eff.quantity, 2)
-                found_blast = True
-        self.assertTrue(found_blast, "Brak modyfikacji ATTR_BLAST_ATTACK_LEVEL dla Onagera w 01b!")
+            )
+        ]
+        self.assertEqual(len(blast_effects), 4, f"Oczekiwano 4 efektow blast_attack_level, znaleziono {len(blast_effects)}!")
+        ai_players = {PlayerId.FIVE.value, PlayerId.SIX.value, PlayerId.SEVEN.value, PlayerId.EIGHT.value}
+        found_players = {eff.source_player for eff in blast_effects}
+        self.assertEqual(found_players, ai_players)
+        for eff in blast_effects:
+            self.assertEqual(eff.quantity, 2)
 
     def test_iron_elephant_attack_resets_in_forge(self):
-        """01d, 01e, 01f musza resetowac atak Zelaznego Slonia do tank_unit_atk (3)."""
+        """01d, 01e, 01f musza resetowac atak Zelaznego Slonia (do 3) i Szakala (do 2) dla wszystkich 4 graczy AI."""
+        ai_players = {PlayerId.FIVE.value, PlayerId.SIX.value, PlayerId.SEVEN.value, PlayerId.EIGHT.value}
         for t_name in ["01d_AI_Techs_Feudal_8m30s", "01e_AI_Techs_Castle_18m", "01f_AI_Techs_Imperial_34m30s"]:
             tr = self.t_map[t_name]
-            found_reset = False
-            for eff in tr.effects:
+
+            # Reset ataku Zelaznego Slonia
+            elephant_resets = [
+                eff for eff in tr.effects
                 if (
                     eff.effect_type == EffectId.MODIFY_ATTRIBUTE
                     and eff.object_list_unit_id == ELITE_BATTLE_ELEPHANT_ID
                     and eff.object_attributes == ATTR_ATTACK
-                ):
-                    val = eff.armour_attack_quantity if eff.armour_attack_quantity is not None else (eff.quantity % 65536)
-                    self.assertEqual(val, BALANCE["tank_unit_atk"])
-                    found_reset = True
-            self.assertTrue(found_reset, f"{t_name} nie resetuje ataku Zelaznego Slonia do 3!")
+                )
+            ]
+            self.assertEqual(len(elephant_resets), 4, f"{t_name} brak 4 resetow ataku Slonia (jest {len(elephant_resets)})!")
+            self.assertEqual({e.source_player for e in elephant_resets}, ai_players)
+            for eff in elephant_resets:
+                val = eff.armour_attack_quantity if eff.armour_attack_quantity is not None else (eff.quantity % 65536)
+                self.assertEqual(val, BALANCE["tank_unit_atk"])
+
+            # Reset ataku Szakala
+            jackal_resets = [
+                eff for eff in tr.effects
+                if (
+                    eff.effect_type == EffectId.MODIFY_ATTRIBUTE
+                    and eff.object_list_unit_id == HUSSAR_ID
+                    and eff.object_attributes == ATTR_ATTACK
+                )
+            ]
+            self.assertEqual(len(jackal_resets), 4, f"{t_name} brak 4 resetow ataku Szakala (jest {len(jackal_resets)})!")
+            self.assertEqual({e.source_player for e in jackal_resets}, ai_players)
+            for eff in jackal_resets:
+                val = eff.armour_attack_quantity if eff.armour_attack_quantity is not None else (eff.quantity % 65536)
+                self.assertEqual(val, BALANCE["raider_atk"])
 
     def test_escalation_prompt_buffs_bug08(self):
         """04a, 04c, 04e musza natychmiast aplikowac 1. tick eskalacji."""
@@ -360,12 +397,14 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         for trig_name, (exp_hp, exp_atk) in grades.items():
             tr = self.t_map[trig_name]
             hp_mods = [e.quantity for e in tr.effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE and e.object_attributes == ATTR_HIT_POINTS]
+            self.assertGreater(len(hp_mods), 0, f"{trig_name} brak modyfikacji HP!")
             self.assertTrue(all(val == exp_hp for val in hp_mods), f"{trig_name} zly buff HP: {hp_mods}")
 
             atk_mods = [
                 (e.armour_attack_quantity if e.armour_attack_quantity is not None else (e.quantity % 65536))
                 for e in tr.effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE and e.object_attributes == ATTR_ATTACK
             ]
+            self.assertGreater(len(atk_mods), 0, f"{trig_name} brak modyfikacji Atk!")
             self.assertTrue(all(val == exp_atk for val in atk_mods), f"{trig_name} zly buff Atk: {atk_mods}")
 
     def test_player_perks_q2_and_q4(self):
@@ -393,17 +432,12 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         self.assertEqual(imam_mod[0].operation, Operation.SET.value)
 
     def test_wave_clocks_variants_and_endless_gates_bug03(self):
-        """Sprawdza strukture Zegarow fal 1-14 oraz indywidualnych bramek Endless."""
+        """Sprawdza strukture Zegarow fal 1-14 oraz indywidualnych bramek i wariantow Endless."""
         wave_defs = get_wave_definitions()
         s_keys = ["G1_North", "G1_East", "G2_Snipers", "G2_Mages", "G3_North", "G3_East"]
 
         for w_def in wave_defs:
             w_num = w_def.wave_num
-            # Close window
-            cw_name = f"03_W{w_num:02d}_Close_Window"
-            self.assertIn(cw_name, self.t_map)
-            self.assertEqual(self.t_map[cw_name].enabled, 1)
-
             for s_key in s_keys:
                 clock_name = f"03_W{w_num:02d}_{s_key}_Clock"
                 if clock_name in self.t_map:
@@ -417,7 +451,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                         self.assertEqual(tr_v.enabled, 0)
                         self.assertEqual(tr_v.looping, 0)
 
-        # Endless Gates
+        # Endless Gates i Warianty Endless
         for s_key in s_keys:
             gate_name = f"03_Endless_Gate_{s_key}"
             self.assertIn(gate_name, self.t_map)
@@ -425,11 +459,41 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             self.assertEqual(tr_g.enabled, 0)
             self.assertEqual(tr_g.looping, 1)
 
-            clock_name = f"03_Endless_{s_key}_Clock"
-            if clock_name in self.t_map:
-                tr_ec = self.t_map[clock_name]
-                self.assertEqual(tr_ec.enabled, 0)
-                self.assertEqual(tr_ec.looping, 1)
+            for lvl_tag in ["M2", "M1", "0", "P1", "P2"]:
+                var_name = f"03_Endless_{s_key}_Diff_{lvl_tag}"
+                self.assertIn(var_name, self.t_map)
+                tr_ev = self.t_map[var_name]
+                self.assertEqual(tr_ev.enabled, 0)
+                self.assertEqual(tr_ev.looping, 0)
+
+    def test_leash_and_p7_spawn_separation_geometry(self):
+        """Weryfikacja, ze punkty spawnu Szakala P7 sa oddalone od smyczy Magow (116, 114) o > 20 kratek."""
+        mage_camp_x, mage_camp_y = 116, 114
+        leash_outer_radius = 20
+
+        checked_spawns = 0
+        for tr in self.triggers:
+            if tr.name.startswith("03_W") or tr.name.startswith("03_Endless"):
+                for eff in tr.effects:
+                    if (
+                        eff.effect_type == EffectId.CREATE_OBJECT
+                        and eff.source_player == PlayerId.SEVEN.value
+                        and eff.object_list_unit_id == HUSSAR_ID
+                    ):
+                        sx, sy = eff.location_x, eff.location_y
+                        chebyshev_dist = max(abs(sx - mage_camp_x), abs(sy - mage_camp_y))
+                        self.assertGreater(
+                            chebyshev_dist,
+                            leash_outer_radius,
+                            f"{tr.name} spawnuje Szakala P7 na ({sx}, {sy}), co lezy w obrebie smyczy Magow (d={chebyshev_dist} <= {leash_outer_radius})!",
+                        )
+                        checked_spawns += 1
+
+        self.assertGreater(checked_spawns, 0, "Brak sprawdzonych spawnów Szakala P7!")
+
+
+if __name__ == "__main__":
+    unittest.main()
 
 
 if __name__ == "__main__":
