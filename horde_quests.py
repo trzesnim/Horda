@@ -455,7 +455,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         add_spawn_and_attack_effect(
             t_destroy, PlayerId.EIGHT,
             counter_comp,
-            spawn_x=118, spawn_y=114, target_x=deep_target_center[0], target_y=deep_target_center[1],
+            spawn_x=116, spawn_y=114, target_x=deep_target_center[0], target_y=deep_target_center[1],
         )
 
         send_highlight_chat(

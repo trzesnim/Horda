@@ -504,11 +504,11 @@ def build_map_and_entities(scenario) -> dict:
     s_g3_east  = spawn_settlement_buildings(um, grid, PlayerId.EIGHT, *s_coords["G3_East"], grade=3)
 
     for sx, sy in [
-        (48, 86), (118, 114), (120, 162), (76, 84), (120, 152),
-        (68, 48), (134, 78), (128, 36), (160, 62), (162, 180), (78, 90), (114, 140),
-        (52, 86), (108, 162), (68, 60), (106, 72), (136, 82),
+        (48, 86), (52, 86), (68, 60), (78, 87), (106, 72),
+        (116, 114), (116, 162), (117, 140), (117, 178), (136, 82), (162, 180),
+        (68, 48), (76, 84), (120, 152), (120, 162), (128, 36), (134, 78), (160, 62),
     ]:
-        grid.mark_no_trees(sx, sy, radius=6)
+        grid.mark_no_trees(sx, sy, radius=7)
 
     reveal_building_center_permanent(um, *q1_pos)
     grid.mark_no_trees(*q1_pos, radius=9)

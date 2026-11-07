@@ -1,7 +1,11 @@
 import inspect
 
 from AoE2ScenarioParser.datasets.players import PlayerId
-from AoE2ScenarioParser.datasets.trigger_lists import DiplomacyState, Operation
+from AoE2ScenarioParser.datasets.trigger_lists import (
+    ActionType,
+    DiplomacyState,
+    Operation,
+)
 from AoE2ScenarioParser.datasets.units import UnitInfo
 
 from horde_config import (
@@ -223,8 +227,8 @@ def add_spawn_and_attack_effect(trigger, ai_player: PlayerId, units_spec: list[t
     idx = 0
     for unit_id, count in units_spec:
         for _ in range(count):
-            dx = (idx % 6) - 3
-            dy = (idx // 6) - 3
+            dx = (idx % 11) - 5
+            dy = (idx // 11) - 5
             safe_call(
                 trigger.new_effect.create_object,
                 object_list_unit_id=unit_id,
@@ -234,20 +238,29 @@ def add_spawn_and_attack_effect(trigger, ai_player: PlayerId, units_spec: list[t
             )
             idx += 1
 
-    order_fn = trigger.new_effect.attack_move
-    if ignore_frontline_move_only and hasattr(trigger.new_effect, "move"):
-        order_fn = trigger.new_effect.move
-
-    safe_call(
-        order_fn,
-        source_player=ai_player,
-        area_x1=max(0, spawn_x - 8),
-        area_y1=max(0, spawn_y - 8),
-        area_x2=min(MAP_SIZE - 1, spawn_x + 8),
-        area_y2=min(MAP_SIZE - 1, spawn_y + 8),
-        location_x=target_x,
-        location_y=target_y,
-    )
+    if ignore_frontline_move_only:
+        safe_call(
+            trigger.new_effect.task_object,
+            source_player=ai_player,
+            area_x1=max(0, spawn_x - 8),
+            area_y1=max(0, spawn_y - 8),
+            area_x2=min(MAP_SIZE - 1, spawn_x + 8),
+            area_y2=min(MAP_SIZE - 1, spawn_y + 8),
+            location_x=target_x,
+            location_y=target_y,
+            action_type=ActionType.MOVE,
+        )
+    else:
+        safe_call(
+            trigger.new_effect.attack_move,
+            source_player=ai_player,
+            area_x1=max(0, spawn_x - 8),
+            area_y1=max(0, spawn_y - 8),
+            area_x2=min(MAP_SIZE - 1, spawn_x + 8),
+            area_y2=min(MAP_SIZE - 1, spawn_y + 8),
+            location_x=target_x,
+            location_y=target_y,
+        )
 
 
 def scale_comp_for_level(comp: list[tuple[int, int]], level: int) -> list[tuple[int, int]]:
@@ -314,6 +327,7 @@ def enforce_specialized_unit_caps(trig, ai_players: list[PlayerId]) -> None:
         safe_modify_attribute(trig, ai_p, ELITE_BATTLE_ELEPHANT_ID, ATTR_ATTACK, Operation.SET, BALANCE["tank_unit_atk"], armor_class=4)
         safe_modify_attribute(trig, ai_p, ELITE_BATTLE_ELEPHANT_ID, ATTR_ARMOR, Operation.SET, BALANCE["tank_melee_armor"], armor_class=4)
         safe_modify_attribute(trig, ai_p, ELITE_BATTLE_ELEPHANT_ID, ATTR_ARMOR, Operation.SET, BALANCE["tank_pierce_armor"], armor_class=3)
+        safe_modify_attribute(trig, ai_p, ELITE_BATTLE_ELEPHANT_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["tank_speed"])
 
         # HUSSAR_ID:
         safe_modify_attribute(trig, ai_p, HUSSAR_ID, ATTR_ATTACK, Operation.SET, BALANCE["raider_atk"], armor_class=4)
@@ -391,29 +405,46 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     t_ai_smith_feudal = tm.add_trigger("01d_AI_Techs_Feudal_8m30s", enabled=True, looping=False)
     safe_call(t_ai_smith_feudal.new_condition.timer, timer=510)
-    research_techs(t_ai_smith_feudal, [PlayerId.FIVE], [TECH_SCALE_MAIL])
-    research_techs(t_ai_smith_feudal, [PlayerId.SIX], [TECH_FLETCHING])
-    research_techs(t_ai_smith_feudal, [PlayerId.SEVEN], [TECH_FORGING])
-    research_techs(t_ai_smith_feudal, [PlayerId.EIGHT], [TECH_FORGING, TECH_SCALE_BARDING])
-    research_techs(t_ai_smith_feudal, ai_players, [TECH_BLOODLINES])
+    research_techs(
+        t_ai_smith_feudal,
+        ai_players,
+        [TECH_FORGING, TECH_SCALE_MAIL, TECH_SCALE_BARDING, TECH_FLETCHING, TECH_BLOODLINES],
+    )
     for ai_p in ai_players:
         safe_modify_attribute(t_ai_smith_feudal, ai_p, HUSSAR_ID, ATTR_HIT_POINTS, Operation.SUBTRACT, 20)
     enforce_specialized_unit_caps(t_ai_smith_feudal, ai_players)
 
     t_ai_smith_castle = tm.add_trigger("01e_AI_Techs_Castle_18m", enabled=True, looping=False)
     safe_call(t_ai_smith_castle.new_condition.timer, timer=1080)
-    research_techs(t_ai_smith_castle, [PlayerId.FIVE], [TECH_CHAIN_MAIL, TECH_SQUIRES])
-    research_techs(t_ai_smith_castle, [PlayerId.SIX], [TECH_BODKIN_ARROW, TECH_BALLISTICS])
-    research_techs(t_ai_smith_castle, [PlayerId.SEVEN], [TECH_IRON_CASTING, TECH_HUSBANDRY])
-    research_techs(t_ai_smith_castle, [PlayerId.EIGHT], [TECH_IRON_CASTING, TECH_CHAIN_BARDING])
+    research_techs(
+        t_ai_smith_castle,
+        ai_players,
+        [
+            TECH_IRON_CASTING,
+            TECH_CHAIN_MAIL,
+            TECH_SQUIRES,
+            TECH_CHAIN_BARDING,
+            TECH_BODKIN_ARROW,
+            TECH_BALLISTICS,
+            TECH_HUSBANDRY,
+        ],
+    )
     enforce_specialized_unit_caps(t_ai_smith_castle, ai_players)
 
     t_ai_smith_imp = tm.add_trigger("01f_AI_Techs_Imperial_34m30s", enabled=True, looping=False)
     safe_call(t_ai_smith_imp.new_condition.timer, timer=2070)
-    research_techs(t_ai_smith_imp, [PlayerId.FIVE], [TECH_PLATE_MAIL])
-    research_techs(t_ai_smith_imp, [PlayerId.SIX], [TECH_BRACER, TECH_CHEMISTRY, TECH_SIEGE_ENGINEERS])
-    research_techs(t_ai_smith_imp, [PlayerId.SEVEN], [TECH_BLAST_FURNACE])
-    research_techs(t_ai_smith_imp, [PlayerId.EIGHT], [TECH_BLAST_FURNACE, TECH_PLATE_BARDING, TECH_SIEGE_ENGINEERS])
+    research_techs(
+        t_ai_smith_imp,
+        ai_players,
+        [
+            TECH_BLAST_FURNACE,
+            TECH_PLATE_MAIL,
+            TECH_PLATE_BARDING,
+            TECH_BRACER,
+            TECH_CHEMISTRY,
+            TECH_SIEGE_ENGINEERS,
+        ],
+    )
     enforce_specialized_unit_caps(t_ai_smith_imp, ai_players)
 
     building_labels = [
@@ -754,7 +785,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     settlement_spawn_configs = {
         "G1_North":   (PlayerId.FIVE,  48, 86,   *deep_target_north),
-        "G1_East":    (PlayerId.FIVE,  108, 162, *deep_target_east),
+        "G1_East":    (PlayerId.FIVE,  117, 178, *deep_target_east),
         "G2_Snipers": (PlayerId.SIX,   68, 60,   *deep_target_north),
         "G2_Mages":   (PlayerId.SEVEN, 116, 114, *deep_target_center),
         "G3_North":   (PlayerId.EIGHT, 106, 72,  *deep_target_center),
@@ -787,7 +818,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     add_spawn_and_attack_effect(
         t_endless_sapper, PlayerId.SIX,
         [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14), (UnitInfo.HUSKARL.ID, 10)],
-        spawn_x=110, spawn_y=140, target_x=68, target_y=146,
+        spawn_x=115, spawn_y=140, target_x=68, target_y=146,
     )
     safe_call(t_endless_sapper.new_effect.deactivate_trigger, trigger_id=t_endless_sapper.trigger_id)
     all_settlement_wave_triggers["G2_Snipers"].append(t_endless_sapper)
@@ -833,12 +864,23 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
                 )
             elif s_key == "G2_Mages":
                 scaled_raiders = scale_comp_for_level([(HUSSAR_ID, w14_def.raider_count)], lvl)
-                add_spawn_and_attack_effect(
-                    t_end_var, PlayerId.SEVEN, scaled_raiders,
-                    spawn_x=52, spawn_y=86,
-                    target_x=eco_raid_targets[0][0], target_y=eco_raid_targets[0][1],
-                    ignore_frontline_move_only=True,
-                )
+                total_r = sum(cnt for _, cnt in scaled_raiders)
+                n_north = (total_r + 1) // 2
+                n_east = total_r // 2
+                if n_north > 0:
+                    add_spawn_and_attack_effect(
+                        t_end_var, PlayerId.SEVEN, [(HUSSAR_ID, n_north)],
+                        spawn_x=52, spawn_y=86,
+                        target_x=54, target_y=119,
+                        ignore_frontline_move_only=True,
+                    )
+                if n_east > 0:
+                    add_spawn_and_attack_effect(
+                        t_end_var, PlayerId.SEVEN, [(HUSSAR_ID, n_east)],
+                        spawn_x=116, spawn_y=162,
+                        target_x=54, target_y=170,
+                        ignore_frontline_move_only=True,
+                    )
 
             all_settlement_wave_triggers[s_key].append(t_end_var)
             end_variants.append(t_end_var)
@@ -868,7 +910,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
         per_settlement_wave = [
             ("G1_North",   PlayerId.FIVE,  w_def.g1_north,   48, 86,   *deep_target_north),
-            ("G1_East",    PlayerId.FIVE,  w_def.g1_east,    108, 162, *deep_target_east),
+            ("G1_East",    PlayerId.FIVE,  w_def.g1_east,    117, 178, *deep_target_east),
             ("G2_Snipers", PlayerId.SIX,   w_def.g2_snipers, 68, 60,   *deep_target_north),
             ("G2_Mages",   PlayerId.SEVEN, w_def.g2_mages,   116, 114, *deep_target_center),
             ("G3_North",   PlayerId.EIGHT, w_def.g3_north,   106, 72,  *deep_target_center),
@@ -968,7 +1010,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             safe_call(t_warn_forest_e.new_condition.timer, timer=w_time - 15)
             add_spawn_and_attack_effect(
                 t_warn_forest_e, PlayerId.SIX, [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 10)],
-                spawn_x=114, spawn_y=140, target_x=109, target_y=140,
+                spawn_x=115, spawn_y=140, target_x=109, target_y=140,
             )
             send_highlight_chat(
                 t_warn_forest_e, "<ORANGE>",
@@ -984,7 +1026,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             add_spawn_and_attack_effect(
                 t_breach_e, PlayerId.SIX,
                 [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 16), (UnitInfo.HUSKARL.ID, 12)],
-                spawn_x=110, spawn_y=140, target_x=68, target_y=146,
+                spawn_x=115, spawn_y=140, target_x=68, target_y=146,
             )
             send_highlight_chat(
                 t_breach_e, "<RED>",

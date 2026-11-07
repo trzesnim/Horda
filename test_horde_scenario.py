@@ -9,24 +9,59 @@ from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 from AoE2ScenarioParser.datasets.conditions import ConditionId
 from AoE2ScenarioParser.datasets.effects import EffectId
 from AoE2ScenarioParser.datasets.players import PlayerId
-from AoE2ScenarioParser.datasets.trigger_lists import Operation
+from AoE2ScenarioParser.datasets.trigger_lists import ActionType, Operation
 from AoE2ScenarioParser.datasets.units import UnitInfo
 from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 
 from horde_config import (
+    ATTR_ARMOR,
     ATTR_ATTACK,
     ATTR_BLAST_ATTACK_LEVEL,
     ATTR_HIT_POINTS,
+    ATTR_MAXIMUM_RANGE,
+    ATTR_MOVEMENT_SPEED,
     BALANCE,
     ELITE_BATTLE_ELEPHANT_ID,
+    ELITE_BERSERK_ID,
     ENEMY_UNIT_REGISTRY,
+    FLAMING_CAMEL_ID,
     HUSSAR_ID,
     IMAM_UNIT_ID,
     OUTPUT_SCENARIO,
+    PETARD_ID,
     SIEGE_ONAGER_ID,
+    TECH_BALLISTICS,
+    TECH_BLAST_FURNACE,
+    TECH_BLOODLINES,
+    TECH_BODKIN_ARROW,
+    TECH_BRACER,
+    TECH_CHAIN_BARDING,
+    TECH_CHAIN_MAIL,
+    TECH_CHEMISTRY,
+    TECH_FLETCHING,
+    TECH_FORGING,
+    TECH_HUSBANDRY,
+    TECH_IRON_CASTING,
+    TECH_PLATE_BARDING,
+    TECH_PLATE_MAIL,
+    TECH_SCALE_BARDING,
+    TECH_SCALE_MAIL,
+    TECH_SIEGE_ENGINEERS,
+    TECH_SQUIRES,
+    TREE_OAK_ID,
+    TREE_PINE_ID,
     get_wave_definitions,
 )
 from horde_waves import scale_comp_for_level
+
+_CACHED_SCENARIO: AoE2DEScenario | None = None
+
+
+def get_compiled_scenario() -> AoE2DEScenario:
+    global _CACHED_SCENARIO
+    if _CACHED_SCENARIO is None:
+        _CACHED_SCENARIO = AoE2DEScenario.from_file(str(OUTPUT_SCENARIO))
+    return _CACHED_SCENARIO
 
 
 class TestWaveScalingAlgorithm(unittest.TestCase):
@@ -107,7 +142,7 @@ class TestEnemyUnitRegistryAndSanctuary(unittest.TestCase):
 
     def test_registry_completeness_across_all_spawns(self):
         """Wszystkie ID uzywane w triggerach spawnu Hordy P5-P8 musza byc w ENEMY_UNIT_REGISTRY."""
-        scenario = AoE2DEScenario.from_file(str(OUTPUT_SCENARIO))
+        scenario = get_compiled_scenario()
         ai_players = {PlayerId.FIVE.value, PlayerId.SIX.value, PlayerId.SEVEN.value, PlayerId.EIGHT.value}
         spawned_unit_ids = set()
 
@@ -169,7 +204,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.scenario = AoE2DEScenario.from_file(str(OUTPUT_SCENARIO))
+        cls.scenario = get_compiled_scenario()
         cls.tm = cls.scenario.trigger_manager
         cls.triggers = cls.tm.triggers
         cls.t_map = {t.name: t for t in cls.triggers}
@@ -223,24 +258,20 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                         f"{d_name} modyfikuje trigger fali {target_tr.name}! (Regresja BUG-01)",
                     )
 
-        # Porzadek topologiczny trigger_id
-        # Pad GORNY: P1->P2 (id+0) < 0->P1 (id+1) < M1->0 (id+2) < M2->M1 (id+3)
+        # Porzadek topologiczny trigger_id (565..572)
+        # Pad GORNY: P1->P2 (565) < 0->P1 (566) < M1->0 (567) < M2->M1 (568)
         id_up_p1_p2 = self.t_map["09_Diff_Up_P1_to_P2"].trigger_id
         id_up_0_p1 = self.t_map["09_Diff_Up_0_to_P1"].trigger_id
         id_up_m1_0 = self.t_map["09_Diff_Up_M1_to_0"].trigger_id
         id_up_m2_m1 = self.t_map["09_Diff_Up_M2_to_M1"].trigger_id
-        self.assertLess(id_up_p1_p2, id_up_0_p1)
-        self.assertLess(id_up_0_p1, id_up_m1_0)
-        self.assertLess(id_up_m1_0, id_up_m2_m1)
+        self.assertEqual((id_up_p1_p2, id_up_0_p1, id_up_m1_0, id_up_m2_m1), (565, 566, 567, 568))
 
-        # Pad DOLNY: M1->M2 (id+4) < 0->M1 (id+5) < P1->0 (id+6) < P2->P1 (id+7)
+        # Pad DOLNY: M1->M2 (569) < 0->M1 (570) < P1->0 (571) < P2->P1 (572)
         id_down_m1_m2 = self.t_map["09_Diff_Down_M1_to_M2"].trigger_id
         id_down_0_m1 = self.t_map["09_Diff_Down_0_to_M1"].trigger_id
         id_down_p1_0 = self.t_map["09_Diff_Down_P1_to_0"].trigger_id
         id_down_p2_p1 = self.t_map["09_Diff_Down_P2_to_P1"].trigger_id
-        self.assertLess(id_down_m1_m2, id_down_0_m1)
-        self.assertLess(id_down_0_m1, id_down_p1_0)
-        self.assertLess(id_down_p1_0, id_down_p2_p1)
+        self.assertEqual((id_down_m1_m2, id_down_0_m1, id_down_p1_0, id_down_p2_p1), (569, 570, 571, 572))
 
     def test_siege_onager_blast_attack_level_bug02(self):
         """01b musi ustawiac ATTR_BLAST_ATTACK_LEVEL = 44 na 2 dla SIEGE_ONAGER_ID dla wszystkich 4 graczy AI."""
@@ -491,9 +522,244 @@ class TestScenarioBinaryStructure(unittest.TestCase):
 
         self.assertGreater(checked_spawns, 0, "Brak sprawdzonych spawnów Szakala P7!")
 
+    def test_spawn_grid_11col_and_all_camp_leash_separation(self):
+        """Weryfikuje 11-kolumnowa siatke [-5..+5, -5..+5], brak kolizji z Garrison_Leash_* oraz drzewami."""
+        camps_by_player = {
+            PlayerId.FIVE.value: [
+                ("Settle_G1_North", 76, 72),
+                ("Settle_G1_East", 132, 152),
+                ("Quest1_Caravan", 154, 190),
+            ],
+            PlayerId.SIX.value: [
+                ("Settle_G2_Snipers", 68, 34),
+                ("Quest2_SniperCliff", 28, 32),
+            ],
+            PlayerId.SEVEN.value: [
+                ("Settle_G2_Mages", 148, 72),
+            ],
+            PlayerId.EIGHT.value: [
+                ("Settle_G3_North", 142, 24),
+                ("Settle_G3_East", 176, 56),
+                ("Quest3_SiegeVault", 142, 118),
+                ("Quest4_BloodAltar", 105, 20),
+            ],
+        }
+        ring_inner = 14
+        ring_outer = 20
 
-if __name__ == "__main__":
-    unittest.main()
+        # Zbierz wspolrzedne drzew na mapie (poza drzewami wycinanymi przez Saperow w Fali 9 i 12)
+        breach_n_tr = self.t_map["03_W09_Forest_Breach_North_Execute"]
+        breach_e_tr = self.t_map["03_W12_Forest_Breach_East_Execute"]
+        n_removed_ids = {
+            eff.selected_object_ids[0]
+            for eff in breach_n_tr.effects
+            if eff.effect_type == EffectId.REMOVE_OBJECT and eff.selected_object_ids
+        }
+        e_removed_ids = {
+            eff.selected_object_ids[0]
+            for eff in breach_e_tr.effects
+            if eff.effect_type == EffectId.REMOVE_OBJECT and eff.selected_object_ids
+        }
+        self.assertEqual(len(n_removed_ids), 66, f"Przesieka polnocna 6x11 powinna wycinac 66 drzew, wycina {len(n_removed_ids)}!")
+        self.assertEqual(len(e_removed_ids), 66, f"Przesieka wschodnia 11x6 powinna wycinac 66 drzew, wycina {len(e_removed_ids)}!")
+
+        permanent_tree_tiles = set()
+        for u in self.scenario.unit_manager.units[PlayerId.GAIA.value]:
+            if u.unit_const in (TREE_OAK_ID, TREE_PINE_ID) and u.reference_id not in (n_removed_ids | e_removed_ids):
+                permanent_tree_tiles.add((int(u.x), int(u.y)))
+
+        max_group_size = 0
+        total_spawn_groups = 0
+
+        for tr in self.triggers:
+            current_creates = []
+            for eff in tr.effects:
+                if eff.effect_type == EffectId.CREATE_OBJECT and eff.source_player in camps_by_player:
+                    current_creates.append(eff)
+                elif eff.effect_type in (EffectId.ATTACK_MOVE, EffectId.TASK_OBJECT) and current_creates:
+                    total_spawn_groups += 1
+                    group_len = len(current_creates)
+                    max_group_size = max(max_group_size, group_len)
+                    self.assertLessEqual(group_len, 121, f"{tr.name} spawnuje {group_len} > 121 jednostek!")
+
+                    # Srodek spawnu wyznaczony z pierwszej jednostki (idx=0 -> dx=-5, dy=-5) i zgodny z obszarem rozkazu +-8
+                    spawn_x = current_creates[0].location_x + 5
+                    spawn_y = current_creates[0].location_y + 5
+                    self.assertEqual(eff.area_x1, max(0, spawn_x - 8))
+                    self.assertEqual(eff.area_y1, max(0, spawn_y - 8))
+                    self.assertEqual(eff.area_x2, min(199, spawn_x + 8))
+                    self.assertEqual(eff.area_y2, min(199, spawn_y + 8))
+
+                    for idx, cr_eff in enumerate(current_creates):
+                        dx = cr_eff.location_x - spawn_x
+                        dy = cr_eff.location_y - spawn_y
+                        self.assertEqual(dx, (idx % 11) - 5, f"{tr.name} zla kolumna dx dla idx={idx}")
+                        self.assertEqual(dy, (idx // 11) - 5, f"{tr.name} zly wiersz dy dla idx={idx}")
+                        self.assertGreaterEqual(dx, -5)
+                        self.assertLessEqual(dx, 5)
+                        self.assertGreaterEqual(dy, -5)
+                        self.assertLessEqual(dy, 5)
+
+                        ux, uy = cr_eff.location_x, cr_eff.location_y
+                        self.assertNotIn(
+                            (ux, uy),
+                            permanent_tree_tiles,
+                            f"{tr.name} spawnuje jednostke na drzewie ({ux}, {uy})!",
+                        )
+
+                        for camp_name, cx, cy in camps_by_player[cr_eff.source_player]:
+                            dist = max(abs(ux - cx), abs(uy - cy))
+                            if tr.name == f"Garrison_Spawn_{camp_name}":
+                                self.assertLess(
+                                    dist,
+                                    ring_inner,
+                                    f"{tr.name} spawnuje garnizon w obrebie smyczy ({ux}, {uy}), d={dist}!",
+                                )
+                            else:
+                                self.assertGreater(
+                                    dist,
+                                    ring_outer,
+                                    f"{tr.name} spawnuje jednostke na ({ux}, {uy}) w zasiegu smyczy {camp_name} ({cx}, {cy}), d={dist} <= {ring_outer}!",
+                                )
+                    current_creates = []
+
+        self.assertGreater(total_spawn_groups, 0)
+        self.assertEqual(max_group_size, 93, f"Najwieksza grupa spawnu (W14 G3_North P2) powinna liczyc 93 jednostki, a liczy {max_group_size}!")
+
+    def test_ai_techs_completeness_and_specialized_unit_caps(self):
+        """Weryfikuje pelen zestaw technologii w 01d, 01e, 01f oraz pulapy enforce_specialized_unit_caps."""
+        ai_players = {PlayerId.FIVE.value, PlayerId.SIX.value, PlayerId.SEVEN.value, PlayerId.EIGHT.value}
+        expected_techs = {
+            "01d_AI_Techs_Feudal_8m30s": {
+                TECH_FORGING, TECH_SCALE_MAIL, TECH_SCALE_BARDING, TECH_FLETCHING, TECH_BLOODLINES,
+            },
+            "01e_AI_Techs_Castle_18m": {
+                TECH_IRON_CASTING, TECH_CHAIN_MAIL, TECH_SQUIRES, TECH_CHAIN_BARDING,
+                TECH_BODKIN_ARROW, TECH_BALLISTICS, TECH_HUSBANDRY,
+            },
+            "01f_AI_Techs_Imperial_34m30s": {
+                TECH_BLAST_FURNACE, TECH_PLATE_MAIL, TECH_PLATE_BARDING,
+                TECH_BRACER, TECH_CHEMISTRY, TECH_SIEGE_ENGINEERS,
+            },
+        }
+
+        for t_name, tech_set in expected_techs.items():
+            tr = self.t_map[t_name]
+            for ai_p in ai_players:
+                researched = {
+                    e.technology
+                    for e in tr.effects
+                    if e.effect_type == EffectId.RESEARCH_TECHNOLOGY and e.source_player == ai_p
+                }
+                self.assertEqual(researched, tech_set, f"{t_name} niekompletne technologie dla gracza P{ai_p}: {researched}")
+
+            # Sprawdz, ze wszystkie efekty MODIFY_ATTRIBUTE wystepuja PO efektach RESEARCH_TECHNOLOGY
+            last_tech_idx = max(i for i, e in enumerate(tr.effects) if e.effect_type == EffectId.RESEARCH_TECHNOLOGY)
+            first_mod_idx = min(i for i, e in enumerate(tr.effects) if e.effect_type == EffectId.MODIFY_ATTRIBUTE)
+            self.assertGreater(first_mod_idx, last_tech_idx, f"{t_name}: modyfikacje atrybutow musza byc po technologiach!")
+
+            # Sprawdz pulapy statystyk (enforce_specialized_unit_caps) dla wszystkich 4 graczy AI
+            for ai_p in ai_players:
+                p_mods = [
+                    e for e in tr.effects
+                    if e.effect_type == EffectId.MODIFY_ATTRIBUTE and e.source_player == ai_p and e.operation == Operation.SET.value
+                ]
+
+                def get_set_val(
+                    unit_id: int,
+                    attr_id: int,
+                    armor_class: int | None = None,
+                    mods=p_mods,
+                    trig_label=t_name,
+                    player_id=ai_p,
+                ):
+                    matches = [
+                        e for e in mods
+                        if e.object_list_unit_id == unit_id
+                        and e.object_attributes == attr_id
+                        and (armor_class is None or e.armour_attack_class == armor_class)
+                    ]
+                    self.assertEqual(
+                        len(matches),
+                        1,
+                        f"{trig_label} P{player_id} brak SET dla unit={unit_id}, attr={attr_id}, class={armor_class}",
+                    )
+                    eff = matches[0]
+                    if armor_class is not None:
+                        return eff.armour_attack_quantity if eff.armour_attack_quantity is not None else (eff.quantity % 65536)
+                    return eff.quantity
+
+                # Zelazny Slon: atak 3, pancerz 10/12, predkosc 0.52
+                self.assertEqual(get_set_val(ELITE_BATTLE_ELEPHANT_ID, ATTR_ATTACK, 4), BALANCE["tank_unit_atk"])
+                self.assertEqual(get_set_val(ELITE_BATTLE_ELEPHANT_ID, ATTR_ARMOR, 4), BALANCE["tank_melee_armor"])
+                self.assertEqual(get_set_val(ELITE_BATTLE_ELEPHANT_ID, ATTR_ARMOR, 3), BALANCE["tank_pierce_armor"])
+                self.assertAlmostEqual(get_set_val(ELITE_BATTLE_ELEPHANT_ID, ATTR_MOVEMENT_SPEED), BALANCE["tank_speed"], places=2)
+
+                # Szakal: atak 2, predkosc 1.62, pancerz 0/6
+                self.assertEqual(get_set_val(HUSSAR_ID, ATTR_ATTACK, 4), BALANCE["raider_atk"])
+                self.assertAlmostEqual(get_set_val(HUSSAR_ID, ATTR_MOVEMENT_SPEED), BALANCE["raider_speed"], places=2)
+                self.assertEqual(get_set_val(HUSSAR_ID, ATTR_ARMOR, 3), BALANCE["raider_pierce_armor"])
+                self.assertEqual(get_set_val(HUSSAR_ID, ATTR_ARMOR, 4), 0)
+
+                # Berserker: pancerz strzelecki 0, predkosc 1.40
+                self.assertEqual(get_set_val(ELITE_BERSERK_ID, ATTR_ARMOR, 3), 0)
+                self.assertAlmostEqual(get_set_val(ELITE_BERSERK_ID, ATTR_MOVEMENT_SPEED), BALANCE["berserk_speed"], places=2)
+
+                # Kamikaze (Petard + Flaming Camel): pancerz strzelecki 0, predkosc 1.50
+                for kam_id in (PETARD_ID, FLAMING_CAMEL_ID):
+                    self.assertEqual(get_set_val(kam_id, ATTR_ARMOR, 3), 0)
+                    self.assertAlmostEqual(get_set_val(kam_id, ATTR_MOVEMENT_SPEED), BALANCE["kamikaze_speed"], places=2)
+
+                # Mozdzierz Oblezniczy: zasieg 21
+                self.assertEqual(get_set_val(SIEGE_ONAGER_ID, ATTR_MAXIMUM_RANGE), BALANCE["mortar_range"])
+
+        # Korekta -20 HP dla HUSSAR_ID w 01d po zbadaniu Bloodlines
+        tr_01d = self.t_map["01d_AI_Techs_Feudal_8m30s"]
+        hussar_hp_subs = [
+            e for e in tr_01d.effects
+            if (
+                e.effect_type == EffectId.MODIFY_ATTRIBUTE
+                and e.object_list_unit_id == HUSSAR_ID
+                and e.object_attributes == ATTR_HIT_POINTS
+                and e.operation == Operation.SUBTRACT.value
+            )
+        ]
+        self.assertEqual(len(hussar_hp_subs), 4)
+        self.assertEqual({e.source_player for e in hussar_hp_subs}, ai_players)
+        for e in hussar_hp_subs:
+            self.assertEqual(e.quantity, 20)
+
+    def test_endless_jackal_dual_flank_raids(self):
+        """Weryfikuje podzial Szakali w 03_Endless_G2_Mages_Diff_* na dwie flanki: (52, 86)->(54, 119) i (116, 162)->(54, 170)."""
+        w14_raiders = get_wave_definitions()[-1].raider_count
+        diff_tags = {-2: "M2", -1: "M1", 0: "0", 1: "P1", 2: "P2"}
+
+        for lvl, tag in diff_tags.items():
+            tr = self.t_map[f"03_Endless_G2_Mages_Diff_{tag}"]
+            expected_total = sum(cnt for _, cnt in scale_comp_for_level([(HUSSAR_ID, w14_raiders)], lvl))
+            expected_north = (expected_total + 1) // 2
+            expected_east = expected_total // 2
+
+            hussar_spawns = [
+                e for e in tr.effects
+                if e.effect_type == EffectId.CREATE_OBJECT and e.object_list_unit_id == HUSSAR_ID
+            ]
+            self.assertEqual(len(hussar_spawns), expected_total)
+
+            north_spawns = [e for e in hussar_spawns if 44 <= e.location_x <= 60 and 78 <= e.location_y <= 94]
+            east_spawns = [e for e in hussar_spawns if 108 <= e.location_x <= 124 and 154 <= e.location_y <= 170]
+            self.assertEqual(len(north_spawns), expected_north)
+            self.assertEqual(len(east_spawns), expected_east)
+
+            move_effs = [
+                e for e in tr.effects
+                if e.effect_type == EffectId.TASK_OBJECT
+                and e.source_player == PlayerId.SEVEN.value
+                and e.action_type == ActionType.MOVE.value
+            ]
+            self.assertEqual(len(move_effs), 2)
+            self.assertEqual((move_effs[0].location_x, move_effs[0].location_y), (54, 119))
+            self.assertEqual((move_effs[1].location_x, move_effs[1].location_y), (54, 170))
 
 
 if __name__ == "__main__":

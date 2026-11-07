@@ -53,21 +53,18 @@ Wszyscy 4 gracze są w sojuszu (`DiplomacyState.ALLY`), mają od `0:01` zbadaną
 - **`PlayerId.FOUR` (Żółty):** Town Center na `(76, 168)`. Odpowiada za umocnienia Bramy Wschodniej `(104, 162)` i Bramy Handlowej `(104, 193)`.
 
 ### Gracze AI (`ai_players = [PlayerId.FIVE, PlayerId.SIX, PlayerId.SEVEN, PlayerId.EIGHT]`)
-Wszyscy 4 gracze AI są w sojuszu między sobą i w stanie wojny (`DiplomacyState.ENEMY`) z `P1–P4`. Startują z `0` wszystkich surowców, bez wieśniaków i bez mobilnych jednostek na mapie w `0:00`:
+Wszyscy 4 gracze AI są w sojuszu między sobą i w stanie wojny (`DiplomacyState.ENEMY`) z `P1–P4`. Startują z `0` wszystkich surowców, bez wieśniaków i bez mobilnych jednostek na mapie w `0:00`. Wszyscy 4 gracze AI otrzymują zunifikowany zestaw technologii Kuźni, Koszar, Stajni i Uniwersytetu (`01d` w `8:30`: `Forging`, `Scale Mail`, `Scale Barding`, `Fletching`, `Bloodlines` z korektą `-20 HP` dla Szakala; `01e` w `18:00`: `Iron Casting`, `Chain Mail`, `Squires`, `Chain Barding`, `Bodkin Arrow`, `Ballistics`, `Husbandry`; `01f` w `34:30`: `Blast Furnace`, `Plate Mail`, `Plate Barding`, `Bracer`, `Chemistry`, `Siege Engineers`), po których `enforce_specialized_unit_caps` zamraża statystyki jednostek specjalnych:
 - **`PlayerId.FIVE` (Turkusowy — Szturmowcy i Kamikaze):**
-  - Technologie Kuźni: `TECH_SCALE_MAIL` (`8:30`), `TECH_CHAIN_MAIL` + `TECH_SQUIRES` (`18:00`), `TECH_PLATE_MAIL` (`34:30`).
   - Jednostki specjalne: Berserker Szturmowy (`ELITE_BERSERK_ID = 694`), Fanatyk Kamikaze (`PETARD_ID = 440`), Płonący Wielbłąd (`FLAMING_CAMEL_ID = 1263`).
   - Budynki: Settlement `G1_North` `(76, 72)`, Settlement `G1_East` `(132, 152)`, Quest 1 Karawanseraj `(154, 190)`.
 - **`PlayerId.SIX` (Fioletowy — Artyleria i Snajperzy):**
-  - Technologie Kuźni/Uniwersytetu: `TECH_FLETCHING` (`8:30`), `TECH_BODKIN_ARROW` + `TECH_BALLISTICS` (`18:00`), `TECH_BRACER` + `TECH_CHEMISTRY` + `TECH_SIEGE_ENGINEERS` (`34:30`).
-  - Jednostki specjalne: Snajper Imperialny (`UnitInfo.ELITE_JANISSARY.ID = 375`), Moździerz Oblężniczy (`SIEGE_ONAGER_ID = 588`).
+  - Jednostki specjalne: Snajper Imperialny (`UnitInfo.ELITE_JANISSARY.ID = 557`), Moździerz Oblężniczy (`SIEGE_ONAGER_ID = 588`).
   - Budynki: Settlement `G2_Snipers` `(68, 34)`, Quest 2 Klif Artylerii `(28, 32)`.
 - **`PlayerId.SEVEN` (Szary — Arcymagowie i Dywersja):**
-  - Technologie Kuźni/Stajni: `TECH_FORGING` + `TECH_BLOODLINES` (`8:30`), `TECH_IRON_CASTING` + `TECH_HUSBANDRY` (`18:00`), `TECH_BLAST_FURNACE` (`34:30`).
   - Jednostki specjalne: Arcymag Tarczy (`IMAM_UNIT_ID = 842`), Szakal Dywersyjny (`HUSSAR_ID = 441`).
   - Budynki: Settlement `G2_Mages` `(148, 72)`, Quest 4 Krwawy Ołtarz `(105, 20)`.
 - **`PlayerId.EIGHT` (Pomarańczowy — Tytani i Elita Hordy):**
-  - Technologie: `TECH_FAITH` (`0:01`), `TECH_FORGING` + `TECH_SCALE_BARDING` (`8:30`), `TECH_IRON_CASTING` + `TECH_CHAIN_BARDING` (`18:00`), `TECH_BLAST_FURNACE` + `TECH_PLATE_BARDING` + `TECH_SIEGE_ENGINEERS` (`34:30`).
+  - Dodatkowa technologia: `TECH_FAITH` (`0:01`).
   - Jednostki specjalne: Taran-Żółw / Żelazny Słoń (`ELITE_BATTLE_ELEPHANT_ID = 1134`).
   - Budynki: Settlement `G3_North` `(142, 24)`, Settlement `G3_East` `(176, 56)`, Quest 3 Skarbiec Krasnoludów `(142, 118)`.
 
@@ -205,6 +202,26 @@ Wszyscy 4 gracze AI są w sojuszu między sobą i w stanie wojny (`DiplomacyStat
 - **Objaw w grze:** Po zrobieniu Q1 pełne wozy handlowe jeździły z bazową prędkością, jednostki P7 przed bramami nie były spychane w głąb bazy w `02e`, a jednostki stojące na linii budowy muru na `y=186` mogły zablokować spawn segmentów muru.
 - **Naprawa:** Dodano `teleport_object` dla pasa `105..199, 183..187`, dodano buff dla `TRADE_CART_FULL` w Q1 oraz włączono P7 do pętli `02e`.
 
+### BUG-20 [KRYTYCZNY — WDROŻONY / NAPRAWIONY w Etapie R7]: Przepełnienie 6-kolumnowej siatki spawnu (`dy > 8`) i kolizje skrajnych kolumn ze smyczami `Garrison_Leash_*` oraz drzewami
+- **Objaw w grze:** Przy 6 kolumnach (`dx = (idx % 6) - 3, dy = (idx // 6) - 3`) w późnych falach (do 93 jednostek w `G3_North` i 92 w `G1_North` na poziomie `+2`) współrzędna `dy` osiągała `+12`, wykraczając poza wyciętą polanę (`radius=6`) i poza obszar rozkazu `attack_move` (`±8`), przez co do 21 jednostek na obóz lądowało w lesie lub stało bezczynnie do końca gry. Ponadto skrajne kolumny spawnu `G1_East` `(108, 162)` (`x=103` za bramą graczy oraz `x=113` w odległości `19 <= 20` od smyczy obozu `132, 152`) i odwetu `05_Settlement_Destroyed_*` `(118, 114)` (`x=123` w odległości `19 <= 20` od smyczy `Quest3_SiegeVault` `142, 118`) wchodziły w pierścienie `Garrison_Leash_*`, a spawny saperskie na wschodzie `(110, 140)` zahaczały o nieścięty las (`x=105..109, y=135..136`).
+- **Naprawa:** Poszerzono siatkę w `add_spawn_and_attack_effect` do 11 kolumn (`dx = (idx % 11) - 5, dy = (idx // 11) - 5`, mieszcząc do 121 jednostek w `[-5..+5, -5..+5]`), zwiększono promień wycinania drzew wokół punktów zbiórki fal w `horde_map.py` do `radius=7` (z zachowaniem pełnych 66 drzew w `north_breach_box` i 66 drzew w `east_breach_box`), przesunięto spawn fal `G1_East` na `(117, 178)`, odwet Settlementów na `(116, 114)` oraz wschodni spawn saperski na `(115, 140)`.
+
+### BUG-21 [WYSOKI — WDROŻONY / NAPRAWIONY w Etapie R7]: Niekompletne technologie Kuźni/Stajni/Koszar/Uniwersytetu dla jednostek regularnych AI (`01d–01f`)
+- **Objaw w grze:** Gracze AI badali tylko wycinkowe technologie (np. `P8` nie badał technologii łuczniczych dla `Crossbowman`/`Arbalester`/`Heavy Cav Archer` ani pancerza piechoty dla `Pikeman`/`Halberdier`; `P7` nie badał pancerza kawalerii dla `Knight`/`Cavalier`/`Paladin`; `P6` nie badał ulepszeń piechoty dla `Halberdier`/`Huskarl`; `P5` nie badał ulepszeń kawalerii i łuczników).
+- **Naprawa:** Zunifikowano badanie pełnego zestawu technologii w `01d` (`8:30`), `01e` (`18:00`) i `01f` (`34:30`) dla wszystkich `ai_players` (`P5–P8`) oraz rozszerzono `enforce_specialized_unit_caps` o zamrożenie prędkości Żelaznego Słonia (`0.52`) po zbadaniu `TECH_HUSBANDRY`.
+
+### BUG-22 [ŚREDNI — WDROŻONY / NAPRAWIONY w Etapie R7]: Jednoflankowe rajdy Szakali w Trybie Endless (`03_Endless_G2_Mages_Diff_*`)
+- **Objaw w grze:** W Trybie Endless wszystkie Szakale spawnowały się wyłącznie na północy `(52, 86)` i uderzały tylko na `eco_raid_targets[0]` (bazę P3), zostawiając południowo-wschodnią flankę ekonomiczną (P2 i P4) bez presji.
+- **Naprawa:** Podzielono Szakale w `03_Endless_G2_Mages_Diff_*` na dwie równomierne grupy: `n_north = (total_r + 1) // 2` ze spawnu `(52, 86)` z rozkazem `move` na `(54, 119)` (pomiędzy P3 i P1) oraz `n_east = total_r // 2` ze spawnu `(116, 162)` z rozkazem `move` na `(54, 170)` (pomiędzy P2 i P4).
+
+### BUG-23 [NISKI — WDROŻONY / NAPRAWIONY w Etapie R7]: Podwójne wczytywanie pliku binarnego w `test_horde_scenario.py` i martwe pliki w repozytorium
+- **Objaw w kodzie:** `AoE2DEScenario.from_file(str(OUTPUT_SCENARIO))` było wywoływane dwukrotnie (~31.4s), na końcu `test_horde_scenario.py` znajdował się zduplikowany blok `if __name__ == "__main__":`, w `DEBUG_LOG.md` zduplikowana sekcja `Wdrożenie 7`, a w katalogu roboczym leżały martwe pliki `split_into_modules.py` oraz `generate_horde_quests_scenario_monolith.bak`.
+- **Naprawa:** Wprowadzono cache `get_compiled_scenario()` skracający czas testów o połowę (~15s), rozbudowano zestaw testów do 23/23, oczyszczono duplikaty i usunięto martwe pliki pomocnicze.
+
+### BUG-24 [WYSOKI — WDROŻONY / NAPRAWIONY w Etapie R7]: Martwa gałąź `hasattr(trigger.new_effect, "move")` w `add_spawn_and_attack_effect` (`horde_waves.py`)
+- **Objaw w grze:** W `AoE2ScenarioParser` efekt ruchu bez zatrzymywania się na froncie nazywa się `task_object` (`EffectId.TASK_OBJECT` z `action_type=ActionType.MOVE`), a nie `move`. Przez użycie cichego warunku `if ignore_frontline_move_only and hasattr(trigger.new_effect, "move"):` parametr `ignore_frontline_move_only=True` dla Szakali Dywersyjnych był zawsze ignorowany i Szakale otrzymywały zwykły `attack_move`, zatrzymując się na pierwszych murach/jednostkach przed bramą zamiast wjeżdżać pod Town Centery graczy.
+- **Naprawa:** Zastąpiono martwy warunek `hasattr(..., "move")` bezpośrednim wywołaniem `trigger.new_effect.task_object(..., action_type=ActionType.MOVE)`.
+
 ---
 
 ## 5. Definicja Bazowego HP, Centralny Rejestr Jednostek i Balans
@@ -326,33 +343,17 @@ Dzięki temu przejście `0 -> -1` odejmuje dokładnie `hp_delta_down` (ok. 15% b
   - W `test_settlement_fury_gradation_and_retaliations` dodano asercje `assertGreater(len(...), 0)` chroniące przed błędem pustej kolekcji.
   - W `test_wave_clocks_variants_and_endless_gates_bug03` zweryfikowano bramki i warianty Endless.
   - Dodano nowy test `test_leash_and_p7_spawn_separation_geometry` weryfikujący, że spawny Szakala P7 leżą w odległości Czebyszewa $> 20$ od smyczy Magów `(116, 114)`.
-- **Weryfikacja binarna i jakość kodu:**
-  - `python generate_horde_quests_scenario.py` -> exit code 0, plik wyjściowy zapisany pomyślnie.
-  - `python test_horde_scenario.py` -> **Ran 20 tests in 31.448s — OK** (20/20 testów zaliczonych).
-  - `python -m ruff check .` -> **All checks passed!** (0 błędów, 0 ostrzeżeń).
 
-
-### Wdrożenie 7: Etapy R4, R5 oraz R6 — Zamknięcie v6.4 [STATUS: OK]
-- **Etap R4 (Całkowite odblokowanie Sanktuarium Balansu i skalowanie rajdów — BUG-12):**
-  - W `horde_waves.py` usunięto trigger `State_Sanctuary_Unlocked`, usunięto triggery zamykające okno `03_W*_Close_Window` oraz wbudowano skalowanie `scale_comp_for_level` dla `Szakale_EcoRaid` i `Trade_Line_Attack` bezpośrednio do wariantów `Diff_{tag}` obozów `G2_Mages` i `G3_East`.
-  - W `horde_quests.py` usunięto `t_sanc_unlocked`, usunięto triggery przekaźnikowe `_Relay2s`, a 8 triggerów `09_Diff_*` zarejestrowano w odwróconym porządku topologicznym:
-    * Pad górny: `id(P1->P2) < id(0->P1) < id(M1->0) < id(M2->M1)`
-    * Pad dolny: `id(M1->M2) < id(0->M1) < id(P1->0) < id(P2->P1)`
-    Gwarantuje to, że aktywowany kolejny trigger ma zawsze niższy `trigger_id` niż trigger aktualnie wykonywany, co uniemożliwia wielokrotny przeskok poziomu w jednym ticku silnika AoE2 bez konieczności stosowania blokad czasowych.
-  - Zaktualizowano powitanie w `t_init` na wersję `v6.4`.
-- **Etap R5 (Synchronizacja dokumentacji i opisów w grze — BUG-13, BUG-14):**
-  - W `horde_config.py` w `populate_ingame_scenario_descriptions` zaktualizowano wersję na `v6.4`, usunięto opis blokad Sanktuarium, zaktualizowano opis eskalacji (od 20:00 +5 HP/+1 Atak co 5 min; od 45:00 dodatkowo +9 HP/+1 Atak co 5 min; od 55:00 dodatkowo +10 HP/+2 Atak co 5 min).
-  - W `horda.md` zaktualizowano wersję na `v6.4`, zaktualizowano opis działania Sanktuarium (brak blokad czasowych, pełne skalowanie), zaktualizowano punkty eskalacji oraz zaktualizowano współrzędne 6 Settlementów do rzeczywistych pozycji na mapie.
-- **Etap R6 (Rozbudowa i uszczelnienie walidatora testowego — BUG-16):**
-  - W `test_horde_scenario.py` zaktualizowano `test_single_unit_scaling` do `UnitInfo.ELITE_JANISSARY.ID` (557).
-  - W `test_registry_completeness_across_all_spawns` wdrożono bezpośrednią weryfikację wszystkich obiektów `CREATE_OBJECT` w triggerach graczy AI przeciwko `ENEMY_UNIT_REGISTRY`.
-  - W `test_state_markers_and_sanctuary_lock` zweryfikowano brak triggerów z `Sanctuary_Unlocked`, `Close_Window` oraz `Relay2s`.
-  - W `test_difficulty_transitions_isolation_bug01` zweryfikowano dokładnie 1 warunek w każdym triggerze `09_Diff_*` oraz porządek topologiczny `trigger_id` dla obu padów.
-  - W `test_siege_onager_blast_attack_level_bug02` oraz `test_iron_elephant_attack_resets_in_forge` zweryfikowano aplikację dla wszystkich 4 graczy AI (`len == 4`).
-  - W `test_settlement_fury_gradation_and_retaliations` dodano asercje `assertGreater(len(...), 0)` chroniące przed błędem pustej kolekcji.
-  - W `test_wave_clocks_variants_and_endless_gates_bug03` zweryfikowano bramki i warianty Endless.
-  - Dodano nowy test `test_leash_and_p7_spawn_separation_geometry` weryfikujący, że spawny Szakala P7 leżą w odległości Czebyszewa $> 20$ od smyczy Magów `(116, 114)`.
-- **Weryfikacja binarna i jakość kodu:**
-  - `python generate_horde_quests_scenario.py` -> exit code 0, plik wyjściowy zapisany pomyślnie.
-  - `python test_horde_scenario.py` -> **Ran 20 tests in 31.448s — OK** (20/20 testów zaliczonych).
-  - `python -m ruff check .` -> **All checks passed!** (0 błędów, 0 ostrzeżeń).
+### Wdrożenie 8: Etap R7 — Audyt Główny Argon High i Usprawnienia Inżynieryjne A–D [STATUS: OK]
+- **Zadanie A (`BUG-20` — Siatka spawnu 11×11, promień polan `radius=7`, separacja od smyczy i drzew):**
+  - W `add_spawn_and_attack_effect` (`horde_waves.py`) zmieniono siatkę spawnu z 6-kolumnowej na 11-kolumnową (`dx = (idx % 11) - 5, dy = (idx // 11) - 5`), dzięki czemu największa fala (93 jednostki w `G3_North` na poziomie `+2`) mieści się w obrysie `dx ∈ [-5, +5], dy ∈ [-5, +3]` (wewnątrz polany `radius=7` i rozkazu `±8`).
+  - W `horde_map.py` zwiększono promień wycinania drzew wokół punktów zbiórki fal do `radius=7` oraz skorygowano środki wycinania przy przesiekach `(78, 87)` i `(117, 140)`, zachowując pełne 66 drzew w `north_breach_box (6×11)` i 66 drzew w `east_breach_box (11×6)`.
+  - Przesunięto punkt spawnu fal `G1_East` z `(108, 162)` na `(117, 178)`, spawn odwetu `05_Settlement_Destroyed_*` z `(118, 114)` na `(116, 114)` oraz wschodni spawn saperski na `(115, 140)`, gwarantując dla 100% spawnów w scenariuszu odległość Czebyszewa $> 20$ od wszystkich obozów (6 Settlementów i 4 Questów) tego samego gracza AI.
+- **Zadanie B (`BUG-21` — Zunifikowane technologie `01d–01f` i pułapy `enforce_specialized_unit_caps`):**
+  - Ujednolicono technologie w `01d` (`8:30`), `01e` (`18:00`) i `01f` (`34:30`) dla wszystkich `ai_players` (`P5–P8`) oraz dodano reset prędkości Żelaznego Słonia (`0.52`) w `enforce_specialized_unit_caps` po `TECH_HUSBANDRY`.
+- **Zadanie C (`BUG-22` — Dwuflankowe rajdy Szakali w Trybie Endless):**
+  - W `03_Endless_G2_Mages_Diff_*` podzielono Szakale na dwie grupy: `n_north = (total_r + 1) // 2` na `(52, 86)` z rozkazem `move` na `(54, 119)` oraz `n_east = total_r // 2` na `(116, 162)` z rozkazem `move` na `(54, 170)`.
+- **Zadanie D (`BUG-23` — Optymalizacja i rozbudowa `test_horde_scenario.py`, higiena repozytorium):**
+  - Zoptymalizowano wczytywanie binarne `.aoe2scenario` w `test_horde_scenario.py` do pojedynczego wywołania (`get_compiled_scenario()`), skracając czas wykonania testów z ~31.4s do ~15s.
+  - Dodano 3 nowe testy kompleksowe (`test_spawn_grid_11col_and_all_camp_leash_separation`, `test_ai_techs_completeness_and_specialized_unit_caps`, `test_endless_jackal_dual_flank_raids`) — łącznie **23/23 testów OK**.
+  - Usunięto martwe pliki `split_into_modules.py` oraz `generate_horde_quests_scenario_monolith.bak`.
