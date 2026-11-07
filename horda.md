@@ -7,7 +7,43 @@
 
 ---
 
-## 1. Sanktuarium Balansu — Zmiana trudności na żywo w trakcie meczu `(6, 150)`
+## 1. Warunki uruchomienia w lobby i konfiguracja graczy (P1–P8)
+
+W menu gry wybierz: **Multiplayer -> Host Game -> Game Mode: Custom Scenario (Niestandardowy scenariusz) -> `Kroniki_Rubiezy_Horda_Coop`**.
+
+### Przypisanie slotów, drużyn i cywilizacji
+
+W scenariuszu numery slotów i przypisane kolory ściśle determinują pozycję bazy, sektor obrony oraz mechaniki triggerów:
+
+| Slot / Kolor | Typ gracza | Rola w scenariuszu i sektor obrony | Drużyna | Przypisana / Rekomendowana cywilizacja |
+| :--- | :--- | :--- | :--- | :--- |
+| **1 (Niebieski)** | **Człowiek** | **Mistrz Balansu i Obrońca Bramy Centralnej:** Kontroluje nieśmiertelnego Inżyniera Balansu (Króla na `6, 150`), broni podejścia pod Bramę Centralną `(104, 114)` przed atakiem Magów P7 i Tytanów P8; odpowiada za stałą wizję celów (stałe Revealers). | **Drużyna 1** | **Bizancjum** (tanie kontry i wytrzymałe budynki pod napór w centrum), **Brytowie** (daleki zasięg łuków na Magów i Snajperów), **Teutoni**, **Czesi** |
+| **2 (Czerwony)** | **Człowiek** | **Cytadela Sojuszu i Koordynator Handlu:** Chroni centralną Cytadelę Sojuszu (Feitoria na `54, 146` z +3000 HP — jej upadek to natychmiastowa porażka!). Zarządza Placem Targowym `(3..23, 177..198)` oraz sojuszniczym Marketem po Q1 `(195, 194)`. | **Drużyna 1** | **Hiszpanie** (**Kluczowy wybór!** Bonus drużynowy **+25% złota z handlu** na 190-kratkowym szlaku), **Portugalczycy**, **Frankowie**, **Burgundczycy** |
+| **3 (Zielony)** | **Człowiek** | **Strażnik Przełęczy Północnej:** Broni Bramy Północnej `(48, 100)` przed szturmami Berserkerów P5 i Snajperów P6; zabezpiecza wyłom saperski w północnym lesie w Fali 9 (51:00); ma najbliżej do Q2 (Klif Artylerii). | **Drużyna 1** | **Celtowie** (szybka piechota i machiny do kontrowania snajperów), **Goci** (masowa produkcja piechoty), **Polacy**, **Rzymianie** |
+| **4 (Żółty)** | **Człowiek** | **Obrońca Skrzydła Wschodniego i Szlaku Handlowego:** Broni Bramy Wschodniej `(104, 162)` i Bramy Handlowej `(104, 193)`; odpiera natarcia ze Wschodu (G1/G3), chroni szlak handlowy przed rajdami od 45:00 oraz wschodni wyłom w lesie w Fali 12 (67:30); ma najbliżej do Q1. | **Drużyna 1** | **Litwini** (Leitis przebijający pancerz Słoni-Tanków P8!), **Hindustańczycy** (wielbłądy na kawalerię i słonie), **Węgrzy**, **Saraceni** |
+| **5 (Turkusowy)** | **Komputer (AI)** | **Awangarda Hordy (Szturmowcy, Berserkerzy i Saperzy):** Kontroluje Obozy G1 Północny `(76, 72)` i Wschodni `(132, 152)` oraz Q1 Karawanseraj `(154, 190)`. Wysyła Berserkerów, Huskarlów, Petardy, Płonące Wielbłądy, Tarany i Halabardników. | **Drużyna 2** | **Wikingowie (Vikings)** *(Rekomendowana / Główna — tożsamość Berserkerów Szturmowych, wysoki atak wręcz)* / *Alternatywa:* **Goci (Goths)** (dla fali Huskarlów i zalewu piechoty) |
+| **6 (Fioletowy)** | **Komputer (AI)** | **Korpus Oblężniczy (Snajperzy Imperialni i Artyleria):** Kontroluje Obóz G2 Akademia Snajperów `(68, 34)` oraz Q2 Klif Artylerii `(28, 32)`. Wysyła Snajperów Imperialnych (zasięg 19), Moździerze Oblężnicze (zasięg 21, nie niszczące drzew) oraz Onagery wyrębujące lasy. | **Drużyna 2** | **Turcy (Turks)** *(Rekomendowana / Główna — tożsamość Janczarów/Snajperów i prochu)* / *Alternatywa:* **Celtowie (Celts)** (bonusy do machin oblężniczych) |
+| **7 (Szary)** | **Komputer (AI)** | **Zakon Magów i Zagon Dywersyjny (Wsparcie i Eco-Raids):** Kontroluje Obóz G2 Klasztor Magów `(148, 72)` oraz Q4 Krwawy Ołtarz `(105, 20)`. Spawnuje Arcymaga Tarczy (Imam dający +30/+30 pancerza i leczenie dla całej Hordy) oraz Szakale Eco-Raiders polujące na wieśniaków pod TC. | **Drużyna 2** | **Saraceni (Saracens)** *(Rekomendowana / Główna — tożsamość Imama Arcymaga, mistycyzm i zwinna lekka jazda)* / *Alternatywa:* **Tatarzy (Tatars)** lub **Mongołowie (Mongols)** (szybkie zagony lekkiej jazdy/huzarów) |
+| **8 (Pomarańczowy)**| **Komputer (AI)** | **Żelazny Legion i Cytadele Tytanów (Boss i Najcięższy Pancerz):** Kontroluje Cytadelę Północną `(142, 24)`, Cytadelę Wschodnią `(176, 56)` oraz Q3 Skarbiec Krasnoludów `(142, 118)` (Krepost). Wysyła Taran-Żółwie / Żelazne Słonie (1450 HP, niewrażliwe na mnichów dzięki Faith), Paladynów i rajdy na szlak handlowy od 45:00. | **Drużyna 2** | **Persowie (Persians)** *(Rekomendowana / Główna — pancerne Słonie Bojowe i Paladyni, ciężki pancerz)* / *Alternatywa:* **Khmerzy (Khmer)** (Battle Elephants) lub **Bułgarzy (Bulgarians)** (Krepost w Q3) |
+
+### Wymagane parametry pokoju (Lobby Settings)
+
+* **Tryb gry (Game Mode):** **Niestandardowy scenariusz (Custom Scenario)** -> plik `Kroniki_Rubiezy_Horda_Coop`.
+* **Widoczność mapy (Map Visibility):** **Normalna (Normal)** — Mgła Wojny jest aktywna. Nad środkiem każdego budynku Questu i Settlementu wisi stały odsłaniacz punktowy (`Map Revealer`, `LOS = 4`), dzięki czemu kluczowe cele strategiczne są stale widoczne i klikalne pod Mgłą Wojny, a pozostała część rubieży wymaga aktywnego zwiadu.
+* **Limit populacji (Population Limit):** **200** — scenariusz dynamicznie zwiększa limity: Gracz 2 otrzymuje w 0:01 `+20` popu (rekompensata za Feitorię), zburzenie Q1 (Karawanseraj) daje stałe `+30` popu (limit 230), a zburzenie Q3 (Skarbiec Krasnoludów) daje kolejne `+20` popu (limit 250 dla całej drużyny!).
+* **Poziom trudności w lobby (Difficulty):** **Umiarkowany / Domyślny (Standard / Moderate)** — wybór trudności w lobby nie wpływa na mechaniki fal, ponieważ faktycznym poziomem trudności steruje **w 100% Sanktuarium Balansu na żywo w trakcie gry** (Inżynier Balansu Gracza 1 na `6, 150`, 5 poziomów od -2 do +2 ze skalowaniem delty HP, ataku i wielkości fal).
+* **Zasoby i Wiek startowy (Starting Resources & Age):** **Domyślne / Standardowe (zdefiniowane w scenariuszu)** — gracze ludzcy P1–P4 startują na równych warunkach z 500F, 600W, 400G, 300S, 6 chłopami i skautem. Graczom AI (P5–P8) scenariusz zeruje zasoby w 0:00 i automatycznie bada kolejne ery i technologie kowalskie w triggerach.
+* **Zablokuj drużyny (Lock Teams):** **Wyłączone (Unchecked)** — krytyczne, aby trigger inicjalizujący (`01_Init_Diplomacy_And_Cartography`) mógł poprawnie skonfigurować i utrzymać sojusze P1–P4 oraz wrogość wobec P5–P8.
+* **Poziom AI (AI Difficulty dla P5–P8):** Dowolny (np. **Standard / Moderate / Extreme**; gracze AI nie posiadają wieśniaków ani gospodarki — całym ruchem, garnizonami i szturmami fal zarządzają skrypty triggerów).
+* **Prędkość gry (Game Speed):** **Normalna (1.7x)** (lub preferowana przez drużynę).
+* **Zablokuj prędkość gry (Lock Speed):** **Włączone (Checked)** — zapobiega przypadkowej zmianie tempa w trakcie partii wieloosobowej.
+* **Wszystkie technologie (All Techs):** **Wyłączone (Unchecked)** — unikalne drzewka technologiczne cywilizacji mają kluczowe znaczenie.
+* **Dozwolone kody (Allow Cheats):** **Wyłączone (Unchecked)**.
+* **Wskazówka strategiczna dotycząca cywilizacji:** Jeśli Gracz 2 (lub dowolny inny gracz) wybierze **Hiszpanów**, ich bonus drużynowy (**+25% złota z handlu**) w połączeniu ze 190-kratkowym szlakiem handlowym i Placem Targowym w lewym dolnym rogu generuje ogromne zasoby złota, niezbędne do utrzymania imperialnych armii w late-game.
+
+---
+
+## 2. Sanktuarium Balansu — Zmiana trudności na żywo w trakcie meczu `(6, 150)`
 
 W zachodnim lesie Twierdzy `(6, 150)` znajduje się odizolowana skalnymi klifami komnata (poza szlakiem handlowym), w której stoi nieśmiertelny **Inżynier Balansu (Król Gracza 1)**:
 
@@ -24,7 +60,7 @@ W zachodnim lesie Twierdzy `(6, 150)` znajduje się odizolowana skalnymi klifami
 
 ---
 
-## 2. Opis rozgrywki i układ Twierdzy Sojuszu
+## 3. Opis rozgrywki i układ Twierdzy Sojuszu
 
 Wszyscy 4 gracze startują na równych warunkach (500 żywności, 600 drewna, 400 złota, 300 kamienia, 6 wieśniaków i 1 skaut) wewnątrz Twierdzy Sojuszu w południowo-zachodniej części mapy:
 
@@ -37,7 +73,7 @@ Wszyscy 4 gracze startują na równych warunkach (500 żywności, 600 drewna, 40
 
 ---
 
-## 3. Harmonogram fal, eskalacja czasowa i taktyki specjalne
+## 4. Harmonogram fal, eskalacja czasowa i taktyki specjalne
 
 * **Harmonogram fal głównych (Fale 1–14):**
   * **Fala 1 (8:30):** Szturm Feudalny **bez taranów i bez jednostek specjalnych**.
@@ -57,7 +93,7 @@ Wszyscy 4 gracze startują na równych warunkach (500 żywności, 600 drewna, 40
 
 ---
 
-## 4. Bestiariusz Hordy — 6 wyspecjalizowanych klas jednostek (z Poświatą Bohatera)
+## 5. Bestiariusz Hordy — 6 wyspecjalizowanych klas jednostek (z Poświatą Bohatera)
 
 | Jednostka specjalna (Od której minuty) | Rola i specjalizacja | Sposób pokonania / Kontra |
 | :--- | :--- | :--- |
@@ -70,7 +106,7 @@ Wszyscy 4 gracze startują na równych warunkach (500 żywności, 600 drewna, 40
 
 ---
 
-## 5. Cztery Questy poboczne i Sześć Settlementów Hordy
+## 6. Cztery Questy poboczne (Q1–Q4)
 
 1. **`Q1 - Karawanseraj (Mur Handlowy, +30 Pop, +20% Eko)` `(154, 190)`:**
    * Po zburzeniu usuwa wrogie wieże strażnicze P5, stawia **Kamienny Mur Obronny na `y = 186` z Basztami na `y = 184`** oraz **pojedyncze sojusznicze Targowisko w prawym rogu mapy `(195, 194)`**.
@@ -90,7 +126,7 @@ Wszyscy 4 gracze startują na równych warunkach (500 żywności, 600 drewna, 40
 
 ---
 
-## 6. Sześć Settlementów Hordy i Gradacja Furii (Stopnie 1–3)
+## 7. Sześć Settlementów Hordy i Gradacja Furii (Stopnie 1–3)
 
 Zburzenie każdego Settlementu trwale wycofuje jego oddziały z kolejnych fal 1–14 oraz z Trybu Endless, deaktywuje jego garnizony i smycze terytorialne, nagradza drużynę kwotą **+600 Złota i +600 Żywności**, a także wywołuje natychmiastowy kontratak oraz wzmocnienie pozostałych obozów zależne od stopnia obozu (**Grade 1–3**):
 
