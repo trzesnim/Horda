@@ -202,15 +202,44 @@ PLAYER_RANGED_UNITS = [
     UnitInfo.ARBALESTER.ID,
     UnitInfo.SKIRMISHER.ID,
     UnitInfo.ELITE_SKIRMISHER.ID,
+    UnitInfo.IMPERIAL_SKIRMISHER.ID,
     UnitInfo.CAVALRY_ARCHER.ID,
     UnitInfo.HEAVY_CAVALRY_ARCHER.ID,
     UnitInfo.HAND_CANNONEER.ID,
+    UnitInfo.SLINGER.ID,
+    UnitInfo.GENITOUR.ID,
+    UnitInfo.ELITE_GENITOUR.ID,
+    UnitInfo.ELEPHANT_ARCHER.ID,
+    UnitInfo.ELITE_ELEPHANT_ARCHER.ID,
+    UnitInfo.LONGBOWMAN.ID,
+    UnitInfo.ELITE_LONGBOWMAN.ID,
+    UnitInfo.CHU_KO_NU.ID,
+    UnitInfo.ELITE_CHU_KO_NU.ID,
+    UnitInfo.MANGUDAI.ID,
+    UnitInfo.ELITE_MANGUDAI.ID,
+    UnitInfo.WAR_WAGON.ID,
+    UnitInfo.ELITE_WAR_WAGON.ID,
+    UnitInfo.PLUMED_ARCHER.ID,
+    UnitInfo.ELITE_PLUMED_ARCHER.ID,
+    UnitInfo.CONQUISTADOR.ID,
+    UnitInfo.ELITE_CONQUISTADOR.ID,
+    UnitInfo.GENOESE_CROSSBOWMAN.ID,
+    UnitInfo.ELITE_GENOESE_CROSSBOWMAN.ID,
+    UnitInfo.CAMEL_ARCHER.ID,
+    UnitInfo.ELITE_CAMEL_ARCHER.ID,
+    UnitInfo.RATTAN_ARCHER.ID,
+    UnitInfo.ELITE_RATTAN_ARCHER.ID,
+    UnitInfo.KIPCHAK.ID,
+    UnitInfo.ELITE_KIPCHAK.ID,
+    UnitInfo.COMPOSITE_BOWMAN.ID,
+    UnitInfo.ELITE_COMPOSITE_BOWMAN.ID,
 ]
 
 PLAYER_CAVALRY_UNITS = [
     UnitInfo.SCOUT_CAVALRY.ID,
     UnitInfo.LIGHT_CAVALRY.ID,
     HUSSAR_ID,
+    UnitInfo.WINGED_HUSSAR.ID,
     UnitInfo.KNIGHT.ID,
     UnitInfo.CAVALIER.ID,
     UnitInfo.PALADIN.ID,
@@ -218,6 +247,29 @@ PLAYER_CAVALRY_UNITS = [
     UnitInfo.ELITE_STEPPE_LANCER.ID,
     UnitInfo.CAMEL_RIDER.ID,
     UnitInfo.HEAVY_CAMEL_RIDER.ID,
+    UnitInfo.IMPERIAL_CAMEL_RIDER.ID,
+    UnitInfo.BATTLE_ELEPHANT.ID,
+    ELITE_BATTLE_ELEPHANT_ID,
+    UnitInfo.CATAPHRACT.ID,
+    UnitInfo.ELITE_CATAPHRACT.ID,
+    UnitInfo.TARKAN.ID,
+    UnitInfo.ELITE_TARKAN.ID,
+    UnitInfo.BOYAR.ID,
+    UnitInfo.ELITE_BOYAR.ID,
+    UnitInfo.MAGYAR_HUSZAR.ID,
+    UnitInfo.ELITE_MAGYAR_HUSZAR.ID,
+    UnitInfo.KONNIK.ID,
+    UnitInfo.ELITE_KONNIK.ID,
+    UnitInfo.LEITIS.ID,
+    UnitInfo.ELITE_LEITIS.ID,
+    UnitInfo.KESHIK.ID,
+    UnitInfo.ELITE_KESHIK.ID,
+    UnitInfo.COUSTILLIER.ID,
+    UnitInfo.ELITE_COUSTILLIER.ID,
+    UnitInfo.MONASPA.ID,
+    UnitInfo.ELITE_MONASPA.ID,
+    UnitInfo.CENTURION.ID,
+    UnitInfo.ELITE_CENTURION.ID,
 ]
 
 PLAYER_INFANTRY_UNITS = [
@@ -226,12 +278,42 @@ PLAYER_INFANTRY_UNITS = [
     UnitInfo.LONG_SWORDSMAN.ID,
     UnitInfo.TWO_HANDED_SWORDSMAN.ID,
     UnitInfo.CHAMPION.ID,
+    UnitInfo.LEGIONARY.ID,
     UnitInfo.SPEARMAN.ID,
     UnitInfo.PIKEMAN.ID,
     UnitInfo.HALBERDIER.ID,
     UnitInfo.EAGLE_SCOUT.ID,
     UnitInfo.EAGLE_WARRIOR.ID,
     UnitInfo.ELITE_EAGLE_WARRIOR.ID,
+    UnitInfo.WOAD_RAIDER.ID,
+    UnitInfo.ELITE_WOAD_RAIDER.ID,
+    UnitInfo.THROWING_AXEMAN.ID,
+    UnitInfo.ELITE_THROWING_AXEMAN.ID,
+    UnitInfo.HUSKARL.ID,
+    UnitInfo.ELITE_HUSKARL.ID,
+    UnitInfo.TEUTONIC_KNIGHT.ID,
+    UnitInfo.ELITE_TEUTONIC_KNIGHT.ID,
+    UnitInfo.SAMURAI.ID,
+    UnitInfo.ELITE_SAMURAI.ID,
+    UnitInfo.BERSERK.ID,
+    ELITE_BERSERK_ID,
+    UnitInfo.JAGUAR_WARRIOR.ID,
+    UnitInfo.ELITE_JAGUAR_WARRIOR.ID,
+    UnitInfo.KAMAYUK.ID,
+    UnitInfo.ELITE_KAMAYUK.ID,
+    UnitInfo.CONDOTTIERO.ID,
+    UnitInfo.SHOTEL_WARRIOR.ID,
+    UnitInfo.ELITE_SHOTEL_WARRIOR.ID,
+    UnitInfo.GBETO.ID,
+    UnitInfo.ELITE_GBETO.ID,
+    UnitInfo.KARAMBIT_WARRIOR.ID,
+    UnitInfo.ELITE_KARAMBIT_WARRIOR.ID,
+    UnitInfo.OBUCH.ID,
+    UnitInfo.ELITE_OBUCH.ID,
+    UnitInfo.URUMI_SWORDSMAN.ID,
+    UnitInfo.ELITE_URUMI_SWORDSMAN.ID,
+    UnitInfo.GHULAM.ID,
+    UnitInfo.ELITE_GHULAM.ID,
 ]
 
 PLAYER_PROD_BUILDINGS = [
@@ -240,6 +322,7 @@ PLAYER_PROD_BUILDINGS = [
     BuildingInfo.ARCHERY_RANGE.ID,
     BuildingInfo.CASTLE.ID,
     BuildingInfo.SIEGE_WORKSHOP.ID,
+    KREPOST_ID,
 ]
 
 
@@ -249,11 +332,15 @@ def populate_ingame_scenario_descriptions(scenario):
         return
 
     instructions_text = (
-        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v6.4 - 4P Co-op)\n\n"
+        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v6.5 - 4P Co-op)\n\n"
+        "USTAWIENIA LOBBY I STARTU:\n"
+        "- Gracze P5-P8 sa automatycznie skonfigurowani jako AI z zablokowanymi cywilizacjami (P5 Wikingowie, P6 Turcy, P7 Saraceni, P8 Persowie). Ustaw trudnosc AI na EKSTREMALNY (Extreme)!\n"
+        "- Gracze P1, P3 i P4 startuja z 2 wybudowanymi domkami na polnoc od TC, a Gracz P2 z 6 domkami (kompensacja 20 popu zajmowanego przez Feitorie).\n"
+        "- W panelu Celow (Objectives) dziala ZEGAR FALI odliczajacy czas do kolejnego uderzenia co 30 sekund.\n\n"
         "SANKTUARIUM BALANSU (Wspolrzedne 6, 150 w zachodnim lesie):\n"
         "- Gracz 1 posiada odizolowanego Inzyniera Balansu (Krola) na (6, 150).\n"
         "- Wejscie Krolem na GORNA flage (6, 146) ZWIEKSZA trudnosc (+25% fal, +15 HP, +2 Ataku wroga na poziom).\n"
-        "- Wejscie Krolem na DOLNA flage (6, 154) ZMNIEJSZA trudnosc (-20% fal, -15% HP wroga na poziom).\n"
+        "- Wejscie Krolem na DOLNA flage (6, 154) ZMNIEJSZA trudnosc (-20% fal, -15% HP wroga na poziom; kluczowe jednostki specjalne i tarany zachowuja min. 1 szt. w grupie).\n"
         "- Dokladne poziomy trudnosci:\n"
         "  * Poziom -2 (Bardzo Latwy): -40% fal, -30% HP wroga.\n"
         "  * Poziom -1 (Latwy): -20% fal, -15% HP wroga.\n"
@@ -278,7 +365,7 @@ def populate_ingame_scenario_descriptions(scenario):
         "BESTIARIUSZ HORDY (WYSPECJALIZOWANE JEDNOSTKI Z POSWIATA BOHATERA):\n"
         "1. Taran-Zolw / Zelazny Slon (P8 - Tank): 1450 HP, +10/+12 pancerza, odporny na konwersje. Zadaje zawsze 3 dmg jednostkom (odpornosc na buffy ataku), ale +220 dmg budynkom!\n"
         "2. Szakale Dywersyjne (Huzarzy P7 - Eco-Raiders): Szybkosc 1.62, +6 pancerza na strzaly, zawsze 2 ataku (skaluja wylacznie HP). Wjezdzaja pod TC atakowac chlopow!\n"
-        "3. Arcymag Tarczy (Imam P7 - Globalny Support): W promieniu 25 kratek przed Brama Centralna daje +30/+30 Pancerza i leczy (+15 HP/3s) WSZYSTKIE frakcje Hordy (P5-P8)! Ma 240 HP i regeneracje 5 HP/s. Zabicie go zdejmuje aure z calej Hordy!\n"
+        "3. Arcymag Tarczy (Imam P7 - Globalny Support): Gdy stoi w strefie 50x50 przed Brama Centralna, daje GLOBALNIE +30/+30 Pancerza wszystkim armiom Hordy (P5-P8 na calej mapie) oraz LOKALNIE leczy (+15 HP/3s) jednostki Hordy w tej strefie 50x50! Ma 240 HP i regeneracje 5 HP/s. Zabicie go zdejmuje aure z calej Hordy!\n"
         "4. Mozdzierz Oblezniczy (Onager P6): 350 HP, 21 zasiegu, wybuch co 10s, MARTWA STREFA 6 kratek. Pociski maja Blast Attack Level = 2 (nie scinaja drzew wokol bram).\n"
         "5. Snajperzy (Janczarzy P6): 90 HP, 19 zasiegu, ~107 dmg w 1 cel.\n"
         "6. Berserkerzy i Kamikaze (P5): Szybkie jednostki szturmowe o zerowym pancerzu na strzaly.\n"
@@ -286,11 +373,12 @@ def populate_ingame_scenario_descriptions(scenario):
 
     scouts_text = (
         "RAPORT ZWIADOWCZY - 4 QUESTY I 6 SETTLEMENTOW:\n"
-        "- Q1 Karawanseraj (154, 190): Mur Handlowy (y=186, baszty y=184) i sojuszniczy Market P2 w prawym rogu (195, 194), +30 Popu, +20% szybszych Wiesniakow i 4 szybkie wozy handlowe.\n"
-        "- Q2 Klif Artylerii (28, 32): Balistyka, Chemia, Siege Engineers, Thumb Ring; +2 Zasiegu i +4 Ataku strzelcow; +12% szybkosci i +4 Ataku jazdy (w tym Elite Steppe Lancer i Heavy Camel).\n"
-        "- Q3 Skarbiec (142, 118): +20 Popu i staly dochod co minute (+250F, +250W, +200G, +40S).\n"
-        "- Q4 Krwawy Oltarz (105, 20): +30% HP armii, +2/+2 pancerza (w tym Militia i linia Eagle Warrior), +40% szybsza produkcja wojska (w tym Siege Workshop); obnizenie HP Arcymaga do 120 HP.\n"
-        "- Stopniowanie Furii Settlementow (zburzenie obozu wycofuje jego wojska z fal, daje +600F/+600G i wywoluje kontratak):\n"
+        "- UWAGA: Kazdy wykonany Quest (Q1-Q4) daje potezne nagrody graczom, ale wywoluje tez Adaptacje Hordy:\n"
+        "  * Q1 Karawanseraj (154, 190): Mur Handlowy (y=186, baszty y=184), Market P2 (195, 194), +30 Popu, +20% szybsi Wiesniacy i 4 szybkie wozy handlowe. [Adaptacja Hordy: +8 HP, +1 Atak]\n"
+        "  * Q2 Klif Artylerii (28, 32): Balistyka, Chemia, Siege Engineers, Thumb Ring; +2 Zasiegu i +4 Ataku strzelcow (w tym UU); +12% szybkosci i +4 Ataku jazdy (w tym UU). [Adaptacja Hordy: +8 HP, +1 Atak]\n"
+        "  * Q3 Skarbiec (142, 118): +20 Popu i staly dochod co minute (+250F, +250W, +200G, +40S dla KAZDEGO gracza P1-P4). [Adaptacja Hordy: +10 HP, +1 Atak]\n"
+        "  * Q4 Krwawy Oltarz (105, 20): +30% HP armii, +2/+2 pancerza (piechota, jazda, strzelcy i UU), +40% szybsza produkcja wojska (w tym Krepost i Siege Workshop); obnizenie HP Arcymaga do 120 HP. [Adaptacja Hordy: +10 HP, +1 Atak]\n"
+        "- Stopniowanie Furii Settlementow (zburzenie obozu wycofuje jego wojska z fal, daje +600F/+600G i wywoluje kontratak z odpowiedniego kierunku):\n"
         "  * Grade 1 (G1 Polnocny, G1 Wschodni): +8 HP, +1 Atak wroga, odwet 8 Cavalier + 10 Pikeman.\n"
         "  * Grade 2 (G2 Akademia, G2 Klasztor): +12 HP, +1 Atak wroga, odwet 10 Cavalier + 12 Halberdier.\n"
         "  * Grade 3 (G3 Cytadela Pln., G3 Cytadela Wsch.): +16 HP, +2 Atak wroga, odwet 1 Zelazny Slon + 12 Paladin + 14 Halberdier.\n"
@@ -394,6 +482,8 @@ BALANCE = {
     "q3_bonus_pop": 20,
     "quest3_trickle": {"food": 250, "wood": 250, "gold": 200, "stone": 40},
     "human_start_res": {"food": 500, "wood": 600, "gold": 400, "stone": 300},
+    "human_start_houses": 2,
+    "p2_start_houses": 6,
 }
 
 

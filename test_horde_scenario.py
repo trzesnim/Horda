@@ -1,6 +1,6 @@
 """
 test_horde_scenario.py - Kompleksowy zestaw testow jednostkowych, integracyjnych
-oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Horda (v6.4).
+oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Horda (v6.5).
 """
 
 import unittest
@@ -8,11 +8,13 @@ import unittest
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 from AoE2ScenarioParser.datasets.conditions import ConditionId
 from AoE2ScenarioParser.datasets.effects import EffectId
+from AoE2ScenarioParser.datasets.object_support import Civilization
 from AoE2ScenarioParser.datasets.players import PlayerId
 from AoE2ScenarioParser.datasets.trigger_lists import ActionType, Operation
 from AoE2ScenarioParser.datasets.units import UnitInfo
 from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 
+from generate_horde_quests_scenario import build_horde_scenario
 from horde_config import (
     ATTR_ARMOR,
     ATTR_ATTACK,
@@ -27,6 +29,7 @@ from horde_config import (
     FLAMING_CAMEL_ID,
     HUSSAR_ID,
     IMAM_UNIT_ID,
+    KREPOST_ID,
     OUTPUT_SCENARIO,
     PETARD_ID,
     SIEGE_ONAGER_ID,
@@ -60,6 +63,8 @@ _CACHED_SCENARIO: AoE2DEScenario | None = None
 def get_compiled_scenario() -> AoE2DEScenario:
     global _CACHED_SCENARIO
     if _CACHED_SCENARIO is None:
+        if not OUTPUT_SCENARIO.exists():
+            build_horde_scenario()
         _CACHED_SCENARIO = AoE2DEScenario.from_file(str(OUTPUT_SCENARIO))
     return _CACHED_SCENARIO
 
@@ -197,6 +202,44 @@ class TestEnemyUnitRegistryAndSanctuary(unittest.TestCase):
         for u_id, spec in ENEMY_UNIT_REGISTRY.items():
             self.assertEqual(sim_hp[u_id], 0, f"Dryf HP dla {spec.name} ({u_id}): {sim_hp[u_id]}")
             self.assertEqual(sim_atk[u_id], 0, f"Dryf Ataku dla {spec.name} ({u_id}): {sim_atk[u_id]}")
+
+        # Weryfikacja bezposrednio na skompilowanych efektach MODIFY_ATTRIBUTE w 8 triggerach 09_Diff_*
+        scenario = get_compiled_scenario()
+        t_map = {t.name: t for t in scenario.trigger_manager.triggers}
+        cycle_trigger_names = [
+            "09_Diff_Up_0_to_P1",
+            "09_Diff_Up_P1_to_P2",
+            "09_Diff_Down_P2_to_P1",
+            "09_Diff_Down_P1_to_0",
+            "09_Diff_Down_0_to_M1",
+            "09_Diff_Down_M1_to_M2",
+            "09_Diff_Up_M2_to_M1",
+            "09_Diff_Up_M1_to_0",
+        ]
+        ai_players = [PlayerId.FIVE.value, PlayerId.SIX.value, PlayerId.SEVEN.value, PlayerId.EIGHT.value]
+        bin_hp = {(ai_p, u_id): 0 for ai_p in ai_players for u_id in ENEMY_UNIT_REGISTRY}
+        bin_atk = {(ai_p, u_id): 0 for ai_p in ai_players for u_id in ENEMY_UNIT_REGISTRY}
+
+        for trig_name in cycle_trigger_names:
+            self.assertIn(trig_name, t_map)
+            tr = t_map[trig_name]
+            mod_effs = [e for e in tr.effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE]
+            self.assertGreater(len(mod_effs), 0, f"{trig_name} nie posiada efektow MODIFY_ATTRIBUTE!")
+            for eff in mod_effs:
+                key = (eff.source_player, eff.object_list_unit_id)
+                self.assertIn(key, bin_hp)
+                sign = 1 if eff.operation == Operation.ADD.value else -1
+                self.assertIn(eff.operation, (Operation.ADD.value, Operation.SUBTRACT.value))
+                if eff.object_attributes == ATTR_HIT_POINTS:
+                    bin_hp[key] += sign * eff.quantity
+                elif eff.object_attributes == ATTR_ATTACK:
+                    val = eff.armour_attack_quantity if eff.armour_attack_quantity is not None else (eff.quantity % 65536)
+                    bin_atk[key] += sign * val
+
+        for key, drift_hp in bin_hp.items():
+            self.assertEqual(drift_hp, 0, f"Binarny dryf HP dla {key}: {drift_hp}")
+        for key, drift_atk in bin_atk.items():
+            self.assertEqual(drift_atk, 0, f"Binarny dryf Ataku dla {key}: {drift_atk}")
 
 
 class TestScenarioBinaryStructure(unittest.TestCase):
@@ -415,17 +458,17 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                 self.assertIn(t_det.trigger_id, deact_ids)
 
     def test_settlement_fury_gradation_and_retaliations(self):
-        """Gradacja Furii Settlementow Grade 1-3 w 05_Settlement_Destroyed_*."""
+        """Gradacja Furii Settlementow Grade 1-3 oraz kierunkowe punkty spawnu odwetow w 05_Settlement_Destroyed_*."""
         grades = {
-            "05_Settlement_Destroyed_G1_North": (8, 1),
-            "05_Settlement_Destroyed_G1_East": (8, 1),
-            "05_Settlement_Destroyed_G2_Snipers": (12, 1),
-            "05_Settlement_Destroyed_G2_Mages": (12, 1),
-            "05_Settlement_Destroyed_G3_North": (16, 2),
-            "05_Settlement_Destroyed_G3_East": (16, 2),
+            "05_Settlement_Destroyed_G1_North": (8, 1, 48, 86, 48, 138),
+            "05_Settlement_Destroyed_G1_East": (8, 1, 117, 178, 68, 162),
+            "05_Settlement_Destroyed_G2_Snipers": (12, 1, 48, 86, 48, 138),
+            "05_Settlement_Destroyed_G2_Mages": (12, 1, 116, 114, 54, 146),
+            "05_Settlement_Destroyed_G3_North": (16, 2, 116, 114, 54, 146),
+            "05_Settlement_Destroyed_G3_East": (16, 2, 117, 178, 68, 162),
         }
 
-        for trig_name, (exp_hp, exp_atk) in grades.items():
+        for trig_name, (exp_hp, exp_atk, exp_sx, exp_sy, exp_tx, exp_ty) in grades.items():
             tr = self.t_map[trig_name]
             hp_mods = [e.quantity for e in tr.effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE and e.object_attributes == ATTR_HIT_POINTS]
             self.assertGreater(len(hp_mods), 0, f"{trig_name} brak modyfikacji HP!")
@@ -438,20 +481,34 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             self.assertGreater(len(atk_mods), 0, f"{trig_name} brak modyfikacji Atk!")
             self.assertTrue(all(val == exp_atk for val in atk_mods), f"{trig_name} zly buff Atk: {atk_mods}")
 
+            creates = [e for e in tr.effects if e.effect_type == EffectId.CREATE_OBJECT and e.source_player == PlayerId.EIGHT.value]
+            self.assertGreater(len(creates), 0, f"{trig_name} brak jednostek odwetu!")
+            self.assertEqual((creates[0].location_x + 5, creates[0].location_y + 5), (exp_sx, exp_sy))
+
+            atk_moves = [e for e in tr.effects if e.effect_type == EffectId.ATTACK_MOVE and e.source_player == PlayerId.EIGHT.value]
+            self.assertEqual(len(atk_moves), 1)
+            self.assertEqual((atk_moves[0].location_x, atk_moves[0].location_y), (exp_tx, exp_ty))
+
     def test_player_perks_q2_and_q4(self):
-        """Perki graczy w Q2 i Q4 obejmuja rozszerzone listy jednostek."""
+        """Perki graczy w Q2 i Q4 obejmuja rozszerzone listy jednostek (w tym UU i Krepost)."""
         t_q2 = self.t_map["06_Quest2_Sniper_Cliff_Buff"]
         q2_units = {e.object_list_unit_id for e in t_q2.effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE}
-        # Elite Steppe Lancer (1372) i Heavy Camel (330)
+        # Elite Steppe Lancer (1372), Heavy Camel (330), Longbowman, Cataphract, Leitis
         self.assertIn(1372, q2_units)
         self.assertIn(330, q2_units)
+        self.assertIn(UnitInfo.ELITE_LONGBOWMAN.ID, q2_units)
+        self.assertIn(UnitInfo.ELITE_CATAPHRACT.ID, q2_units)
+        self.assertIn(UnitInfo.ELITE_LEITIS.ID, q2_units)
 
         t_q4 = self.t_map["06_Quest4_Blood_Altar_Super_Army"]
         q4_units = {e.object_list_unit_id for e in t_q4.effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE}
-        # Militia (74), Eagle Scout (751), Siege Workshop (49)
+        # Militia (74), Eagle Scout (751), Siege Workshop (49), Krepost (1251), Teutonic Knight, Huskarl
         self.assertIn(74, q4_units)
         self.assertIn(751, q4_units)
         self.assertIn(49, q4_units)
+        self.assertIn(KREPOST_ID, q4_units)
+        self.assertIn(UnitInfo.ELITE_TEUTONIC_KNIGHT.ID, q4_units)
+        self.assertIn(UnitInfo.ELITE_HUSKARL.ID, q4_units)
 
         # Imam HP = 120
         imam_mod = [
@@ -463,32 +520,58 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         self.assertEqual(imam_mod[0].operation, Operation.SET.value)
 
     def test_wave_clocks_variants_and_endless_gates_bug03(self):
-        """Sprawdza strukture Zegarow fal 1-14 oraz indywidualnych bramek i wariantow Endless."""
+        """Sprawdza strukture Zegarow fal 1-14 oraz indywidualnych bramek i wariantow Endless (bez pomijania brakujacych)."""
         wave_defs = get_wave_definitions()
-        s_keys = ["G1_North", "G1_East", "G2_Snipers", "G2_Mages", "G3_North", "G3_East"]
+        s_keys = [
+            ("G1_North", "g1_north"),
+            ("G1_East", "g1_east"),
+            ("G2_Snipers", "g2_snipers"),
+            ("G2_Mages", "g2_mages"),
+            ("G3_North", "g3_north"),
+            ("G3_East", "g3_east"),
+        ]
 
         for w_def in wave_defs:
             w_num = w_def.wave_num
-            for s_key in s_keys:
+            for s_key, attr_name in s_keys:
+                comp = getattr(w_def, attr_name)
+                has_raiders = (s_key == "G2_Mages" and w_def.raider_count > 0)
+                has_trade_raid = (s_key == "G3_East" and w_num in (8, 10, 12, 14))
+                should_exist = bool(comp) or has_raiders or has_trade_raid
                 clock_name = f"03_W{w_num:02d}_{s_key}_Clock"
-                if clock_name in self.t_map:
-                    tr_c = self.t_map[clock_name]
-                    self.assertEqual(tr_c.enabled, 1)
-                    self.assertEqual(tr_c.looping, 0)
-                    for lvl_tag in ["M2", "M1", "0", "P1", "P2"]:
-                        v_name = f"03_W{w_num:02d}_{s_key}_Diff_{lvl_tag}"
-                        self.assertIn(v_name, self.t_map)
-                        tr_v = self.t_map[v_name]
-                        self.assertEqual(tr_v.enabled, 0)
-                        self.assertEqual(tr_v.looping, 0)
+
+                if not should_exist:
+                    self.assertNotIn(clock_name, self.t_map)
+                    continue
+
+                self.assertIn(clock_name, self.t_map, f"Brak oczekiwanego zegara {clock_name}!")
+                tr_c = self.t_map[clock_name]
+                self.assertEqual(tr_c.enabled, 1)
+                self.assertEqual(tr_c.looping, 0)
+                self.assertEqual(len(tr_c.conditions), 1)
+                self.assertEqual(tr_c.conditions[0].condition_type, ConditionId.TIMER)
+                self.assertEqual(tr_c.conditions[0].timer, w_def.wave_sec)
+
+                for lvl_tag in ["M2", "M1", "0", "P1", "P2"]:
+                    v_name = f"03_W{w_num:02d}_{s_key}_Diff_{lvl_tag}"
+                    self.assertIn(v_name, self.t_map)
+                    tr_v = self.t_map[v_name]
+                    self.assertEqual(tr_v.enabled, 0)
+                    self.assertEqual(tr_v.looping, 0)
+                    self.assertEqual(len(tr_v.conditions), 1)
+                    self.assertEqual(tr_v.conditions[0].condition_type, ConditionId.TRIGGER_ACTIVE)
+                    self.assertEqual(tr_v.conditions[0].trigger_id, self.t_map[f"State_Diff_Lvl_{lvl_tag}"].trigger_id)
 
         # Endless Gates i Warianty Endless
-        for s_key in s_keys:
+        for s_key, _ in s_keys:
             gate_name = f"03_Endless_Gate_{s_key}"
             self.assertIn(gate_name, self.t_map)
             tr_g = self.t_map[gate_name]
             self.assertEqual(tr_g.enabled, 0)
             self.assertEqual(tr_g.looping, 1)
+            self.assertEqual(len(tr_g.conditions), 1)
+            self.assertEqual(tr_g.conditions[0].condition_type, ConditionId.TIMER)
+            self.assertEqual(tr_g.conditions[0].timer, BALANCE["wave_interval_sec"])
 
             for lvl_tag in ["M2", "M1", "0", "P1", "P2"]:
                 var_name = f"03_Endless_{s_key}_Diff_{lvl_tag}"
@@ -496,6 +579,9 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                 tr_ev = self.t_map[var_name]
                 self.assertEqual(tr_ev.enabled, 0)
                 self.assertEqual(tr_ev.looping, 0)
+                self.assertEqual(len(tr_ev.conditions), 1)
+                self.assertEqual(tr_ev.conditions[0].condition_type, ConditionId.TRIGGER_ACTIVE)
+                self.assertEqual(tr_ev.conditions[0].trigger_id, self.t_map[f"State_Diff_Lvl_{lvl_tag}"].trigger_id)
 
     def test_leash_and_p7_spawn_separation_geometry(self):
         """Weryfikacja, ze punkty spawnu Szakala P7 sa oddalone od smyczy Magow (116, 114) o > 20 kratek."""
@@ -713,24 +799,29 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                 # Mozdzierz Oblezniczy: zasieg 21
                 self.assertEqual(get_set_val(SIEGE_ONAGER_ID, ATTR_MAXIMUM_RANGE), BALANCE["mortar_range"])
 
-        # Korekta -20 HP dla HUSSAR_ID w 01d po zbadaniu Bloodlines
+                # Snajper Imperialny: zasieg 19 oraz Arcymag Tarczy: predkosc 0.78
+                self.assertEqual(get_set_val(UnitInfo.ELITE_JANISSARY.ID, ATTR_MAXIMUM_RANGE), BALANCE["sniper_range"])
+                self.assertAlmostEqual(get_set_val(IMAM_UNIT_ID, ATTR_MOVEMENT_SPEED), BALANCE["mage_speed"], places=2)
+
+        # Korekta -20 HP dla HUSSAR_ID oraz ELITE_BATTLE_ELEPHANT_ID w 01d po zbadaniu Bloodlines
         tr_01d = self.t_map["01d_AI_Techs_Feudal_8m30s"]
-        hussar_hp_subs = [
-            e for e in tr_01d.effects
-            if (
-                e.effect_type == EffectId.MODIFY_ATTRIBUTE
-                and e.object_list_unit_id == HUSSAR_ID
-                and e.object_attributes == ATTR_HIT_POINTS
-                and e.operation == Operation.SUBTRACT.value
-            )
-        ]
-        self.assertEqual(len(hussar_hp_subs), 4)
-        self.assertEqual({e.source_player for e in hussar_hp_subs}, ai_players)
-        for e in hussar_hp_subs:
-            self.assertEqual(e.quantity, 20)
+        for cav_id in (HUSSAR_ID, ELITE_BATTLE_ELEPHANT_ID):
+            cav_hp_subs = [
+                e for e in tr_01d.effects
+                if (
+                    e.effect_type == EffectId.MODIFY_ATTRIBUTE
+                    and e.object_list_unit_id == cav_id
+                    and e.object_attributes == ATTR_HIT_POINTS
+                    and e.operation == Operation.SUBTRACT.value
+                )
+            ]
+            self.assertEqual(len(cav_hp_subs), 4, f"Brak 4 odjec 20 HP dla unit_id={cav_id} w 01d!")
+            self.assertEqual({e.source_player for e in cav_hp_subs}, ai_players)
+            for e in cav_hp_subs:
+                self.assertEqual(e.quantity, 20)
 
     def test_endless_jackal_dual_flank_raids(self):
-        """Weryfikuje podzial Szakali w 03_Endless_G2_Mages_Diff_* na dwie flanki: (52, 86)->(54, 119) i (116, 162)->(54, 170)."""
+        """Weryfikuje podzial Szakali w 03_Endless_G2_Mages_Diff_* na dwie flanki do stref eko oraz wykluczenie P7 z 02e na polnocy/wschodzie."""
         w14_raiders = get_wave_definitions()[-1].raider_count
         diff_tags = {-2: "M2", -1: "M1", 0: "0", 1: "P1", 2: "P2"}
 
@@ -758,8 +849,110 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                 and e.action_type == ActionType.MOVE.value
             ]
             self.assertEqual(len(move_effs), 2)
-            self.assertEqual((move_effs[0].location_x, move_effs[0].location_y), (54, 119))
-            self.assertEqual((move_effs[1].location_x, move_effs[1].location_y), (54, 170))
+            self.assertEqual((move_effs[0].location_x, move_effs[0].location_y), (32, 118))
+            self.assertEqual((move_effs[1].location_x, move_effs[1].location_y), (76, 172))
+
+        # Weryfikacja, ze 02e_Push_Gate_Units_Deep_Into_Base NIE wydaje rozkazow P7 przy Bramie Polnocnej ani Wschodniej
+        tr_02e = self.t_map["02e_Push_Gate_Units_Deep_Into_Base"]
+        p7_push_effs = [
+            e for e in tr_02e.effects
+            if e.effect_type == EffectId.ATTACK_MOVE and e.source_player == PlayerId.SEVEN.value
+        ]
+        # P7 ma rozkaz 02e wylacznie w Bramie Centralnej (96..108, 106..122 -> 54, 146)
+        self.assertEqual(len(p7_push_effs), 1)
+        self.assertEqual(
+            (p7_push_effs[0].area_x1, p7_push_effs[0].area_y1, p7_push_effs[0].area_x2, p7_push_effs[0].area_y2),
+            (96, 106, 108, 122),
+        )
+
+    def test_lobby_ai_players_and_locked_civilizations(self):
+        """Gracze P1-P4 musza byc ludzmi (odblokowane civ), a P5-P8 AI z zablokowanymi cywilizacjami."""
+        pm = self.scenario.player_manager
+        self.assertEqual(pm.active_players, 8)
+
+        for h_p in [PlayerId.ONE, PlayerId.TWO, PlayerId.THREE, PlayerId.FOUR]:
+            p = pm.players[h_p]
+            self.assertTrue(bool(p.human), f"Gracz {h_p.name} powinien miec human=True!")
+            self.assertFalse(bool(p.lock_civ), f"Gracz {h_p.name} powinien miec lock_civ=False!")
+            self.assertTrue(bool(p.allied_victory))
+
+        expected_ai_civs = {
+            PlayerId.FIVE: Civilization.VIKINGS,
+            PlayerId.SIX: Civilization.TURKS,
+            PlayerId.SEVEN: Civilization.SARACENS,
+            PlayerId.EIGHT: Civilization.PERSIANS,
+        }
+        for ai_p, exp_civ in expected_ai_civs.items():
+            p = pm.players[ai_p]
+            self.assertFalse(bool(p.human), f"Gracz AI {ai_p.name} powinien miec human=False!")
+            self.assertTrue(bool(p.lock_civ), f"Gracz AI {ai_p.name} powinien miec lock_civ=True!")
+            self.assertEqual(p.civilization, exp_civ, f"Gracz AI {ai_p.name} ma zla cywilizacje: {p.civilization}")
+            self.assertEqual(p.architecture_set, exp_civ)
+            self.assertTrue(bool(p.allied_victory))
+
+    def test_starting_houses_per_player_and_distance(self):
+        """P1, P3, P4 startuja z 2 domkami, a P2 z 6 domkami (na polnoc od TC, ~5 kratek od krawedzi TC)."""
+        um = self.scenario.unit_manager
+        expected_counts = {
+            PlayerId.ONE: BALANCE["human_start_houses"],
+            PlayerId.TWO: BALANCE["p2_start_houses"],
+            PlayerId.THREE: BALANCE["human_start_houses"],
+            PlayerId.FOUR: BALANCE["human_start_houses"],
+        }
+        tc_coords = {
+            PlayerId.ONE: (76.0, 124.0),
+            PlayerId.TWO: (32.0, 164.0),
+            PlayerId.THREE: (32.0, 122.0),
+            PlayerId.FOUR: (76.0, 168.0),
+        }
+
+        for h_p, exp_cnt in expected_counts.items():
+            p_units = um.units[h_p.value]
+            houses = [u for u in p_units if u.unit_const == BuildingInfo.HOUSE.ID]
+            self.assertEqual(len(houses), exp_cnt, f"Gracz {h_p.name} ma {len(houses)} domkow zamiast {exp_cnt}!")
+            tc_x, tc_y = tc_coords[h_p]
+            for h in houses:
+                # Domki znajduja sie na polnoc od TC (dy = -7 lub -10, czyli ~5-8 kafelkow od krawedzi TC)
+                self.assertLess(h.y, tc_y - 4.0, f"Domek gracza {h_p.name} na ({h.x}, {h.y}) jest za blisko TC!")
+                self.assertGreaterEqual(h.y, tc_y - 11.0)
+                self.assertLessEqual(abs(h.x - tc_x), 4.0)
+
+    def test_crash_safe_wave_countdown_timer(self):
+        """Weryfikuje bezpieczny Zegar Fali w Objectives (brak DISPLAY_TIMER, timer=999999 na UI, 168 krokow co 30s)."""
+        for tr in self.triggers:
+            for eff in tr.effects:
+                self.assertNotEqual(
+                    eff.effect_type,
+                    EffectId.DISPLAY_TIMER,
+                    f"Trigger {tr.name} uzywa niebezpiecznego efektu DISPLAY_TIMER!",
+                )
+
+        ui_triggers = [t for t in self.triggers if t.name.startswith("00_Wave_Timer_UI_")]
+        tick_triggers = [t for t in self.triggers if t.name.startswith("00_Wave_Timer_Tick_")]
+        self.assertEqual(len(ui_triggers), 169)
+        self.assertEqual(len(tick_triggers), 168)
+
+        for idx, t_ui in enumerate(ui_triggers):
+            self.assertEqual(t_ui.enabled, 1 if idx == 0 else 0)
+            self.assertEqual(t_ui.looping, 0)
+            self.assertEqual(t_ui.display_on_screen, 1)
+            self.assertEqual(t_ui.description_order, 110)
+            self.assertEqual(t_ui.header, 1)
+            self.assertEqual(len(t_ui.conditions), 1)
+            self.assertEqual(t_ui.conditions[0].condition_type, ConditionId.TIMER)
+            self.assertEqual(t_ui.conditions[0].timer, 999999)
+
+        for idx, t_tick in enumerate(tick_triggers, start=1):
+            self.assertEqual(t_tick.enabled, 1)
+            self.assertEqual(t_tick.looping, 0)
+            self.assertEqual(len(t_tick.conditions), 1)
+            self.assertEqual(t_tick.conditions[0].condition_type, ConditionId.TIMER)
+            self.assertEqual(t_tick.conditions[0].timer, idx * 30)
+
+            deact_ids = [e.trigger_id for e in t_tick.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER]
+            act_ids = [e.trigger_id for e in t_tick.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER]
+            self.assertEqual(deact_ids, [ui_triggers[idx - 1].trigger_id])
+            self.assertEqual(act_ids, [ui_triggers[idx].trigger_id])
 
 
 if __name__ == "__main__":

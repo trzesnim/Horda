@@ -1,6 +1,7 @@
 import math
 
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
+from AoE2ScenarioParser.datasets.object_support import Civilization
 from AoE2ScenarioParser.datasets.other import OtherInfo
 from AoE2ScenarioParser.datasets.players import PlayerId
 from AoE2ScenarioParser.datasets.terrains import TerrainId
@@ -295,6 +296,15 @@ def spawn_symmetrical_player_base(um, mm, grid: SafeMapGrid, player: PlayerId, c
     grid.mark_no_trees(cx, cy, radius=11)
     grid.place_building(um, player, BuildingInfo.TOWN_CENTER.ID, cx, cy, size_tiles=4, no_tree_margin=4)
 
+    # Domki startowe ~5 kafelków od północnej krawędzi TC (z dala od skupisk zasobów)
+    if player == PlayerId.TWO:
+        # P2 otrzymuje 6 domków (2 bazowe + 4 kompensujące 20 popu zajmowanego przez Feitorię)
+        house_offsets = [(-3, -7), (0, -7), (3, -7), (-3, -10), (0, -10), (3, -10)]
+    else:
+        house_offsets = [(0, -7), (3, -7)]
+    for hx, hy in house_offsets:
+        grid.place_building(um, player, BuildingInfo.HOUSE.ID, cx + hx, cy + hy, size_tiles=2, no_tree_margin=1)
+
     for dx, dy in [(-3, -2), (-3, -1), (-3, 0), (-3, 1), (-2, -3), (-1, -3)]:
         grid.place_unit(um, player, UnitInfo.VILLAGER_MALE.ID, cx + dx, cy + dy, no_tree_margin=1)
     grid.place_unit(um, player, UnitInfo.SCOUT_CAVALRY.ID, cx + 4, cy, no_tree_margin=1)
@@ -363,16 +373,32 @@ def build_map_and_entities(scenario) -> dict:
 
     human_players = [PlayerId.ONE, PlayerId.TWO, PlayerId.THREE, PlayerId.FOUR]
     ai_players = [PlayerId.FIVE, PlayerId.SIX, PlayerId.SEVEN, PlayerId.EIGHT]
+    ai_civ_map = {
+        PlayerId.FIVE: Civilization.VIKINGS,
+        PlayerId.SIX: Civilization.TURKS,
+        PlayerId.SEVEN: Civilization.SARACENS,
+        PlayerId.EIGHT: Civilization.PERSIANS,
+    }
 
     pm.active_players = 8
     for p_id in human_players:
         p = pm.players[p_id]
         res = BALANCE["human_start_res"]
         p.food, p.wood, p.gold, p.stone = res["food"], res["wood"], res["gold"], res["stone"]
+        p.human = True
+        p.lock_civ = False
+        p.allied_victory = True
 
     for p_id in ai_players:
         p = pm.players[p_id]
         p.food, p.wood, p.gold, p.stone = 0, 0, 0, 0
+        p.human = False
+        p.civilization = ai_civ_map[p_id]
+        p.architecture_set = ai_civ_map[p_id]
+        p.lock_civ = True
+        p.allied_victory = True
+
+    pm.set_diplomacy_teams(human_players, ai_players)
 
     paint_natural_biome_background(mm, MAP_SIZE)
 

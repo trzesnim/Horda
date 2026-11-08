@@ -29,6 +29,7 @@ from horde_config import (
     TECH_CHEMISTRY,
     TECH_SIEGE_ENGINEERS,
     TECH_THUMB_RING,
+    get_wave_definitions,
 )
 from horde_waves import (
     add_enemy_combat_buff,
@@ -42,11 +43,75 @@ from horde_waves import (
 )
 
 
+def format_mm_ss(sec: int) -> str:
+    return f"{sec // 60}:{sec % 60:02d}"
+
+
+def setup_wave_countdown_timer(tm) -> None:
+    """
+    Stabilny, odporny na crashe licznik czasu do następnej fali w panelu Celów (Objectives).
+    Używa statycznych banerów UI z `timer=999999` (nigdy nie ulegają przekreśleniu ani wykonaniu)
+    przełączanych co 30s przez triggery zegarowe za pomocą `activate_trigger` / `deactivate_trigger`.
+    Zero użycia niebezpiecznego efektu `display_timer`.
+    """
+    wave_defs = get_wave_definitions()
+    milestones = [(w.wave_num, w.wave_sec) for w in wave_defs]
+
+    ui_steps: list[tuple[int, str, str | None]] = [
+        (0, "Zegar Fali: Fala 1/14 za 8:30 (uderzenie 8:30)", None),
+    ]
+
+    for t in range(30, 5040 + 1, 30):
+        next_w = None
+        for w_num, w_sec in milestones:
+            if w_sec > t:
+                next_w = (w_num, w_sec)
+                break
+        if next_w is not None:
+            w_num, w_sec = next_w
+            rem = w_sec - t
+            label = f"Zegar Fali: Fala {w_num}/14 za {format_mm_ss(rem)} (uderzenie {format_mm_ss(w_sec)})"
+            chat_warn = None
+            if rem == 60:
+                chat_warn = f"[ZEGAR FALI]: Pozostala 1 minuta do uderzenia Fali {w_num}/14 ({format_mm_ss(w_sec)})!"
+            elif w_num == 1 and rem == 30:
+                chat_warn = "[ZEGAR FALI]: Pozostalo 30 sekund do Pierwszej Fali Hordy (8:30)!"
+            ui_steps.append((t, label, chat_warn))
+        elif t < 5040:
+            rem = 5040 - t
+            label = f"Zegar Fali: Tryb Endless za {format_mm_ss(rem)} (od 84:00 co 5:30)"
+            chat_warn = None
+            if rem == 60:
+                chat_warn = "[ZEGAR FALI]: Pozostala 1 minuta do pierwszego szturmu TRYBU ENDLESS (84:00)!"
+            ui_steps.append((t, label, chat_warn))
+        else:
+            label = "Zegar Fali: TRYB ENDLESS AKTYWNY (szturm co 5:30)"
+            ui_steps.append((t, label, None))
+
+    ui_banners = []
+    for idx, (t, label, _) in enumerate(ui_steps):
+        t_ui = tm.add_trigger(f"00_Wave_Timer_UI_{idx:03d}_{t:04d}s", enabled=(idx == 0), looping=False)
+        safe_call(t_ui.new_condition.timer, timer=999999)
+        set_as_objective(t_ui, label, order=110, is_header=True)
+        ui_banners.append(t_ui)
+
+    for idx in range(1, len(ui_steps)):
+        t, _, chat_warn = ui_steps[idx]
+        t_tick = tm.add_trigger(f"00_Wave_Timer_Tick_{idx:03d}_{t:04d}s", enabled=True, looping=False)
+        safe_call(t_tick.new_condition.timer, timer=t)
+        safe_call(t_tick.new_effect.deactivate_trigger, trigger_id=ui_banners[idx - 1].trigger_id)
+        safe_call(t_tick.new_effect.activate_trigger, trigger_id=ui_banners[idx].trigger_id)
+        if chat_warn is not None:
+            send_highlight_chat(t_tick, "<YELLOW>", chat_warn)
+
+
 def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     ai_players = ctx["ai_players"]
     all_settlement_wave_triggers = ctx["all_settlement_wave_triggers"]
     allied_citadel = ctx["allied_citadel"]
     deep_target_center = ctx["deep_target_center"]
+    deep_target_east = ctx["deep_target_east"]
+    deep_target_north = ctx["deep_target_north"]
     human_players = ctx["human_players"]
     p_coords = ctx["p_coords"]
     q1_bldg = ctx["q1_bldg"]
@@ -334,7 +399,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
 
     send_highlight_chat(
         t_q1, "<GREEN>",
-        "=== [Q1 UKONCZONY!] === Wybudowano KAMIENNY MUR HANDLOWY i postawiono sojuszniczy Market w prawym rogu (195, 194)! Wszyscy zyskuja +30 POPU, +20% Eko i 4 Wozy!",
+        "=== [Q1 UKONCZONY!] === Wybudowano MUR HANDLOWY i postawiono Market P2 na (195, 194)! Wszyscy zyskuja +30 POPU, +20% Eko i 4 Wozy! [Adaptacja Hordy: +8 HP, +1 Atak]",
         flare_x=195, flare_y=194,
     )
 
@@ -358,7 +423,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
 
     send_highlight_chat(
         t_q2, "<GREEN>",
-        "=== [Q2 UKONCZONY!] === Wszyscy otrzymuja Balistyke, Chemie, Siege Engineers, +2 Zasiegu i +4 Ataku dla strzelcow oraz +12% szybkosci i +4 Ataku dla jazdy!",
+        "=== [Q2 UKONCZONY!] === Wszyscy otrzymuja Balistyke, Chemie, Siege Engineers, +2 Zasiegu i +4 Ataku strzelcow oraz +12% szybkosci i +4 Ataku jazdy! [Adaptacja Hordy: +8 HP, +1 Atak]",
         flare_x=q2_pos[0], flare_y=q2_pos[1],
     )
 
@@ -378,7 +443,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
 
     send_highlight_chat(
         t_q3_unlock, "<GREEN>",
-        "=== [Q3 UKONCZONY!] === Wszyscy zyskuja na stale +20 LIMITU POPULACJI oraz duzy dochod (+250 Zywn/Drewna, +200 Zlota i +40 Kamienia co minute)!",
+        "=== [Q3 UKONCZONY!] === Kazdy gracz zyskuje +20 POPU oraz staly dochod (+250F, +250W, +200G i +40S co minute)! [Adaptacja Hordy: +10 HP, +1 Atak]",
         flare_x=q3_pos[0], flare_y=q3_pos[1],
     )
 
@@ -410,12 +475,12 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
 
     send_highlight_chat(
         t_q4, "<GREEN>",
-        "=== [Q4 UKONCZONY!] === Wasze armie otrzymuja na stale +30% Max HP, +2/+2 Pancerza oraz +40% szybsza produkcje w budynkach wojskowych!",
+        "=== [Q4 UKONCZONY!] === Armie graczy otrzymuja +30% Max HP, +2/+2 Pancerza i +40% szybsza produkcje, a HP Arcymaga spada do 120! [Adaptacja Hordy: +10 HP, +1 Atak]",
         flare_x=q4_pos[0], flare_y=q4_pos[1],
     )
 
     # ==============================================================================
-    # 11. ZNISZCZENIE 6 SETTLEMENTÓW (GRADACJA FURII GRADE 1-3)
+    # 11. ZNISZCZENIE 6 SETTLEMENTÓW (GRADACJA FURII GRADE 1-3 + KIERUNKOWE ODWETY)
     # ==============================================================================
     t_obj_header_s = tm.add_trigger("00_Obj_Header_Settlements", enabled=True, looping=False)
     safe_call(t_obj_header_s.new_condition.timer, timer=99999)
@@ -423,20 +488,26 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
 
     settlement_defs = [
         ("G1_North", s_g1_north, "G1 - Polnocny (usuwa Berserkerow i Petardy)", 89, 1, 8, 1,
-         [(UnitInfo.CAVALIER.ID, 8), (UnitInfo.PIKEMAN.ID, 10)], *s_coords["G1_North"]),
+         [(UnitInfo.CAVALIER.ID, 8), (UnitInfo.PIKEMAN.ID, 10)], *s_coords["G1_North"],
+         48, 86, *deep_target_north),
         ("G1_East",  s_g1_east,  "G1 - Wschodni (usuwa Huskarlow i Wielblady)", 88, 1, 8, 1,
-         [(UnitInfo.CAVALIER.ID, 8), (UnitInfo.PIKEMAN.ID, 10)], *s_coords["G1_East"]),
+         [(UnitInfo.CAVALIER.ID, 8), (UnitInfo.PIKEMAN.ID, 10)], *s_coords["G1_East"],
+         117, 178, *deep_target_east),
         ("G2_Snipers", s_g2_snipers, "G2 - Akademia (usuwa Snajperow i Mozdzierze)", 87, 2, 12, 1,
-         [(UnitInfo.CAVALIER.ID, 10), (UnitInfo.HALBERDIER.ID, 12)], *s_coords["G2_Snipers"]),
+         [(UnitInfo.CAVALIER.ID, 10), (UnitInfo.HALBERDIER.ID, 12)], *s_coords["G2_Snipers"],
+         48, 86, *deep_target_north),
         ("G2_Mages",   s_g2_mages,   "G2 - Klasztor (usuwa Magow i Szakale)", 86, 2, 12, 1,
-         [(UnitInfo.CAVALIER.ID, 10), (UnitInfo.HALBERDIER.ID, 12)], *s_coords["G2_Mages"]),
+         [(UnitInfo.CAVALIER.ID, 10), (UnitInfo.HALBERDIER.ID, 12)], *s_coords["G2_Mages"],
+         116, 114, *deep_target_center),
         ("G3_North", s_g3_north, "G3 - Cytadela Pln. (usuwa Slonie-Tanki Pln.)", 85, 3, 16, 2,
-         [(ELITE_BATTLE_ELEPHANT_ID, 1), (UnitInfo.PALADIN.ID, 12), (UnitInfo.HALBERDIER.ID, 14)], *s_coords["G3_North"]),
+         [(ELITE_BATTLE_ELEPHANT_ID, 1), (UnitInfo.PALADIN.ID, 12), (UnitInfo.HALBERDIER.ID, 14)], *s_coords["G3_North"],
+         116, 114, *deep_target_center),
         ("G3_East",  s_g3_east,  "G3 - Cytadela Wsch. (usuwa Slonie-Tanki Wsch.)", 84, 3, 16, 2,
-         [(ELITE_BATTLE_ELEPHANT_ID, 1), (UnitInfo.PALADIN.ID, 12), (UnitInfo.HALBERDIER.ID, 14)], *s_coords["G3_East"]),
+         [(ELITE_BATTLE_ELEPHANT_ID, 1), (UnitInfo.PALADIN.ID, 12), (UnitInfo.HALBERDIER.ID, 14)], *s_coords["G3_East"],
+         117, 178, *deep_target_east),
     ]
 
-    for s_key, core_unit, obj_label, obj_order, grade, g_hp, g_atk, counter_comp, sx, sy in settlement_defs:
+    for s_key, core_unit, obj_label, obj_order, grade, g_hp, g_atk, counter_comp, sx, sy, ret_sx, ret_sy, ret_tx, ret_ty in settlement_defs:
         t_destroy = tm.add_trigger(f"05_Settlement_Destroyed_{s_key}", enabled=True, looping=False)
         set_as_objective(t_destroy, obj_label, order=obj_order)
         safe_call(t_destroy.new_condition.destroy_object, unit_object=core_unit.reference_id)
@@ -455,7 +526,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         add_spawn_and_attack_effect(
             t_destroy, PlayerId.EIGHT,
             counter_comp,
-            spawn_x=116, spawn_y=114, target_x=deep_target_center[0], target_y=deep_target_center[1],
+            spawn_x=ret_sx, spawn_y=ret_sy, target_x=ret_tx, target_y=ret_ty,
         )
 
         send_highlight_chat(
@@ -476,3 +547,6 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     safe_call(t_lose.new_condition.destroy_object, unit_object=allied_citadel.reference_id)
     for ai_p in ai_players:
         safe_call(t_lose.new_effect.declare_victory, source_player=ai_p, enabled=1)
+
+    # 13. Licznik Czasu do Następnej Fali (Crash-Safe w panelu Objectives)
+    setup_wave_countdown_timer(tm)

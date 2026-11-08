@@ -1,4 +1,4 @@
-# ROADMAP.md — Plan Naprawczy Podzielony na Atomowe Etapy (`Kroniki Rubieży` v6.2 -> v6.3)
+# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v6.5)
 
 ## 0. Protokół Wykonawczy dla Agenta IDE (Antigravity / VS Code)
 1. **Atomowość etapów:** Realizuj podetapy ściśle po kolei (`Etap 0` -> `1A` -> `1B` -> `2` -> `3A` -> `3B` -> `3C` -> `4` -> `5` -> `6A` -> `6B` -> `6C` -> `7` -> `8`). **Zabrania się łączenia kilku podetapów (szczególnie 3A, 3B i 3C) w jedną edycję.**
@@ -208,88 +208,54 @@ def scale_comp_for_level(comp: list[tuple[int, int]], level: int) -> list[tuple[
 
 ---
 
-## Etap 3A: Znaczniki Stanu Trudności, Blokada `State_Sanctuary_Unlocked` i Test Minimalnego Dispatchu [DONE / WDROŻONE]
+## Etap 3A: Znaczniki Stanu Trudności (`State_Diff_Lvl_*`) i Bezblokadowe Sanktuarium [DONE / WDROŻONE — zaktualizowane w R4]
 **Oznaczenie trudności:** `[ARCHITECT-REVIEW]`  
 **Modyfikowane pliki:** `horde_waves.py`, `horde_quests.py`
 
 ### Cel i miejsce w kodzie:
-1. W `horde_waves.py` utwórz:
-   - 5 triggerów-znaczników stanu trudności `State_Diff_Lvl_{M2, M1, 0, P1, P2}` (`enabled = (lvl == 0)`, `looping = False`, `timer = 999999`).
-   - 1 trigger-znacznik blokady Sanktuarium podczas dispatchu fali:
-     `t_sanc_unlocked = tm.add_trigger("State_Sanctuary_Unlocked", enabled=True, looping=False)` z warunkiem `timer = 999999`.
-   - Zapisz `state_markers` oraz `t_sanc_unlocked` w słowniku `ctx`.
+1. W `horde_waves.py` utwórz 5 triggerów-znaczników stanu trudności `State_Diff_Lvl_{M2, M1, 0, P1, P2}` (`enabled = (lvl == 0)`, `looping = False`, `timer = 999999`) i zapisz `state_markers` w słowniku `ctx`.
 2. W `horde_quests.py` (`wire_difficulty_transition`):
-   - Dodaj do każdego z 8 triggerów przejścia `09_Diff_*` warunek:
-     `trig.new_condition.trigger_active(trigger_id=t_sanc_unlocked.trigger_id)`.
-   - Usuń przekazywanie `waves_to_enable` i `waves_to_disable` z `wire_difficulty_transition()` — Sanktuarium przełącza wyłącznie `state_markers[from_lvl]` -> `state_markers[to_lvl]`.
-3. **Test izolowany przed Etapem 3B:** Sprawdź kompilację i ponowne wczytanie pliku, upewniając się, że wszystkie 8 triggerów `09_Diff_*` posiada warunek `trigger_active` wskazujący na `State_Sanctuary_Unlocked` i `0` efektów wskazujących na triggery fal `03_W*`.
+   - Każdy z 8 triggerów przejścia `09_Diff_*` ma dokładnie 1 warunek `OBJECTS_IN_AREA` dla Króla P1 (usunięto sztuczne blokady `State_Sanctuary_Unlocked` oraz `09_Diff_*_Relay2s`).
+   - Odwrócony porządek topologiczny utworzenia triggerów (`P1->P2 < 0->P1 < M1->0 < M2->M1` dla padu górnego oraz `M1->M2 < 0->M1 < P1->0 < P2->P1` dla padu dolnego) uniemożliwia kaskadowy przeskok o więcej niż 1 poziom w jednym ticku silnika.
+   - Sanktuarium przełącza wyłącznie `state_markers[from_lvl]` -> `state_markers[to_lvl]` i nie dotyka żadnych triggerów fal `03_W*` ani `03_Endless*`.
 
 ### Kryterium akceptacji:
 - Żaden trigger `09_Diff_*` w `horde_quests.py` nie aktywuje ani nie dezaktywuje triggerów fal.
-- Wszystkie 8 triggerów `09_Diff_*` wymaga aktywnego stanu `State_Sanctuary_Unlocked`.
+- W całym scenariuszu nie istnieją triggery `State_Sanctuary_Unlocked`, `Close_Window` ani `Relay2s`.
 
 ---
 
-## Etap 3B: Jednorazowy harmonogram Fal 1–14 z samozamykającym oknem dispatchu i snapshotem trudności (`BUG-01`, `BUG-03`) [DONE / WDROŻONE]
+## Etap 3B: Jednorazowy harmonogram Fal 1–14 ze skalowanymi wariantami trudności (`BUG-01`, `BUG-03`) [DONE / WDROŻONE — zaktualizowane w R4]
 **Oznaczenie trudności:** `[ARCHITECT-REVIEW]`  
 **Modyfikowane pliki:** `horde_waves.py`
 
 ### Cel i miejsce w kodzie:
-W `horde_waves.py` zastąp stary system 5 warstw dla Fal 1–14 (włącznie z Falą 14 w `4710s` = `78:30`!) następującym układem:
-1. Dla każdej fali `w_def` (`w_num = 1..14`, `w_time = w_def.wave_sec`):
-   - Utwórz ogłoszenie `03_W{w_num:02d}_Announce` (`enabled = True`, `looping = False`, `timer = w_time`).
-   - Dla każdego aktywnego w tej fali Settlementu `s_key`:
-     - Utwórz **Zegar Fali Settlementu**:
-       `t_clock = tm.add_trigger(f"03_W{w_num:02d}_{s_key}_Clock", enabled=True, looping=False)` z warunkiem `timer = w_time`.
-     - Bezpośrednio po `t_clock` utwórz 5 jednorazowych wariantów dispatchu dla `lvl ∈ {-2, -1, 0, 1, 2}`:
-       `t_var = tm.add_trigger(f"03_W{w_num:02d}_{s_key}_Diff_{lvl_tag}", enabled=False, looping=False)`
-       - **Warunek `t_var`:** wyłącznie `t_var.new_condition.trigger_active(trigger_id=state_markers[lvl].trigger_id)` (brak `timer` na wariancie!).
-     - **Efekty Zegara `t_clock` (w tej kolejności):**
-       1. Dezaktywuje `t_sanc_unlocked` (zamraża poziom trudności na czas dispatchu!),
-       2. Aktywuje wszystkie 5 wariantów `t_var` dla `s_key`.
-     - **Efekty każdego z 5 wariantów `t_var` (w tej kolejności):**
-       1. Spawnuje `scale_comp_for_level(comp, lvl)` i wydaje rozkaz `attack_move` w głąb bazy,
-       2. Dezaktywuje wszystkie 5 wariantów braci `03_W{w_num:02d}_{s_key}_Diff_{-2..+2}` (w tym samego siebie),
-       3. Ponownie aktywuje `t_sanc_unlocked` (odblokowuje Sanktuarium po wykonaniu dispatchu).
-   - Dodaj bezpiecznik zamykający falę `03_W{w_num:02d}_Close_Window` (`enabled = True`, `looping = False`, `timer = w_time + 1`), który bezwarunkowo dezaktywuje wszystkie warianty `Diff_*` tej fali i aktywuje `t_sanc_unlocked` (gdyby wszystkie Settlementy z tej fali były już wcześniej zniszczone).
-2. Wszystkie triggery danej fali należące do Settlementu `s_key` (`t_clock`, 5 wariantów `t_var`, a także jednorazowe triggery `Szakale_EcoRaid` [`G2_Mages`], `Trade_Line_Attack` [`G3_East`] oraz `Forest_Breach` [`G2_Snipers`]) dopisz do `ctx["settlement_trigger_handles"][s_key]`.
+W `horde_waves.py` dla każdej fali `w_def` (`w_num = 1..14`, `w_time = w_def.wave_sec`):
+1. Utwórz ogłoszenie `03_W{w_num:02d}_Announce` (`enabled = True`, `looping = False`, `timer = w_time`).
+2. Dla każdego aktywnego w tej fali Settlementu `s_key`:
+   - Utwórz **Zegar Fali Settlementu**: `t_clock = tm.add_trigger(f"03_W{w_num:02d}_{s_key}_Clock", enabled=True, looping=False)` z warunkiem `timer = w_time`.
+   - Utwórz 5 jednorazowych wariantów dispatchu dla `lvl ∈ {-2, -1, 0, 1, 2}`:
+     `t_var = tm.add_trigger(f"03_W{w_num:02d}_{s_key}_Diff_{lvl_tag}", enabled=False, looping=False)` z warunkiem `trigger_active(trigger_id=state_markers[lvl].trigger_id)`.
+   - `t_clock` aktywuje wszystkie 5 wariantów `t_var` dla `s_key` (a w Fali 14 uzbraja też `endless_gates[s_key]`).
+   - Aktywny wariant `t_var` spawnuje przeskalowane wojsko (oraz przeskalowane `Szakale` w `G2_Mages` i `Trade Raid` w `G3_East`), a następnie dezaktywuje wszystkie 5 wariantów braci.
 
 ### Kryterium akceptacji:
-- Wejście na flagę `+1` przed `8:30` zamraża stan `+1`, a w `510s` (`8:30`) uruchamia się wyłącznie wariant `03_W01_*_Diff_P1` (jednostki Feudalne Fali 1 powiększone o 25%).
-- Zmiana trudności przez gracza w dokładnej sekundzie wybuchu fali jest wstrzymywana przez blokadę `State_Sanctuary_Unlocked` do zakończenia dispatchu tej fali.
-- W `78:30` (`4710s`) Fala 14 uruchamia pełny skład wszystkich 6 Settlementów jako zwykła fala jednorazowa.
+- Zmiana poziomu trudności przed falą powoduje uruchomienie dokładnie jednego wariantu `03_W*_*_Diff_*` odpowiadającego bieżącemu `State_Diff_Lvl_*`.
 
 ---
 
-## Etap 3C: Indywidualne Bramki Endless (`03_Endless_Gate_{s_key}`) i jednorazowe warianty dispatchu Endless [DONE / WDROŻONE]
+## Etap 3C: Indywidualne Bramki Endless (`03_Endless_Gate_{s_key}`) i jednorazowe warianty dispatchu Endless [DONE / WDROŻONE — zaktualizowane w R4/R7/R8]
 **Oznaczenie trudności:** `[ARCHITECT-REVIEW]`  
 **Modyfikowane pliki:** `horde_waves.py`, `horde_quests.py`
 
 ### Cel i miejsce w kodzie:
-1. **Całkowite rozdzielenie bramek Endless poszczególnych Settlementów (`horde_waves.py`):**
-   - Dla globalnego ogłoszenia czatu utwórz `03_Endless_Announce_Gate` (`enabled = True`, `looping = False`, `timer = 4710`), który aktywuje `03_Endless_Announce_Loop` (`enabled = False`, `looping = True`, `timer = 330`). Ten trigger **nie dotyka żadnego Settlementu**.
-   - Dla każdego z 6 Settlementów `s_key` utwórz **indywidualną Bramkę Endless**:
-     `t_end_gate = tm.add_trigger(f"03_Endless_Gate_{s_key}", enabled=True, looping=False)` z warunkiem `timer = 4710` (`78:30`).
-   - Dla każdego z 6 Settlementów `s_key` utwórz **jeden pętlowy Zegar Endless**:
-     `t_end_clock = tm.add_trigger(f"03_Endless_{s_key}_Clock", enabled=False, looping=True)` z warunkiem `timer = 330` (`BALANCE["wave_interval_sec"]`).
-   - **Wyłącznie `t_end_gate` aktywuje `t_end_clock`** (oraz przypisany do danego Settlementu specjalny atak Endless: `t_endless_trade` w `G3_East`, `t_endless_sapper` w `G2_Snipers`, `t_endless_szakale` w `G2_Mages`).
-   - Dla każdego Settlementu `s_key` utwórz 5 **jednorazowych (`looping = False`)** wariantów dispatchu Endless:
-     `t_end_var = tm.add_trigger(f"03_Endless_{s_key}_Diff_{lvl_tag}", enabled=False, looping=False)`
-     - **Warunek `t_end_var`:** wyłącznie `t_end_var.new_condition.trigger_active(trigger_id=state_markers[lvl].trigger_id)` (brak `timer` i `looping = False`!).
-     - **Efekty `t_end_clock` (co 330s):** dezaktywuje `t_sanc_unlocked` i aktywuje wszystkie 5 wariantów `t_end_var` dla `s_key`.
-     - **Efekty każdego `t_end_var`:** spawnuje `scale_comp_for_level(comp, lvl)`, dezaktywuje wszystkie 5 wariantów `03_Endless_{s_key}_Diff_{-2..+2}` oraz aktywuje `t_sanc_unlocked`.
-2. **Pełna dezaktywacja po zniszczeniu Settlementu (`horde_waves.py`, `horde_quests.py`):**
-   - Dopisz `t_end_gate`, `t_end_clock`, wszystkie 5 wariantów `t_end_var` oraz ewentualny specjalny trigger Endless (`t_endless_trade` / `t_endless_sapper` / `t_endless_szakale`) do `ctx["settlement_trigger_handles"][s_key]`.
-   - W `horde_quests.py` w `05_Settlement_Destroyed_{s_key}` dezaktywuj wszystkie triggery z `ctx["settlement_trigger_handles"][s_key]`.
+1. Dla każdego z 6 Settlementów `s_key` utwórz pętlową bramkę `03_Endless_Gate_{s_key}` (`enabled = False`, `looping = True`, `timer = 330`), uzbrajaną przez zegar Fali 14 (`4710s`), dzięki czemu pierwszy tick Endless uderza w `5040s` (`84:00`).
+2. Dla każdego Settlementu `s_key` utwórz 5 jednorazowych (`looping = False`) wariantów `03_Endless_{s_key}_Diff_{lvl_tag}` z warunkiem `trigger_active(state_markers[lvl].trigger_id)`.
+3. W `G2_Mages` Szakale Endless są dzielone na dwie flanki: `(52, 86) -> (32, 118)` (eko P3) oraz `(116, 162) -> (76, 172)` (eko P4) z rozkazem `ActionType.MOVE`.
+4. Zniszczenie Settlementu w `05_Settlement_Destroyed_{s_key}` trwale dezaktywuje wszystkie jego zegary fal 1–14, bramkę `03_Endless_Gate_{s_key}` oraz wszystkie warianty.
 
 ### Kryterium akceptacji:
-- Wszystkie warianty `03_Endless_*_Diff_*` mają `enabled = False` oraz **`looping = False`**, natomiast zegary `03_Endless_*_Clock` mają `enabled = False` oraz **`looping = True`**.
-- Scenariusz przechodzi test osi czasu:
-  - `78:30` (`4710s`): `03_Endless_Gate_*` uzbraja zegary `Clock` (brak dodatkowego spawnu ponad Falę 14),
-  - `84:00` (`5040s`): pierwszy tick Endless spawnuje wojsko na aktualnym poziomie trudności,
-  - `85:00`: zmiana trudności `+1 -> 0` nie wywołuje natychmiastowego spawnu,
-  - `89:30` (`5370s`): drugi tick Endless spawnuje wojsko na poziomie `0`,
-  - zniszczenie Settlementu przed lub po `78:30` trwale wyłącza jego `Gate`, `Clock`, warianty i ataki specjalne.
+- Wszystkie warianty `03_Endless_*_Diff_*` mają `enabled = False` oraz `looping = False`, a bramki `03_Endless_Gate_*` mają `enabled = False`, `looping = True`, `timer = 330`.
 
 ---
 
@@ -390,29 +356,28 @@ W `horde_quests.py` w triggerze `06_Quest1_Build_Trade_Wall_And_Pop` (`t_q1`):
 
 ---
 
-## Etap 7: Kompleksowy walidator strukturalny scenariusza (`test_horde_scenario.py`) [DONE / WDROŻONE]
+## Etap 7: Kompleksowy walidator strukturalny scenariusza (`test_horde_scenario.py`) [DONE / WDROŻONE — rozbudowane w R6–R8 do 26 testów]
 **Oznaczenie trudności:** `[FLASH-SAFE]`  
-**Modyfikowane pliki:** nowy plik `test_horde_scenario.py`
+**Modyfikowane pliki:** `test_horde_scenario.py`
 
 ### Cel i miejsce w kodzie:
-Utwórz skrypt `test_horde_scenario.py`, który wykonuje:
+Skrypt `test_horde_scenario.py` wykonuje automatyczną budowę scenariusza (jeśli plik wynikowy nie istnieje) oraz weryfikuje:
 1. **Testy danych i algorytmów (`unittest`):**
-   - Sprawdzenie, że każdy `unit_id` występujący w 14 falach, 10 garnizonach, rajdach Szakali, Trade Raid, Saperach i 3 stopniach odwetów znajduje się w `ENEMY_UNIT_REGISTRY`.
-   - Test `scale_comp_for_level` dla pustych kompozycji, kompozycji zerowych `[(375, 0)]`, wielokrotnej redukcji `diff < 0` oraz wszystkich `14 fal × 6 Settlementów × 5 poziomów` (dokładna zgodność na poziomie `0`, monotoniczność, zachowanie `mandatory_min_one`, zgodność sumy z `effective_target`).
-   - Test pełnej odwracalności delt HP i ataku w Sanktuarium Balansu (`0 -> +1 -> +2 -> +1 -> 0 -> -1 -> -2 -> -1 -> 0`).
-2. **Walidacja wygenerowanego pliku binarnego po ponownym wczytaniu (`AoE2DEScenario.from_file(str(OUTPUT_SCENARIO))`):**
-   - Dokładnie jeden początkowo aktywny `State_Diff_Lvl_0` (`enabled == 1`) i cztery nieaktywne (`enabled == 0`) oraz aktywny `State_Sanctuary_Unlocked` (`enabled == 1`).
-   - Wszystkie zegary fal `03_W{01..14}_{s_key}_Clock` mają `enabled == 1`, `looping == 0` oraz `timer == w_def.wave_sec`.
-   - Każdy zegar fali dezaktywuje `State_Sanctuary_Unlocked` i aktywuje dokładnie 5 właściwych wariantów `Diff_{-2..+2}`.
-   - Każdy wariant `Diff_{-2..+2}` (zarówno w Falach 1–14, jak i w Endless!) ma na starcie `enabled == 0`, **`looping == 0`**, dokładnie jeden warunek `trigger_active` wskazujący na właściwy `State_Diff_Lvl_*`, a w efektach dezaktywuje wszystkich 5 braci i aktywuje `State_Sanctuary_Unlocked`.
-   - Wszystkie 6 bramek `03_Endless_Gate_{s_key}` mają `enabled == 1`, `looping == 0`, `timer == 4710` i aktywują wyłącznie zegary i ataki Endless swojego Settlementu.
-   - Wszystkie 6 zegarów `03_Endless_{s_key}_Clock` mają na starcie `enabled == 0`, **`looping == 1`** oraz `timer == 330`.
-   - **Asercja anty-regresyjna `BUG-01`:** Żaden z 8 triggerów `09_Diff_*` nie posiada efektu `activate_trigger` ani `deactivate_trigger` wskazującego na jakikolwiek trigger `03_W*` lub `03_Endless*`.
-   - Każdy z 6 triggerów `05_Settlement_Destroyed_{s_key}` dezaktywuje komplet przypisanych do niego zegarów fal 1–14, wariantów, bramki `03_Endless_Gate_{s_key}`, zegara `03_Endless_{s_key}_Clock`, wariantów Endless oraz smyczy garnizonowej.
-   - `t_shield_on` (`enabled == 1`) i `t_shield_off` (`enabled == 0`) wzajemnie się przełączają i żaden trigger fali nie aktywuje `t_shield_on`.
+   - Sprawdzenie, że każdy `unit_id` występujący w `CREATE_OBJECT` dla P5–P8 znajduje się w `ENEMY_UNIT_REGISTRY`.
+   - Test `scale_comp_for_level` dla pustych kompozycji, kompozycji zerowych, wielokrotnej redukcji `diff < 0` oraz wszystkich `14 fal × 6 Settlementów × 5 poziomów`.
+   - Test pełnej odwracalności delt HP i ataku w Sanktuarium Balansu zarówno matematycznie, jak i na skompilowanych efektach `MODIFY_ATTRIBUTE` z 8 triggerów `09_Diff_*`.
+2. **Walidację wygenerowanego pliku binarnego po ponownym wczytaniu (`AoE2DEScenario.from_file(str(OUTPUT_SCENARIO))`):**
+   - Dokładnie jeden początkowo aktywny `State_Diff_Lvl_0` (`enabled == 1`) i cztery nieaktywne (`enabled == 0`) oraz brak przestarzałych triggerów `Sanctuary_Unlocked` / `Close_Window` / `Relay2s`.
+   - Wszystkie oczekiwane zegary fal `03_W{01..14}_{s_key}_Clock` mają `enabled == 1`, `looping == 0` oraz `timer == w_def.wave_sec` (bez pomijania brakujących zegarów).
+   - Każdy wariant `Diff_{-2..+2}` (zarówno w Falach 1–14, jak i w Endless) ma na starcie `enabled == 0`, `looping == 0`, dokładnie jeden warunek `trigger_active` wskazujący na właściwy `State_Diff_Lvl_*`.
+   - Wszystkie 6 bramek `03_Endless_Gate_{s_key}` mają `enabled == 0`, `looping == 1`, `timer == 330`.
+   - **Asercja anty-regresyjna `BUG-01`:** Żaden z 8 triggerów `09_Diff_*` nie dotyka żadnego triggera `03_W*` ani `03_Endless*`.
+   - Każdy z 6 triggerów `05_Settlement_Destroyed_{s_key}` dezaktywuje komplet przypisanych do niego zegarów fal, bramek Endless, wariantów oraz smyczy garnizonowej i spawnuje odwet na właściwej bramie kierunkowej.
+   - `t_shield_on` i `t_shield_off` tworzą dwustanowy automat skończony.
+   - Konfiguracja graczy AI P5–P8 (`human == False`, `lock_civ == True`, cywilizacje `VIKINGS/TURKS/SARACENS/PERSIANS`), domki startowe (`2` dla P1/P3/P4 i `6` dla P2) oraz bezpieczny Zegar Fali w Objectives (`0` efektów `DISPLAY_TIMER`, 169 banerów UI z `timer == 999999` i 168 przełączników co 30s).
 
 ### Kryterium akceptacji:
-- `python test_horde_scenario.py` kończy się statusem `OK`, a `ruff check .` zwraca `All checks passed!`.
+- `python test_horde_scenario.py` kończy się statusem `OK` (26/26 testów), a `ruff check .` zwraca `All checks passed!`.
 
 ---
 
@@ -438,7 +403,7 @@ Zaktualizuj `horda.md` oraz teksty w `populate_ingame_scenario_descriptions()` (
 
 ---
 
-## Plan Naprawczy Po Audycie v6.3 -> v6.4 (Etapy R1–R6)
+## Plan Naprawczy Po Audycie i Playteście v6.3 -> v6.5 (Etapy R1–R8)
 
 - **Etap R1 `[FLASH-SAFE]` `[DONE / WDROŻONE]`:** Czyszczenie konfiguracji, usunięcie duplikatów `PLAYER_*` i `populate_ingame_scenario_descriptions`, usunięcie błędnego `object_list_unit_id` z `objects_in_area`, uszczelnienie `safe_call` i usunięcie `try...except` z `safe_modify_attribute`.
 - **Etap R2 `[FLASH-SAFE]` `[DONE / WDROŻONE]`:** Unifikacja mutacji 6 archetypów w `01b` dla wszystkich `ai_players` (`P5–P8`), `TECH_BLOODLINES` dla wszystkich `ai_players` w `01d` (z korektą `-20 HP` dla Szakala) oraz `enforce_specialized_unit_caps` w `01d`, `01e`, `01f`.
@@ -447,3 +412,11 @@ Zaktualizuj `horda.md` oraz teksty w `populate_ingame_scenario_descriptions()` (
 - **Etap R5 `[FLASH-SAFE]` `[DONE / WDROŻONE]`:** Synchronizacja dokumentacji `horda.md`, `populate_ingame_scenario_descriptions` i komunikatów czatu z wartościami eskalacji z `BALANCE` (`+5/+9/+10 HP`) oraz rzeczywistymi współrzędnymi 6 Settlementów (`BUG-13`, `BUG-14`).
 - **Etap R6 `[ARGON/SONNET-REQUIRED]` `[DONE / WDROŻONE]`:** Rozbudowa i uszczelnienie `test_horde_scenario.py` do 20/20 testów (weryfikacja `assertGreater` na kolekcjach `BUG-16`, realne ID `557`, pełny skan `CREATE_OBJECT` przeciwko `ENEMY_UNIT_REGISTRY`, testy geometrii separacji smyczy i spawnów P7, testy odblokowanego Sanktuarium i porządku topologicznego triggerów).
 - **Etap R7 `[ARGON-HIGH AUDIT]` `[DONE / WDROŻONE]`:** Naprawa przepełnienia siatki spawnu do 11 kolumn (`dx = (idx % 11) - 5, dy = (idx // 11) - 5`), zwiększenie bufora polan spawnu do `radius=7` (z pełną ochroną 66 drzew północnej i 66 drzew wschodniej przesieki), korekta współrzędnych spawnu `G1_East` `(117, 178)`, odwetu Settlementów `(116, 114)` i wschodnich Saperów `(115, 140)` zapewniająca odległość Czebyszewa $> 20$ od wszystkich 10 smyczy obozowych (`BUG-20`), pełna unifikacja technologii `01d–01f` dla `P5–P8` z zamrożeniem prędkości Żelaznego Słonia po `Husbandry` (`BUG-21`), podział rajdów Szakali w Trybie Endless na dwie flanki `(52, 86) -> (54, 119)` i `(116, 162) -> (54, 170)` (`BUG-22`), naprawa martwej gałęzi `hasattr(trigger.new_effect, "move")` na `task_object(..., action_type=ActionType.MOVE)` (`BUG-24`), optymalizacja `test_horde_scenario.py` do jednokrotnego odczytu binarnego (~15s, 23/23 testów OK) oraz usunięcie martwych plików `split_into_modules.py` i `generate_horde_quests_scenario_monolith.bak` (`BUG-23`).
+- **Etap R8 `[PLAYTEST + EXTERNAL AUDIT v6.5]` `[DONE / WDROŻONE]`:**
+  1. **Wymuszenie AI i cywilizacji P5–P8 w pliku scenariusza (`horde_map.py`):** `human = False`, `lock_civ = True`, `allied_victory = True` oraz przypisanie `Civilization.VIKINGS` (P5), `TURKS` (P6), `SARACENS` (P7), `PERSIANS` (P8) wraz z `pm.set_diplomacy_teams(human_players, ai_players)`.
+  2. **Poziom trudności AI `Extreme` w `horda.md` i instrukcjach w grze:** Zaktualizowano zalecenia lobby na `Ekstremalny (Extreme)`, aby jednostki AI działały bez błędów taktycznych.
+  3. **Domki startowe dla P1–P4 (`horde_map.py`):** P1, P3 i P4 rozpoczynają grę z `2` wybudowanymi domkami ~5 kratek na północ od krawędzi TC (`(cx, cy - 7)`, `(cx + 3, cy - 7)`), a P2 rozpoczyna z `6` domkami (kompensacja 20 popu zajmowanego przez Feitorię w `0:00`).
+  4. **Odporny na crashe Zegar Fali (`setup_wave_countdown_timer` w `horde_quests.py`):** Zbudowany bez użycia `display_timer` na 169 statycznych banerach UI w Objectives (`00_Wave_Timer_UI_*`, `order=110`, `timer=999999`) przełączanych co 30s przez 168 triggerów `00_Wave_Timer_Tick_*` wraz z ostrzeżeniami czatu na 1 min przed każdą falą.
+  5. **Rozwiązanie kolizji rozkazów Szakali P7 z `02e_Push_Gate_Units_Deep_Into_Base` (`BUG-25`, `horde_waves.py`):** Wykluczenie `PlayerId.SEVEN` ze stref `02e` przy Bramie Północnej, Wschodniej i wyłomach leśnych (pozostawienie P7 wyłącznie w Bramie Centralnej) oraz skierowanie Szakali Endless bezpośrednio w strefy ekonomiczne `(32, 118)` (P3 TC) i `(76, 172)` (P4 TC).
+  6. **Normalizacja HP Żelaznego Słonia po `Bloodlines` (`BUG-26`, `horde_waves.py`):** Odjęcie `20 HP` (`Operation.SUBTRACT, 20`) dla `ELITE_BATTLE_ELEPHANT_ID` w `01d_AI_Techs_Feudal_8m30s` dla wszystkich `ai_players` oraz egzekwowanie zasięgu Snajpera (`19`) i prędkości Arcymaga (`0.78`) w `enforce_specialized_unit_caps`.
+  7. **Rozszerzenie list `PLAYER_*` o jednostki unikalne i regionalne (`horde_config.py`), kierunkowe spawny odwetów Settlementów (`05_Settlement_Destroyed_*` w `horde_quests.py`) oraz wzmocnienie walidatora `test_horde_scenario.py` do 26/26 testów.**

@@ -347,6 +347,10 @@ def enforce_specialized_unit_caps(trig, ai_players: list[PlayerId]) -> None:
         # SIEGE_ONAGER_ID:
         safe_modify_attribute(trig, ai_p, SIEGE_ONAGER_ID, ATTR_MAXIMUM_RANGE, Operation.SET, BALANCE["mortar_range"])
 
+        # ELITE_JANISSARY (Snajper Imperialny) oraz IMAM_UNIT_ID (Arcymag Tarczy):
+        safe_modify_attribute(trig, ai_p, UnitInfo.ELITE_JANISSARY.ID, ATTR_MAXIMUM_RANGE, Operation.SET, BALANCE["sniper_range"])
+        safe_modify_attribute(trig, ai_p, IMAM_UNIT_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["mage_speed"])
+
 
 def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     ai_players = ctx["ai_players"]
@@ -412,6 +416,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     )
     for ai_p in ai_players:
         safe_modify_attribute(t_ai_smith_feudal, ai_p, HUSSAR_ID, ATTR_HIT_POINTS, Operation.SUBTRACT, 20)
+        safe_modify_attribute(t_ai_smith_feudal, ai_p, ELITE_BATTLE_ELEPHANT_ID, ATTR_HIT_POINTS, Operation.SUBTRACT, 20)
     enforce_specialized_unit_caps(t_ai_smith_feudal, ai_players)
 
     t_ai_smith_castle = tm.add_trigger("01e_AI_Techs_Castle_18m", enabled=True, looping=False)
@@ -470,7 +475,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     send_highlight_chat(
         t_init, "<YELLOW>",
-        "=== KRONIKI RUBIEZY v6.4 === Inzynier Balansu P1 powrocil na (6, 150) w zachodnim lesie! Lewy dolny rog mapy (x=3..23, y=177..198) jest czysty pod Targowiska graczy!",
+        "=== KRONIKI RUBIEZY v6.5 === Inzynier Balansu P1 czeka na (6, 150)! W panelu Celow (Objectives) dziala ZEGAR FALI odliczajacy czas do kolejnego uderzenia!",
     )
 
     t_mutate = tm.add_trigger("01b_Apply_Specialized_Unit_Archetypes", enabled=True, looping=False)
@@ -618,7 +623,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_shield_on.new_effect.activate_trigger, trigger_id=t_shield_off.trigger_id)
     send_highlight_chat(
         t_shield_on, "<PURPLE>",
-        "[GLOBALNA AURA MAGA - 25 KRATEK]: Arcymag (240 HP, regen 5 HP/s, flara!) dal +30/+30 Pancerza i leczenie WSZYSTKIM frakcjom Hordy (P5-P8)! Skupcie na nim ogien!",
+        "[GLOBALNA AURA MAGA]: Arcymag w strefie 50x50 przed Brama Centralna dal GLOBALNIE +30/+30 Pancerza calej Hordzie (P5-P8) oraz LOKALNIE leczy jednostki w tej strefie! Skupcie na nim ogien!",
         flare_x=114, flare_y=114,
     )
 
@@ -675,15 +680,19 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     t_push_inside = tm.add_trigger("02e_Push_Gate_Units_Deep_Into_Base", enabled=True, looping=True)
     safe_call(t_push_inside.new_condition.timer, timer=15)
+    # P7 (Saracens / G2_Mages) wystawia Szakale Dywersyjne (HUSSAR_ID) przez Bramę Północną (52, 86)
+    # oraz Wschodnią (116, 162) z rozkazem ActionType.MOVE. Wykluczamy P7 z tych stref, aby 02e
+    # nie nadpisywał ich rozkazu MOVE rozkazem ATTACK_MOVE. P7 główną armią idzie wyłącznie przez Bramę Centralną.
+    non_raider_ai = [PlayerId.FIVE, PlayerId.SIX, PlayerId.EIGHT]
     gate_push_zones = [
-        (gate_north[0] - 8, gate_north[1] - 4, gate_north[0] + 8, gate_north[1] + 8, 48, 138),
-        (gate_center[0] - 8, gate_center[1] - 8, gate_center[0] + 4, gate_center[1] + 8, 54, 146),
-        (gate_east[0] - 8, gate_east[1] - 8, gate_east[0] + 4, gate_east[1] + 8, 68, 162),
-        (74, 94, 82, 108, 68, 130),
-        (98, 135, 112, 144, 68, 146),
+        (gate_north[0] - 8, gate_north[1] - 4, gate_north[0] + 8, gate_north[1] + 8, 48, 138, non_raider_ai),
+        (gate_center[0] - 8, gate_center[1] - 8, gate_center[0] + 4, gate_center[1] + 8, 54, 146, ai_players),
+        (gate_east[0] - 8, gate_east[1] - 8, gate_east[0] + 4, gate_east[1] + 8, 68, 162, non_raider_ai),
+        (74, 94, 82, 108, 68, 130, non_raider_ai),
+        (98, 135, 112, 144, 68, 146, non_raider_ai),
     ]
-    for ai_p in ai_players:
-        for gx1, gy1, gx2, gy2, p_tx, p_ty in gate_push_zones:
+    for gx1, gy1, gx2, gy2, p_tx, p_ty, zone_players in gate_push_zones:
+        for ai_p in zone_players:
             safe_call(
                 t_push_inside.new_effect.attack_move,
                 source_player=ai_p,
@@ -871,14 +880,14 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
                     add_spawn_and_attack_effect(
                         t_end_var, PlayerId.SEVEN, [(HUSSAR_ID, n_north)],
                         spawn_x=52, spawn_y=86,
-                        target_x=54, target_y=119,
+                        target_x=32, target_y=118,
                         ignore_frontline_move_only=True,
                     )
                 if n_east > 0:
                     add_spawn_and_attack_effect(
                         t_end_var, PlayerId.SEVEN, [(HUSSAR_ID, n_east)],
                         spawn_x=116, spawn_y=162,
-                        target_x=54, target_y=170,
+                        target_x=76, target_y=172,
                         ignore_frontline_move_only=True,
                     )
 
@@ -1038,4 +1047,6 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     ctx["all_settlement_wave_triggers"] = all_settlement_wave_triggers
     ctx["camp_leash_handles"] = camp_leash_handles
     ctx["deep_target_center"] = deep_target_center
+    ctx["deep_target_east"] = deep_target_east
+    ctx["deep_target_north"] = deep_target_north
     ctx["state_markers"] = state_markers

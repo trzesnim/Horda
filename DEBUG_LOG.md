@@ -1,4 +1,4 @@
-# DEBUG_LOG.md — Dokumentacja Architektury, Stanu Bazowego i Błędów (`Kroniki Rubieży: Horda i Ekspedycje` v6.3 -> v6.4)
+# DEBUG_LOG.md — Dokumentacja Architektury, Stanu Bazowego i Błędów (`Kroniki Rubieży: Horda i Ekspedycje` v6.3 -> v6.5)
 
 ## 0. Identyfikacja stanu bazowego i zasady dla Agenta IDE (Antigravity / VS Code)
 - **Repozytorium bazowe:** `https://github.com/trzesnim/AoE_Scenarios/tree/main` (stan odpowiadający wersji `v6.3 -> v6.4` po audycie kodu i testów).
@@ -357,3 +357,31 @@ Dzięki temu przejście `0 -> -1` odejmuje dokładnie `hp_delta_down` (ok. 15% b
   - Zoptymalizowano wczytywanie binarne `.aoe2scenario` w `test_horde_scenario.py` do pojedynczego wywołania (`get_compiled_scenario()`), skracając czas wykonania testów z ~31.4s do ~15s.
   - Dodano 3 nowe testy kompleksowe (`test_spawn_grid_11col_and_all_camp_leash_separation`, `test_ai_techs_completeness_and_specialized_unit_caps`, `test_endless_jackal_dual_flank_raids`) — łącznie **23/23 testów OK**.
   - Usunięto martwe pliki `split_into_modules.py` oraz `generate_horde_quests_scenario_monolith.bak`.
+
+### Wdrożenie 9: Etap R8 — Poprawki po Playteście i Audycie Zewnętrznym (v6.5) [STATUS: OK]
+- **1. Narzucenie AI i zablokowanych cywilizacji P5–P8 w pliku scenariusza (`horde_map.py`):**
+  - W `build_map_and_entities` ustawiono dla `P1–P4`: `p.human = True, p.lock_civ = False, p.allied_victory = True`.
+  - Dla `P5–P8` ustawiono `p.human = False, p.lock_civ = True, p.allied_victory = True` oraz narzucono cywilizacje i zestawy architektoniczne (`Civilization.VIKINGS` dla P5, `Civilization.TURKS` dla P6, `Civilization.SARACENS` dla P7, `Civilization.PERSIANS` dla P8) wraz z `pm.set_diplomacy_teams(human_players, ai_players)`.
+- **2. Aktualizacja poziomu trudności AI w `horda.md` na `Extreme (Ekstremalny)`:**
+  - W `horda.md` oraz `populate_ingame_scenario_descriptions` (`horde_config.py`) zaktualizowano zalecenia lobby na `Ekstremalny (Extreme)`, aby jednostki AI działały rozsądnie taktycznie i nie blokowały się podczas szturmów.
+- **3. Domki startowe dla graczy P1–P4 (`horde_map.py`, `horde_config.py`):**
+  - W `spawn_symmetrical_player_base` każdy z graczy `P1, P3, P4` otrzymuje na starcie `2` wybudowane domki (`BuildingInfo.HOUSE.ID`, `size_tiles=2`) w odległości ~5 kafelków na północ od krawędzi TC (`(cx, cy - 7)` i `(cx + 3, cy - 7)`), z dala od skupisk zasobów.
+  - Gracz `P2` otrzymuje na starcie `6` domków (`(-3, -7), (0, -7), (3, -7), (-3, -10), (0, -10), (3, -10)`), co daje `+30` populacji z domków i w pełni kompensuje `20` populacji zajmowane w `0:00` przez pre-postawioną Feitorię (Cytadelę Sojuszu), eliminując stan *housed* na starcie.
+- **4. Odporny na crashe Zegar Fali (`setup_wave_countdown_timer` w `horde_quests.py`):**
+  - Ponieważ natywny efekt `display_timer` w `AoE2ScenarioParser` potrafi powodować crashe wątku UI silnika C++ przy odświeżaniu/wygasaniu, wdrożono w 100% bezpieczny licznik oparty na 169 statycznych banerach UI w panelu Objectives (`00_Wave_Timer_UI_000_0000s` .. `00_Wave_Timer_UI_168_5040s`, `order=110`, `is_header=True`, `timer=999999` — nigdy nie ulegają przekreśleniu) przełączanych co 30 sekund przez 168 triggerów `00_Wave_Timer_Tick_001_0030s` .. `00_Wave_Timer_Tick_168_5040s` za pomocą `deactivate_trigger` / `activate_trigger`.
+  - Dodatkowo na 1 minutę przed każdą z 14 fal (oraz 30 sekund przed Falą 1 i 1 minutę przed Trybem Endless) zegar wysyła ostrzeżenie na czacie (`[ZEGAR FALI]`).
+  - Triggery zegara są rejestrowane na końcu `setup_sanctuary_quests_and_victory`, dzięki czemu topologiczne `trigger_id` (`565..572`) przejść Sanktuarium `09_Diff_*` pozostają nienaruszone.
+- **5. Eliminacja konfliktu rozkazów Szakali P7 z `02e_Push_Gate_Units_Deep_Into_Base` oraz korekta celów Endless (`BUG-25`, `horde_waves.py`):**
+  - W `02e_Push_Gate_Units_Deep_Into_Base` wykluczono `PlayerId.SEVEN` ze stref popychających przy Bramie Północnej, Bramie Wschodniej oraz obu wyłomach leśnych (`PlayerId.SEVEN` pozostaje w `02e` wyłącznie w strefie Bramy Centralnej `(96, 106)..(108, 122)`, którędy maszeruje główna fala `G2_Mages`). Dzięki temu globalny `attack_move` co 15s nigdy nie nadpisuje rozkazów `ActionType.MOVE` Szakali P7 przechodzących przez Bramę Północną lub Wschodnią.
+  - W `03_Endless_G2_Mages_Diff_*` zmieniono cele `ActionType.MOVE` obu grup Szakali z pustego śródpobocza `(54, 119)` / `(54, 170)` bezpośrednio na strefy ekonomiczne graczy: `(32, 118)` (TC P3) oraz `(76, 172)` (TC P4).
+- **6. Normalizacja HP Żelaznego Słonia po `Bloodlines` oraz uzupełnienie `enforce_specialized_unit_caps` (`BUG-26`, `horde_waves.py`):**
+  - W `01d_AI_Techs_Feudal_8m30s` po zbadaniu `TECH_BLOODLINES` dodano odjęcie `-20 HP` (`Operation.SUBTRACT, 20`) dla `ELITE_BATTLE_ELEPHANT_ID` u wszystkich `ai_players` (analogicznie do `HUSSAR_ID`), dzięki czemu Żelazny Słoń zachowuje dokładnie `1450 HP` bazowego życia (z zachowaniem ewentualnych delt trudności/questów).
+  - W `enforce_specialized_unit_caps` dodano jawne egzekwowanie zasięgu Snajpera Imperialnego (`ELITE_JANISSARY.ID -> 19`) oraz prędkości Arcymaga Tarczy (`IMAM_UNIT_ID -> 0.78`).
+- **7. Rozszerzenie list `PLAYER_*` o jednostki unikalne/regionalne, kierunkowe odwety Settlementów i synchronizacja komunikatów (`horde_config.py`, `horde_quests.py`, `horda.md`):**
+  - Rozszerzono `PLAYER_RANGED_UNITS`, `PLAYER_CAVALRY_UNITS`, `PLAYER_INFANTRY_UNITS` i `PLAYER_PROD_BUILDINGS` o jednostki unikalne i regionalne (m.in. `Longbowman`, `Cataphract`, `Leitis`, `Teutonic Knight`, `Huskarl`, `Woad Raider`, `Conquistador`, `Genoese Crossbowman`, `Obuch`, `Winged Hussar`, `Legionary`, `Centurion`, `Coustillier`, `Magyar Huszar`, `Ghulam`, `Imperial Camel Rider`, `Imperial Skirmisher`, `Krepost`).
+  - Zróżnicowano punkty spawnu i cele odwetów w `05_Settlement_Destroyed_*`: obozy północne (`G1_North`, `G2_Snipers`) uderzają z `(48, 86) -> (48, 138)`, obozy centralne (`G2_Mages`, `G3_North`) z `(116, 114) -> (54, 146)`, a obozy wschodnie (`G1_East`, `G3_East`) z `(117, 178) -> (68, 162)` (wszystkie punkty posiadają polany `radius=7` i leżą w odległości Czebyszewa $> 20$ od smyczy P8).
+  - Uzupełniono komunikaty czatu `Q1–Q4`, opisy w grze oraz `horda.md` o informację o Adaptacji Hordy po Questach (`+8/+8/+10/+10 HP`), dochodzie Q3 dla każdego gracza oraz rozróżnieniu globalnego pancerza (`+30/+30`) i lokalnego leczenia (`50×50`) Arcymaga.
+- **8. Rozbudowa i uszczelnienie `test_horde_scenario.py` (26/26 testów OK):**
+  - Dodano automatyczną kompilację scenariusza w `get_compiled_scenario()`, jeśli plik wynikowy nie istnieje.
+  - Uszczelniono `test_sanctuary_cycle_mathematical_zero_drift` (weryfikacja na rzeczywistych efektach `MODIFY_ATTRIBUTE` z 8 skompilowanych triggerów `09_Diff_*`) oraz `test_wave_clocks_variants_and_endless_gates_bug03` (usunięcie warunkowego `if clock_name in self.t_map:`, ścisła weryfikacja wszystkich oczekiwanych zegarów, wartości `timer` i warunków `trigger_active`).
+  - Dodano nowe testy binarne: `test_lobby_ai_players_and_locked_civilizations`, `test_starting_houses_per_player_and_distance` oraz `test_crash_safe_wave_countdown_timer`.
