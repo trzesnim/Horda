@@ -18,6 +18,7 @@ from horde_config import (
     MAP_SIZE,
     PLAYER_CAVALRY_UNITS,
     PLAYER_INFANTRY_UNITS,
+    PLAYER_MOUNTED_RANGED_UNITS,
     PLAYER_PROD_BUILDINGS,
     PLAYER_RANGED_UNITS,
     RES_BONUS_POP_CAP,
@@ -144,6 +145,34 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         safe_call(trig.new_effect.deactivate_trigger, trigger_id=t_leash.trigger_id)
         for d_tr in detect_list:
             safe_call(trig.new_effect.deactivate_trigger, trigger_id=d_tr.trigger_id)
+
+    camp_building_ids = [
+        BuildingInfo.CASTLE.ID,
+        BuildingInfo.KEEP.ID,
+        BuildingInfo.GUARD_TOWER.ID,
+        BuildingInfo.BARRACKS.ID,
+        BuildingInfo.STABLE.ID,
+        BuildingInfo.ARCHERY_RANGE.ID,
+        BuildingInfo.SIEGE_WORKSHOP.ID,
+        BuildingInfo.MONASTERY.ID,
+        BuildingInfo.FORTIFIED_WALL.ID,
+    ]
+
+    def collapse_camp_buildings(trig, owner: PlayerId, cx: int, cy: int, radius: int = 14):
+        ax1 = max(0, cx - radius)
+        ay1 = max(0, cy - radius)
+        ax2 = min(MAP_SIZE - 1, cx + radius)
+        ay2 = min(MAP_SIZE - 1, cy + radius)
+        for b_id in camp_building_ids:
+            safe_call(
+                trig.new_effect.kill_object,
+                source_player=owner,
+                object_list_unit_id=b_id,
+                area_x1=ax1,
+                area_y1=ay1,
+                area_x2=ax2,
+                area_y2=ay2,
+            )
 
     def apply_king_reset_and_safe_stat_shift(trig, mode: str):
         cx1, cy1, cx2, cy2 = full_chamber_box
@@ -311,10 +340,6 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         log_msg="[LOG BALANSU]: Trudnosc ZWIEKSZONA z -1 do POZIOMU 0 (DOMYSLNY: 100% wielkosci fal)!",
     )
 
-    t_obj_balance = tm.add_trigger("00_Obj_Balance_Info", enabled=True, looping=False)
-    safe_call(t_obj_balance.new_condition.timer, timer=99999)
-    set_as_objective(t_obj_balance, "Balans (6,150): Krol P1 Gora=Trudniej / Dol=Latwiej", order=75, is_header=True)
-
     # ==============================================================================
     # 10. LOGIKA 4 QUESTÓW (POJEDYNCZE TARGOWISKO W PRAWYM ROGU + 10-KRATKOWY SZLAK)
     # ==============================================================================
@@ -349,8 +374,9 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
             location_y=192,
         )
 
-    # Ciągły Kamienny Mur Obronny z Basztami wzdłuż korytarza handlowego (y = 186, baszty y = 184)
-    keep_x_positions = {115, 130, 145, 160, 175, 190}
+    # Kamienny Mur Obronny z Basztami i 2-kratkowymi otworami wypadowymi (x=122..123 oraz x=170..171)
+    keep_x_positions = {115, 122, 145, 160, 170, 190}
+    sally_gap_x = {122, 123, 170, 171}
     for wx in range(105, MAP_SIZE):
         if wx in keep_x_positions:
             safe_call(
@@ -360,13 +386,14 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
                 location_x=wx,
                 location_y=184,
             )
-        safe_call(
-            t_q1.new_effect.create_object,
-            object_list_unit_id=BuildingInfo.FORTIFIED_WALL.ID,
-            source_player=PlayerId.FOUR,
-            location_x=wx,
-            location_y=186,
-        )
+        if wx not in sally_gap_x:
+            safe_call(
+                t_q1.new_effect.create_object,
+                object_list_unit_id=BuildingInfo.FORTIFIED_WALL.ID,
+                source_player=PlayerId.FOUR,
+                location_x=wx,
+                location_y=186,
+            )
 
     # POJEDYNCZE sojusznicze Targowisko w prawym rogu mapy na (195, 194)
     safe_call(
@@ -407,6 +434,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     t_q2 = tm.add_trigger("06_Quest2_Sniper_Cliff_Buff", enabled=True, looping=False)
     set_as_objective(t_q2, "Q2 - Klif Artylerii (+2 Zasiegu, +4 Ataku, Szybkosc)", order=98)
     safe_call(t_q2.new_condition.destroy_object, unit_object=q2_bldg.reference_id)
+    collapse_camp_buildings(t_q2, PlayerId.SIX, *q2_pos)
     research_techs(t_q2, human_players, [TECH_BALLISTICS, TECH_CHEMISTRY, TECH_SIEGE_ENGINEERS, TECH_THUMB_RING])
 
     for h_p in human_players:
@@ -414,6 +442,8 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
             safe_modify_attribute(t_q2, h_p, r_id, ATTR_MAXIMUM_RANGE, Operation.ADD, 2)
             safe_modify_attribute(t_q2, h_p, r_id, ATTR_SEARCH_RADIUS, Operation.ADD, 2)
             safe_modify_attribute(t_q2, h_p, r_id, ATTR_ATTACK, Operation.ADD, 4, armor_class=3)
+        for mr_id in PLAYER_MOUNTED_RANGED_UNITS:
+            safe_modify_attribute(t_q2, h_p, mr_id, ATTR_MOVEMENT_SPEED, Operation.MULTIPLY, 1.12)
         for c_id in PLAYER_CAVALRY_UNITS:
             safe_modify_attribute(t_q2, h_p, c_id, ATTR_MOVEMENT_SPEED, Operation.MULTIPLY, 1.12)
             safe_modify_attribute(t_q2, h_p, c_id, ATTR_ATTACK, Operation.ADD, 4, armor_class=4)
@@ -432,6 +462,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     set_as_objective(t_q3_unlock, "Q3 - Skarbiec (+20 Pop i Duzy Staly Dochod)", order=97)
     t_q3_trickle = tm.add_trigger("06b_Quest3_Passive_Resource_Trickle", enabled=False, looping=True)
     safe_call(t_q3_unlock.new_condition.destroy_object, unit_object=q3_bldg.reference_id)
+    collapse_camp_buildings(t_q3_unlock, PlayerId.EIGHT, *q3_pos)
     safe_call(t_q3_unlock.new_effect.activate_trigger, trigger_id=t_q3_trickle.trigger_id)
     for h_p in human_players:
         add_player_resource(t_q3_unlock, h_p, RES_BONUS_POP_CAP, BALANCE["q3_bonus_pop"])
@@ -459,6 +490,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     t_q4 = tm.add_trigger("06_Quest4_Blood_Altar_Super_Army", enabled=True, looping=False)
     set_as_objective(t_q4, "Q4 - Krwawy Oltarz (+30% HP Armii i +40% Produkcji)", order=96)
     safe_call(t_q4.new_condition.destroy_object, unit_object=q4_bldg.reference_id)
+    collapse_camp_buildings(t_q4, PlayerId.SEVEN, *q4_pos)
     safe_modify_attribute(t_q4, PlayerId.SEVEN, IMAM_UNIT_ID, ATTR_HIT_POINTS, Operation.SET, 120)
 
     all_player_combat_units = PLAYER_RANGED_UNITS + PLAYER_CAVALRY_UNITS + PLAYER_INFANTRY_UNITS
@@ -487,30 +519,31 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     set_as_objective(t_obj_header_s, "-- SETTLEMENTY HORDY --", order=90, is_header=True)
 
     settlement_defs = [
-        ("G1_North", s_g1_north, "G1 - Polnocny (usuwa Berserkerow i Petardy)", 89, 1, 8, 1,
+        ("G1_North", PlayerId.FIVE, s_g1_north, "G1 - Polnocny (usuwa Berserkerow i Petardy)", 89, 1, 700, 5, 0,
          [(UnitInfo.CAVALIER.ID, 8), (UnitInfo.PIKEMAN.ID, 10)], *s_coords["G1_North"],
          48, 86, *deep_target_north),
-        ("G1_East",  s_g1_east,  "G1 - Wschodni (usuwa Huskarlow i Wielblady)", 88, 1, 8, 1,
+        ("G1_East",  PlayerId.FIVE, s_g1_east,  "G1 - Wschodni (usuwa Huskarlow i Wielblady)", 88, 1, 700, 5, 0,
          [(UnitInfo.CAVALIER.ID, 8), (UnitInfo.PIKEMAN.ID, 10)], *s_coords["G1_East"],
          117, 178, *deep_target_east),
-        ("G2_Snipers", s_g2_snipers, "G2 - Akademia (usuwa Snajperow i Mozdzierze)", 87, 2, 12, 1,
+        ("G2_Snipers", PlayerId.SIX, s_g2_snipers, "G2 - Akademia (usuwa Snajperow, Mozdzierze i Saperow)", 87, 2, 1000, 10, 1,
          [(UnitInfo.CAVALIER.ID, 10), (UnitInfo.HALBERDIER.ID, 12)], *s_coords["G2_Snipers"],
          48, 86, *deep_target_north),
-        ("G2_Mages",   s_g2_mages,   "G2 - Klasztor (usuwa Magow i Szakale)", 86, 2, 12, 1,
+        ("G2_Mages",   PlayerId.SEVEN, s_g2_mages,   "G2 - Klasztor (usuwa Magow i Szakale)", 86, 2, 1000, 10, 1,
          [(UnitInfo.CAVALIER.ID, 10), (UnitInfo.HALBERDIER.ID, 12)], *s_coords["G2_Mages"],
          116, 114, *deep_target_center),
-        ("G3_North", s_g3_north, "G3 - Cytadela Pln. (usuwa Slonie-Tanki Pln.)", 85, 3, 16, 2,
+        ("G3_North", PlayerId.EIGHT, s_g3_north, "G3 - Cytadela Pln. (usuwa Slonie-Tanki Pln.)", 85, 3, 1500, 15, 2,
          [(ELITE_BATTLE_ELEPHANT_ID, 1), (UnitInfo.PALADIN.ID, 12), (UnitInfo.HALBERDIER.ID, 14)], *s_coords["G3_North"],
          116, 114, *deep_target_center),
-        ("G3_East",  s_g3_east,  "G3 - Cytadela Wsch. (usuwa Slonie-Tanki Wsch.)", 84, 3, 16, 2,
+        ("G3_East",  PlayerId.EIGHT, s_g3_east,  "G3 - Cytadela Wsch. (usuwa Slonie Wsch. i Rajdy Handlowe)", 84, 3, 1500, 15, 2,
          [(ELITE_BATTLE_ELEPHANT_ID, 1), (UnitInfo.PALADIN.ID, 12), (UnitInfo.HALBERDIER.ID, 14)], *s_coords["G3_East"],
          117, 178, *deep_target_east),
     ]
 
-    for s_key, core_unit, obj_label, obj_order, grade, g_hp, g_atk, counter_comp, sx, sy, ret_sx, ret_sy, ret_tx, ret_ty in settlement_defs:
+    for s_key, s_owner, core_unit, obj_label, obj_order, grade, reward_res, g_hp, g_atk, counter_comp, sx, sy, ret_sx, ret_sy, ret_tx, ret_ty in settlement_defs:
         t_destroy = tm.add_trigger(f"05_Settlement_Destroyed_{s_key}", enabled=True, looping=False)
         set_as_objective(t_destroy, obj_label, order=obj_order)
         safe_call(t_destroy.new_condition.destroy_object, unit_object=core_unit.reference_id)
+        collapse_camp_buildings(t_destroy, s_owner, sx, sy)
 
         for tr_w in all_settlement_wave_triggers[s_key]:
             safe_call(t_destroy.new_effect.deactivate_trigger, trigger_id=tr_w.trigger_id)
@@ -518,8 +551,8 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         deactivate_camp_handles(t_destroy, camp_leash_handles[s_key])
 
         for h_p in human_players:
-            add_player_resource(t_destroy, h_p, RES_GOLD, 600)
-            add_player_resource(t_destroy, h_p, RES_FOOD, 600)
+            add_player_resource(t_destroy, h_p, RES_GOLD, reward_res)
+            add_player_resource(t_destroy, h_p, RES_FOOD, reward_res)
 
         add_enemy_combat_buff(t_destroy, ai_players, hp_add=g_hp, atk_add=g_atk)
 
@@ -531,14 +564,14 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
 
         send_highlight_chat(
             t_destroy, "<AQUA>",
-            f"=== [SETTLEMENT ZNISZCZONY: {s_key} (Stopien {grade})] === Jego oddzialy znikaja z fal (+600 Zlota/Zywnosci), a pozostale obozy zyskuja +{g_hp} HP i +{g_atk} Ataku!",
+            f"=== [SETTLEMENT ZNISZCZONY: {s_key} (Stopien {grade})] === Jego oddzialy znikaja z fal (+{reward_res} Zlota/Zywnosci), a pozostale obozy zyskuja +{g_hp} HP i +{g_atk} Ataku!",
             flare_x=sx, flare_y=sy,
         )
 
     # 12. Warunki Zwycięstwa i Porażki
     t_win = tm.add_trigger("07_Victory_All_6_Settlements_Destroyed", enabled=True, looping=False)
     for s_def in settlement_defs:
-        core_unit = s_def[1]
+        core_unit = s_def[2]
         safe_call(t_win.new_condition.destroy_object, unit_object=core_unit.reference_id)
     for h_p in human_players:
         safe_call(t_win.new_effect.declare_victory, source_player=h_p, enabled=1)

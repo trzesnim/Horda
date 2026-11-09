@@ -233,6 +233,31 @@ PLAYER_RANGED_UNITS = [
     UnitInfo.ELITE_KIPCHAK.ID,
     UnitInfo.COMPOSITE_BOWMAN.ID,
     UnitInfo.ELITE_COMPOSITE_BOWMAN.ID,
+    UnitInfo.JANISSARY.ID,
+    UnitInfo.ELITE_JANISSARY.ID,
+    UnitInfo.ARAMBAI.ID,
+    UnitInfo.ELITE_ARAMBAI.ID,
+    UnitInfo.CHAKRAM_THROWER.ID,
+    UnitInfo.ELITE_CHAKRAM_THROWER.ID,
+    UnitInfo.RATHA_RANGED.ID,
+]
+
+PLAYER_MOUNTED_RANGED_UNITS = [
+    UnitInfo.CAVALRY_ARCHER.ID,
+    UnitInfo.HEAVY_CAVALRY_ARCHER.ID,
+    UnitInfo.MANGUDAI.ID,
+    UnitInfo.ELITE_MANGUDAI.ID,
+    UnitInfo.CAMEL_ARCHER.ID,
+    UnitInfo.ELITE_CAMEL_ARCHER.ID,
+    UnitInfo.CONQUISTADOR.ID,
+    UnitInfo.ELITE_CONQUISTADOR.ID,
+    UnitInfo.KIPCHAK.ID,
+    UnitInfo.ELITE_KIPCHAK.ID,
+    UnitInfo.ELEPHANT_ARCHER.ID,
+    UnitInfo.ELITE_ELEPHANT_ARCHER.ID,
+    UnitInfo.ARAMBAI.ID,
+    UnitInfo.ELITE_ARAMBAI.ID,
+    UnitInfo.RATHA_RANGED.ID,
 ]
 
 PLAYER_CAVALRY_UNITS = [
@@ -243,13 +268,20 @@ PLAYER_CAVALRY_UNITS = [
     UnitInfo.KNIGHT.ID,
     UnitInfo.CAVALIER.ID,
     UnitInfo.PALADIN.ID,
+    UnitInfo.SAVAR.ID,
     UnitInfo.STEPPE_LANCER.ID,
     UnitInfo.ELITE_STEPPE_LANCER.ID,
+    UnitInfo.CAMEL_SCOUT.ID,
     UnitInfo.CAMEL_RIDER.ID,
     UnitInfo.HEAVY_CAMEL_RIDER.ID,
     UnitInfo.IMPERIAL_CAMEL_RIDER.ID,
     UnitInfo.BATTLE_ELEPHANT.ID,
     ELITE_BATTLE_ELEPHANT_ID,
+    UnitInfo.WAR_ELEPHANT.ID,
+    UnitInfo.ELITE_WAR_ELEPHANT.ID,
+    UnitInfo.SHRIVAMSHA_RIDER.ID,
+    UnitInfo.ELITE_SHRIVAMSHA_RIDER.ID,
+    UnitInfo.RATHA_MELEE.ID,
     UnitInfo.CATAPHRACT.ID,
     UnitInfo.ELITE_CATAPHRACT.ID,
     UnitInfo.TARKAN.ID,
@@ -314,6 +346,9 @@ PLAYER_INFANTRY_UNITS = [
     UnitInfo.ELITE_URUMI_SWORDSMAN.ID,
     UnitInfo.GHULAM.ID,
     UnitInfo.ELITE_GHULAM.ID,
+    UnitInfo.SERJEANT.ID,
+    UnitInfo.ELITE_SERJEANT.ID,
+    UnitInfo.FLEMISH_MILITIA.ID,
 ]
 
 PLAYER_PROD_BUILDINGS = [
@@ -323,6 +358,7 @@ PLAYER_PROD_BUILDINGS = [
     BuildingInfo.CASTLE.ID,
     BuildingInfo.SIEGE_WORKSHOP.ID,
     KREPOST_ID,
+    BuildingInfo.DONJON.ID,
 ]
 
 
@@ -332,11 +368,11 @@ def populate_ingame_scenario_descriptions(scenario):
         return
 
     instructions_text = (
-        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v6.5 - 4P Co-op)\n\n"
+        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v6.6 - 4P Co-op)\n\n"
         "USTAWIENIA LOBBY I STARTU:\n"
         "- Gracze P5-P8 sa automatycznie skonfigurowani jako AI z zablokowanymi cywilizacjami (P5 Wikingowie, P6 Turcy, P7 Saraceni, P8 Persowie). Ustaw trudnosc AI na EKSTREMALNY (Extreme)!\n"
         "- Gracze P1, P3 i P4 startuja z 2 wybudowanymi domkami na polnoc od TC, a Gracz P2 z 6 domkami (kompensacja 20 popu zajmowanego przez Feitorie).\n"
-        "- W panelu Celow (Objectives) dziala ZEGAR FALI odliczajacy czas do kolejnego uderzenia co 30 sekund.\n\n"
+        "- W panelu Celow (Objectives) dziala ZEGAR FALI odliczajacy czas do kolejnego uderzenia co 30 sekund oraz dynamiczny znacznik aktualnego Poziomu Trudnosci.\n\n"
         "SANKTUARIUM BALANSU (Wspolrzedne 6, 150 w zachodnim lesie):\n"
         "- Gracz 1 posiada odizolowanego Inzyniera Balansu (Krola) na (6, 150).\n"
         "- Wejscie Krolem na GORNA flage (6, 146) ZWIEKSZA trudnosc (+25% fal, +15 HP, +2 Ataku wroga na poziom).\n"
@@ -350,23 +386,23 @@ def populate_ingame_scenario_descriptions(scenario):
         "- Po kazdej zmianie Krol jest automatycznie zatrzymywany i wraca na srodek (zmiana trudnosci jest dostepna w kazdym momencie gry, bez blokad).\n\n"
         "SZLAK HANDLOWY I PLAC GRACZY (Lewy dolny rog mapy x=2..24, y=176..198):\n"
         "- W lewym dolnym rogu bazy znajduje sie duzy, czysty Plac pod Targowiska graczy.\n"
-        "- Zburzenie Q1 (Karawanseraj) stawia pojedyncze Targowisko sojusznicze w prawym rogu (195, 194) oraz buduje Kamienny Mur Obronny na y=186 z Basztami na y=184!\n\n"
+        "- Zburzenie Q1 (Karawanseraj) stawia pojedyncze Targowisko sojusznicze w prawym rogu (195, 194) oraz buduje Kamienny Mur Obronny na y=186 (z 2-kratkowymi otworami wypadowymi na x=122..123 i x=170..171 oslonietych Basztami na y=184)!\n\n"
         "ZASADY ROZGRYWKI (Horyzont 60-90 minut):\n"
-        "- Fala 1 w 8:30 (bez taranow), Fala 2 w 13:00 (z taranem/mangonelem, bez mutantow), Fala 3 w 18:00, kolejne co 5,5 min.\n"
+        "- Fala 1 w 8:30 (bez taranow), Fala 2 w 13:00 (z taranem/mangonelem i uderzeniem na wszystkie 3 bramy, bez mutantow), Fala 3 w 18:00, kolejne co 5,5 min.\n"
         "- Trzypoziomowa eskalacja czasowa (natychmiastowy 1. tick i powtorzenie co 5 min):\n"
         "  * Od 20:00: +5 HP, +1 Atak co 5 min.\n"
         "  * Od 45:00: dodatkowo +9 HP, +1 Atak co 5 min (lacznie +14 HP, +2 Ataku co 5 min).\n"
-        "  * Od 55:00: dodatkowo +10 HP, +2 Atak co 5 min (lacznie +24 HP, +4 Ataku co 5 min).\n"
-        "- Od 45. minuty (Fale 8-14) co druga fala wysyla szturm na SZLAK HANDLOWY.\n"
-        "- W Falach 9 (51:00) i 12 (67:30) Saperzy wyrabuja przesieki w lesie (6x11 na polnocy, 11x6 na wschodzie)!\n"
+        "  * Od 55:00: dodatkowo +6 HP, +1 Atak co 5 min (lacznie +20 HP, +3 Ataku co 5 min).\n"
+        "- Od 45. minuty (Fale 8-14) co druga fala wysyla szturm na SZLAK HANDLOWY w kierunku Bramy Handlowej.\n"
+        "- W Falach 9 (51:00) i 12 (67:30) Saperzy P6 wyrabuja przesieki w lesie (6x11 na polnocy, 11x6 na wschodzie)!\n"
     )
 
     hints_text = (
         "BESTIARIUSZ HORDY (WYSPECJALIZOWANE JEDNOSTKI Z POSWIATA BOHATERA):\n"
-        "1. Taran-Zolw / Zelazny Slon (P8 - Tank): 1450 HP, +10/+12 pancerza, odporny na konwersje. Zadaje zawsze 3 dmg jednostkom (odpornosc na buffy ataku), ale +220 dmg budynkom!\n"
+        "1. Taran-Zolw / Zelazny Slon (P8 - Tank): 1450 HP, szybkosc 0.72, +10/+12 pancerza, odporny na konwersje. Zadaje zawsze 3 dmg jednostkom (odpornosc na buffy ataku), ale +220 dmg budynkom!\n"
         "2. Szakale Dywersyjne (Huzarzy P7 - Eco-Raiders): Szybkosc 1.62, +6 pancerza na strzaly, zawsze 2 ataku (skaluja wylacznie HP). Wjezdzaja pod TC atakowac chlopow!\n"
-        "3. Arcymag Tarczy (Imam P7 - Globalny Support): Gdy stoi w strefie 50x50 przed Brama Centralna, daje GLOBALNIE +30/+30 Pancerza wszystkim armiom Hordy (P5-P8 na calej mapie) oraz LOKALNIE leczy (+15 HP/3s) jednostki Hordy w tej strefie 50x50! Ma 240 HP i regeneracje 5 HP/s. Zabicie go zdejmuje aure z calej Hordy!\n"
-        "4. Mozdzierz Oblezniczy (Onager P6): 350 HP, 21 zasiegu, wybuch co 10s, MARTWA STREFA 6 kratek. Pociski maja Blast Attack Level = 2 (nie scinaja drzew wokol bram).\n"
+        "3. Arcymag Tarczy (Imam P7 - Globalny Support): Gdy stoi w strefie przedpola (promien 18 kratek wokol 110, 114) przed Brama Centralna, daje GLOBALNIE +30/+30 Pancerza wszystkim armiom Hordy (P5-P8 na calej mapie) oraz LOKALNIE leczy (+15 HP/3s) jednostki Hordy w tej strefie! Ma 240 HP i regeneracje 5 HP/s. Zabicie go zdejmuje aure z calej Hordy!\n"
+        "4. Mozdzierz Oblezniczy (Onager P6): 350 HP, szybkosc 0.58, 21 zasiegu, wybuch co 10s, MARTWA STREFA 6 kratek. Pociski maja Blast Attack Level = 2 (nie scinaja drzew wokol bram).\n"
         "5. Snajperzy (Janczarzy P6): 90 HP, 19 zasiegu, ~107 dmg w 1 cel.\n"
         "6. Berserkerzy i Kamikaze (P5): Szybkie jednostki szturmowe o zerowym pancerzu na strzaly.\n"
     )
@@ -374,14 +410,14 @@ def populate_ingame_scenario_descriptions(scenario):
     scouts_text = (
         "RAPORT ZWIADOWCZY - 4 QUESTY I 6 SETTLEMENTOW:\n"
         "- UWAGA: Kazdy wykonany Quest (Q1-Q4) daje potezne nagrody graczom, ale wywoluje tez Adaptacje Hordy:\n"
-        "  * Q1 Karawanseraj (154, 190): Mur Handlowy (y=186, baszty y=184), Market P2 (195, 194), +30 Popu, +20% szybsi Wiesniacy i 4 szybkie wozy handlowe. [Adaptacja Hordy: +8 HP, +1 Atak]\n"
-        "  * Q2 Klif Artylerii (28, 32): Balistyka, Chemia, Siege Engineers, Thumb Ring; +2 Zasiegu i +4 Ataku strzelcow (w tym UU); +12% szybkosci i +4 Ataku jazdy (w tym UU). [Adaptacja Hordy: +8 HP, +1 Atak]\n"
+        "  * Q1 Karawanseraj (154, 190): Mur Handlowy (y=186, baszty y=184, otwory wypadowe x=122..123 i 170..171), Market P2 (195, 194), +30 Popu, +20% szybsi Wiesniacy i 4 szybkie wozy handlowe. [Adaptacja Hordy: +8 HP, +1 Atak]\n"
+        "  * Q2 Klif Artylerii (28, 32): Balistyka, Chemia, Siege Engineers, Thumb Ring; +2 Zasiegu i +4 Ataku strzelcow (w tym UU); +12% szybkosci i +4 Ataku jazdy oraz +12% szybkosci strzelcow konnych (w tym UU). [Adaptacja Hordy: +8 HP, +1 Atak]\n"
         "  * Q3 Skarbiec (142, 118): +20 Popu i staly dochod co minute (+250F, +250W, +200G, +40S dla KAZDEGO gracza P1-P4). [Adaptacja Hordy: +10 HP, +1 Atak]\n"
-        "  * Q4 Krwawy Oltarz (105, 20): +30% HP armii, +2/+2 pancerza (piechota, jazda, strzelcy i UU), +40% szybsza produkcja wojska (w tym Krepost i Siege Workshop); obnizenie HP Arcymaga do 120 HP. [Adaptacja Hordy: +10 HP, +1 Atak]\n"
-        "- Stopniowanie Furii Settlementow (zburzenie obozu wycofuje jego wojska z fal, daje +600F/+600G i wywoluje kontratak z odpowiedniego kierunku):\n"
-        "  * Grade 1 (G1 Polnocny, G1 Wschodni): +8 HP, +1 Atak wroga, odwet 8 Cavalier + 10 Pikeman.\n"
-        "  * Grade 2 (G2 Akademia, G2 Klasztor): +12 HP, +1 Atak wroga, odwet 10 Cavalier + 12 Halberdier.\n"
-        "  * Grade 3 (G3 Cytadela Pln., G3 Cytadela Wsch.): +16 HP, +2 Atak wroga, odwet 1 Zelazny Slon + 12 Paladin + 14 Halberdier.\n"
+        "  * Q4 Krwawy Oltarz (105, 20): +30% HP armii, +2/+2 pancerza (piechota, jazda, strzelcy i UU), +40% szybsza produkcja wojska (w tym Krepost, Donjon i Siege Workshop); obnizenie HP Arcymaga do 120 HP. [Adaptacja Hordy: +10 HP, +1 Atak]\n"
+        "- Stopniowanie Nagrod i Furii Settlementow (zburzenie obozu zawala jego budynki poboczne, wycofuje wojska z fal i wywoluje kontratak z odpowiedniego kierunku):\n"
+        "  * Grade 1 (G1 Polnocny, G1 Wschodni): Nagroda +700F/+700G, Furia +5 HP i +0 Ataku wroga, odwet 8 Cavalier + 10 Pikeman.\n"
+        "  * Grade 2 (G2 Akademia [usuwa tez Saperow], G2 Klasztor): Nagroda +1000F/+1000G, Furia +10 HP i +1 Atak wroga, odwet 10 Cavalier + 12 Halberdier.\n"
+        "  * Grade 3 (G3 Cytadela Pln., G3 Cytadela Wsch. [usuwa tez Rajdy Handlowe]): Nagroda +1500F/+1500G, Furia +15 HP i +2 Atak wroga, odwet 1 Zelazny Slon + 12 Paladin + 14 Halberdier.\n"
     )
 
     if hasattr(mm_msg, "instructions"):
@@ -430,8 +466,8 @@ BALANCE = {
     "escalation_atk_add": 1,
     "late_escalation_start_sec": 2700,    # Od 45:00 (Bieg 2): +9 HP i +1 Ataku co 5 minut
     "late_escalation_hp_add": 9,
-    "endgame_escalation_start_sec": 3300, # Od 55:00 (Bieg 3): +10 HP i +2 Ataku co 5 minut
-    "endgame_escalation_hp_add": 10,
+    "endgame_escalation_start_sec": 3300, # Od 55:00 (Bieg 3): +6 HP i +1 Ataku co 5 minut
+    "endgame_escalation_hp_add": 6,
 
     "diff_step_up_hp": 15,
     "diff_step_up_atk": 2,
@@ -441,7 +477,7 @@ BALANCE = {
     "tank_bldg_bonus": 220,
     "tank_melee_armor": 10,
     "tank_pierce_armor": 12,
-    "tank_speed": 0.52,
+    "tank_speed": 0.72,
 
     "raider_hp": 95,
     "raider_speed": 1.62,
@@ -452,7 +488,7 @@ BALANCE = {
     "mage_melee_armor": 3,
     "mage_pierce_armor": 4,
     "mage_regen_per_min": 300,
-    "mage_local_radius": 25,
+    "mage_local_radius": 18,
     "mage_shield_armor": 30,
     "mage_aoe_heal_3s": 15,
     "mage_speed": 0.78,
@@ -463,7 +499,7 @@ BALANCE = {
     "mortar_reload": 10.0,
     "mortar_blast_width": 2.6,
     "mortar_bonus_atk": 75,
-    "mortar_speed": 0.42,
+    "mortar_speed": 0.58,
 
     "sniper_hp": 90,
     "sniper_range": 19,
@@ -626,14 +662,17 @@ def get_wave_definitions() -> list[WaveDefinition]:
             2, 780, "Fala 2/14 (13:00 - Feudalna z Taranem i Mangonelem, bez jednostek specjalnych)",
             [(UnitInfo.MAN_AT_ARMS.ID, 8), (UnitInfo.ARCHER.ID, 6), (UnitInfo.BATTERING_RAM.ID, 1)],
             [(UnitInfo.SPEARMAN.ID, 8), (UnitInfo.SCOUT_CAVALRY.ID, 6), (UnitInfo.MANGONEL.ID, 1)],
-            [], [], [], [], 0,
+            [],
+            [(UnitInfo.SCOUT_CAVALRY.ID, 5), (UnitInfo.ARCHER.ID, 6)],
+            [], [], 0,
         ),
         (
             3, 1080, "Fala 3/14 (18:00 - Castle Age + pierwsi Berserkerzy, Snajperzy i Szakale!)",
             [(UnitInfo.PIKEMAN.ID, 11), (ELITE_BERSERK_ID, 3), (PETARD_ID, 1), (UnitInfo.BATTERING_RAM.ID, 1)],
             [(UnitInfo.HUSKARL.ID, 8), (UnitInfo.KNIGHT.ID, 5), (FLAMING_CAMEL_ID, 1)],
             [(UnitInfo.CROSSBOWMAN.ID, 10), (UnitInfo.ELITE_JANISSARY.ID, 2)],
-            [], [], [], 5,
+            [(UnitInfo.KNIGHT.ID, 6), (UnitInfo.BATTERING_RAM.ID, 1)],
+            [], [], 5,
         ),
         (
             4, 1410, "Fala 4/14 (23:30 - Castle Age + Arcymag Tarczy dajacy +30 Pancerza calej Hordzie!)",

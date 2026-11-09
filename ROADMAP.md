@@ -1,4 +1,4 @@
-# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v6.5)
+# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v6.6)
 
 ## 0. Protokół Wykonawczy dla Agenta IDE (Antigravity / VS Code)
 1. **Atomowość etapów:** Realizuj podetapy ściśle po kolei (`Etap 0` -> `1A` -> `1B` -> `2` -> `3A` -> `3B` -> `3C` -> `4` -> `5` -> `6A` -> `6B` -> `6C` -> `7` -> `8`). **Zabrania się łączenia kilku podetapów (szczególnie 3A, 3B i 3C) w jedną edycję.**
@@ -403,7 +403,7 @@ Zaktualizuj `horda.md` oraz teksty w `populate_ingame_scenario_descriptions()` (
 
 ---
 
-## Plan Naprawczy Po Audycie i Playteście v6.3 -> v6.5 (Etapy R1–R8)
+## Plan Naprawczy Po Audycie i Playteście v6.3 -> v6.6 (Etapy R1–R9)
 
 - **Etap R1 `[FLASH-SAFE]` `[DONE / WDROŻONE]`:** Czyszczenie konfiguracji, usunięcie duplikatów `PLAYER_*` i `populate_ingame_scenario_descriptions`, usunięcie błędnego `object_list_unit_id` z `objects_in_area`, uszczelnienie `safe_call` i usunięcie `try...except` z `safe_modify_attribute`.
 - **Etap R2 `[FLASH-SAFE]` `[DONE / WDROŻONE]`:** Unifikacja mutacji 6 archetypów w `01b` dla wszystkich `ai_players` (`P5–P8`), `TECH_BLOODLINES` dla wszystkich `ai_players` w `01d` (z korektą `-20 HP` dla Szakala) oraz `enforce_specialized_unit_caps` w `01d`, `01e`, `01f`.
@@ -420,3 +420,24 @@ Zaktualizuj `horda.md` oraz teksty w `populate_ingame_scenario_descriptions()` (
   5. **Rozwiązanie kolizji rozkazów Szakali P7 z `02e_Push_Gate_Units_Deep_Into_Base` (`BUG-25`, `horde_waves.py`):** Wykluczenie `PlayerId.SEVEN` ze stref `02e` przy Bramie Północnej, Wschodniej i wyłomach leśnych (pozostawienie P7 wyłącznie w Bramie Centralnej) oraz skierowanie Szakali Endless bezpośrednio w strefy ekonomiczne `(32, 118)` (P3 TC) i `(76, 172)` (P4 TC).
   6. **Normalizacja HP Żelaznego Słonia po `Bloodlines` (`BUG-26`, `horde_waves.py`):** Odjęcie `20 HP` (`Operation.SUBTRACT, 20`) dla `ELITE_BATTLE_ELEPHANT_ID` w `01d_AI_Techs_Feudal_8m30s` dla wszystkich `ai_players` oraz egzekwowanie zasięgu Snajpera (`19`) i prędkości Arcymaga (`0.78`) w `enforce_specialized_unit_caps`.
   7. **Rozszerzenie list `PLAYER_*` o jednostki unikalne i regionalne (`horde_config.py`), kierunkowe spawny odwetów Settlementów (`05_Settlement_Destroyed_*` w `horde_quests.py`) oraz wzmocnienie walidatora `test_horde_scenario.py` do 26/26 testów.**
+- **Etap R9 `[PLAYTEST + DUAL AUDIT v6.6]` `[DONE / WDROŻONE]`:**
+  1. **Naprawa błędów geometrycznych, wodnych i kolizji spawnu z budynkami (`horde_map.py`, `horde_waves.py`):**
+     - Przeniesienie spawnu fal `G3_East` z `(136, 82)` na `(156, 152)` (na południe od grzbietu skalnego `(124, 134)..(158, 134)`) ze skierowaniem na Bramę Wschodnią `(104, 162)` -> `(68, 162)` oraz polaną `mark_no_trees(156, 152, radius=7)`.
+     - Eliminacja kolizji `Garrison_Spawn_*` z budynkami i wieżami wszystkich 10 obozów poprzez przekazanie `ctx["occupied_tiles"]` (zawierającego `grid.occupied_tiles` oraz kafelki `TERRAIN_WATER`) i dedykowaną funkcję `add_garrison_spawn_effect` dobierającą wolne kafelki w pierścieniach `r = 3..12` wokół `(cx, cy + 2)` wewnątrz `ring_inner = 14`.
+     - Korekta pozycji północno-wschodniej wieży `G2_Snipers (68, 34)` z offsetu `(9, -9)` (w rzece na `77, 25`) na `(5, -9)` (`73, 25` — 100% na suchym lądzie).
+     - Zmiana właściciela garnizonu i smyczy `Quest4_BloodAltar` `(105, 20)` z `PlayerId.EIGHT` na `PlayerId.SEVEN`.
+  2. **Mechanika rozgrywki, balans fal i czytelność taktyczna (`horde_config.py`, `horde_waves.py`, `horde_quests.py`):**
+     - Dodanie efektu `kill_object` (`collapse_camp_buildings` w `cx ± 14, cy ± 14`) zawalającego poboczne wieże, zamki i budynki koszarowe po zniszczeniu rdzenia w `t_q2`, `t_q3_unlock`, `t_q4` oraz 6 triggerach `05_Settlement_Destroyed_{s_key}`.
+     - Wczesne zaangażowanie Bramy Centralnej P1 w Fali 2 (`5x Scout Cavalry + 6x Archer`) i Fali 3 (`6x Knight + 1x Battering Ram`) dla `G2_Mages` oraz zwiększenie prędkości Tanka (`0.52 -> 0.72`) i Moździerza (`0.42 -> 0.58`).
+     - Nowa gradacja nagród i Furii Settlementów (`G1`: `+700F/+700G`, `+5 HP / +0 Atk`; `G2`: `+1000F/+1000G`, `+10 HP / +1 Atk`; `G3`: `+1500F/+1500G`, `+15 HP / +2 Atk`) oraz złagodzenie Biegu 3 eskalacji (`55:00+`: `+6 HP i +1 Ataku`, łącznie `+20 HP i +3 Ataku` co 5 min).
+     - Zmiana celu `Trade_Line_Attack` na `(96, 194)`, dodanie dwóch 2-kratkowych otworów wypadowych (`x = 122..123, 170..171`) w murze `Q1` na `y = 186` z basztami `KEEP` na `x = {115, 122, 145, 160, 170, 190}`, zastąpienie jednostek P5 w wyłomach saperskich jednostkami P6 (`ELITE_JANISSARY`, `ARBALESTER`) oraz wyśrodkowanie strefy Aury Arcymaga (`promień 18`) wokół `(110, 114)` (`x = 92..128, y = 96..132`).
+  3. **Ulepszenia UI, listy jednostek DE i asercje antykolizyjne (`horde_config.py`, `horde_waves.py`, `horde_quests.py`, `test_horde_scenario.py`, `horda.md`):**
+     - Uzupełnienie `set_as_objective` o `description` i `display_as_objective`, dynamiczny nagłówek trudności (`order = 109`) na `State_Diff_Lvl_{M2, M1, 0, P1, P2}` (zamiast statycznego `00_Obj_Balance_Info`) oraz doprecyzowane etykiety `G2_Snipers` i `G3_East`.
+     - Rozszerzenie list `PLAYER_*` (m.in. `Janissary`, `Arambai`, `Chakram Thrower`, `Ratha`, `Savar`, `War Elephant`, `Shrivamsha Rider`, `Camel Scout`, `Serjeant`, `Flemish Militia`, `Donjon`) i dodanie `+12%` prędkości dla konnych strzelców (`PLAYER_MOUNTED_RANGED_UNITS`) w `Q2`.
+     - Wymuszenie świeżej kompilacji w `get_compiled_scenario()` oraz twardych asercji antykolizyjnych (0 budynków i 0 jednostek lądowych na `TERRAIN_WATER`, 0 kolizji spawnu z budynkami i drzewami) w `test_horde_scenario.py`.
+
+---
+
+## Opcjonalny Backlog R&D na przyszłość
+
+* **Zastąpienie 169-etapowej drabinki `00_Wave_Timer_UI_*` natywnym skryptem XS (`XsManager`) lub pojedynczym licznikiem zmiennych (`Variable`)**, jeśli przyszłe wersje `AoE2ScenarioParser` i silnika DE udostępnią stabilne API tekstowe bez ryzyka crasha `display_timer`.

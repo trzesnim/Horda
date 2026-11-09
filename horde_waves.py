@@ -111,14 +111,19 @@ def add_enemy_combat_buff(trigger, ai_players: list[PlayerId], hp_add: int, atk_
 
 
 def set_as_objective(trigger, text: str, order: int, is_header: bool = False):
+    if hasattr(trigger, "description"):
+        trigger.description = text
     if hasattr(trigger, "short_description"):
         trigger.short_description = text
     if hasattr(trigger, "display_on_screen"):
         trigger.display_on_screen = 1
     if hasattr(trigger, "description_order"):
         trigger.description_order = order
-    if is_header and hasattr(trigger, "header"):
-        trigger.header = 1
+    if is_header:
+        if hasattr(trigger, "header"):
+            trigger.header = 1
+    elif hasattr(trigger, "display_as_objective"):
+        trigger.display_as_objective = 1
 
 
 def send_highlight_chat(trigger, color_tag: str, message: str, flare_x: int | None = None, flare_y: int | None = None):
@@ -166,14 +171,78 @@ def research_techs(trigger, players: list[PlayerId], tech_ids: list[int]):
             )
 
 
+def add_garrison_spawn_effect(
+    trigger,
+    ai_player: PlayerId,
+    units_spec: list[tuple[int, int]],
+    cx: int,
+    cy: int,
+    occupied_tiles: set[tuple[int, int]],
+):
+    free_coords: list[tuple[int, int]] = []
+    used_local: set[tuple[int, int]] = set()
+    total_needed = sum(cnt for _, cnt in units_spec)
+    anchor_x, anchor_y = cx, cy + 2
+    for r in range(3, 13):
+        for dy in range(-r, r + 1):
+            for dx in range(-r, r + 1):
+                if abs(dx) != r and abs(dy) != r:
+                    continue
+                nx, ny = anchor_x + dx, anchor_y + dy
+                if not (1 <= nx < MAP_SIZE - 1 and 1 <= ny < MAP_SIZE - 1):
+                    continue
+                if max(abs(nx - cx), abs(ny - cy)) >= 13:
+                    continue
+                if (nx, ny) in occupied_tiles or (nx, ny) in used_local:
+                    continue
+                used_local.add((nx, ny))
+                free_coords.append((nx, ny))
+                if len(free_coords) >= total_needed:
+                    break
+            if len(free_coords) >= total_needed:
+                break
+        if len(free_coords) >= total_needed:
+            break
+
+    if len(free_coords) < total_needed:
+        raise RuntimeError(
+            f"Brak wystarczajacej liczby wolnych kafelkow dla garnizonu na ({cx}, {cy}): "
+            f"potrzeba {total_needed}, znaleziono {len(free_coords)}"
+        )
+
+    idx = 0
+    for unit_id, count in units_spec:
+        for _ in range(count):
+            ux, uy = free_coords[idx]
+            safe_call(
+                trigger.new_effect.create_object,
+                object_list_unit_id=unit_id,
+                source_player=ai_player,
+                location_x=ux,
+                location_y=uy,
+            )
+            idx += 1
+
+    safe_call(
+        trigger.new_effect.attack_move,
+        source_player=ai_player,
+        area_x1=max(0, cx - 13),
+        area_y1=max(0, cy - 13),
+        area_x2=min(MAP_SIZE - 1, cx + 13),
+        area_y2=min(MAP_SIZE - 1, cy + 13),
+        location_x=cx,
+        location_y=cy,
+    )
+
+
 def add_guarded_camp_with_leash(tm, enable_parent_trigger, name: str, ai_player: PlayerId, cx: int, cy: int,
-                                units_spec: list[tuple[int, int]]):
+                                units_spec: list[tuple[int, int]], occupied_tiles: set[tuple[int, int]]):
     detect_radius = 15
     x1, y1 = max(0, cx - detect_radius), max(0, cy - detect_radius)
     x2, y2 = min(MAP_SIZE - 1, cx + detect_radius), min(MAP_SIZE - 1, cy + detect_radius)
 
     t_spawn = tm.add_trigger(f"Garrison_Spawn_{name}", enabled=False, looping=False)
-    add_spawn_and_attack_effect(t_spawn, ai_player, units_spec, spawn_x=cx, spawn_y=cy + 3, target_x=cx, target_y=cy)
+    add_garrison_spawn_effect(t_spawn, ai_player, units_spec, cx=cx, cy=cy, occupied_tiles=occupied_tiles)
 
     t_leash = tm.add_trigger(f"Garrison_Leash_{name}", enabled=False, looping=True)
     safe_call(t_leash.new_condition.timer, timer=3)
@@ -346,6 +415,7 @@ def enforce_specialized_unit_caps(trig, ai_players: list[PlayerId]) -> None:
 
         # SIEGE_ONAGER_ID:
         safe_modify_attribute(trig, ai_p, SIEGE_ONAGER_ID, ATTR_MAXIMUM_RANGE, Operation.SET, BALANCE["mortar_range"])
+        safe_modify_attribute(trig, ai_p, SIEGE_ONAGER_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["mortar_speed"])
 
         # ELITE_JANISSARY (Snajper Imperialny) oraz IMAM_UNIT_ID (Arcymag Tarczy):
         safe_modify_attribute(trig, ai_p, UnitInfo.ELITE_JANISSARY.ID, ATTR_MAXIMUM_RANGE, Operation.SET, BALANCE["sniper_range"])
@@ -362,6 +432,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     gate_north = ctx["gate_north"]
     human_players = ctx["human_players"]
     north_breach_trees = ctx["north_breach_trees"]
+    occupied_tiles = ctx["occupied_tiles"]
     q1_bldg = ctx["q1_bldg"]
     q1_pos = ctx["q1_pos"]
     q2_bldg = ctx["q2_bldg"]
@@ -461,10 +532,10 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         (q4_bldg, "Q4: Krwawy Oltarz (+30% HP Armii i +40% Produkcji)"),
         (s_g1_north, "G1 Polnocny (Berserkerzy i Petardy)"),
         (s_g1_east,  "G1 Wschodni (Huskarlowie i Wielblady)"),
-        (s_g2_snipers, "G2 Akademia (Snajperzy i Mozdzierze)"),
+        (s_g2_snipers, "G2 Akademia (Snajperzy, Mozdzierze i Saperzy)"),
         (s_g2_mages,   "G2 Klasztor (Arcymagowie i Szakale)"),
         (s_g3_north, "G3 Cytadela Pln. (Zelazne Slonie-Tanki)"),
-        (s_g3_east,  "G3 Cytadela Wsch. (Slonie-Tanki i Artyleria)"),
+        (s_g3_east,  "G3 Cytadela Wsch. (Slonie Wsch. i Rajdy Handlowe)"),
     ]
     for b_unit, label_text in building_labels:
         safe_call(
@@ -475,7 +546,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     send_highlight_chat(
         t_init, "<YELLOW>",
-        "=== KRONIKI RUBIEZY v6.5 === Inzynier Balansu P1 czeka na (6, 150)! W panelu Celow (Objectives) dziala ZEGAR FALI odliczajacy czas do kolejnego uderzenia!",
+        "=== KRONIKI RUBIEZY v6.6 === Inzynier Balansu P1 czeka na (6, 150)! W panelu Celow (Objectives) dziala ZEGAR FALI odliczajacy czas do kolejnego uderzenia!",
     )
 
     t_mutate = tm.add_trigger("01b_Apply_Specialized_Unit_Archetypes", enabled=True, looping=False)
@@ -553,42 +624,52 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         "Quest1_Caravan": add_guarded_camp_with_leash(
             tm, t_arm_garrisons, "Quest1_Caravan", PlayerId.FIVE, *q1_pos,
             units_spec=[(UnitInfo.STEPPE_LANCER.ID, 12), (UnitInfo.CROSSBOWMAN.ID, 10), (ELITE_BERSERK_ID, 4)],
+            occupied_tiles=occupied_tiles,
         ),
         "Quest2_SniperCliff": add_guarded_camp_with_leash(
             tm, t_arm_garrisons, "Quest2_SniperCliff", PlayerId.SIX, *q2_pos,
             units_spec=[(UnitInfo.ELITE_JANISSARY.ID, 6), (SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14)],
+            occupied_tiles=occupied_tiles,
         ),
         "Quest3_SiegeVault": add_guarded_camp_with_leash(
             tm, t_arm_garrisons, "Quest3_SiegeVault", PlayerId.EIGHT, *q3_pos,
             units_spec=[(UnitInfo.HALBERDIER.ID, 18), (ELITE_BATTLE_ELEPHANT_ID, 2), (UnitInfo.ARBALESTER.ID, 14)],
+            occupied_tiles=occupied_tiles,
         ),
         "Quest4_BloodAltar": add_guarded_camp_with_leash(
-            tm, t_arm_garrisons, "Quest4_BloodAltar", PlayerId.EIGHT, *q4_pos,
+            tm, t_arm_garrisons, "Quest4_BloodAltar", PlayerId.SEVEN, *q4_pos,
             units_spec=[(UnitInfo.PALADIN.ID, 14), (ELITE_BATTLE_ELEPHANT_ID, 2), (UnitInfo.HALBERDIER.ID, 12)],
+            occupied_tiles=occupied_tiles,
         ),
         "G1_North": add_guarded_camp_with_leash(
             tm, t_arm_garrisons, "Settle_G1_North", PlayerId.FIVE, *s_coords["G1_North"],
             units_spec=[(UnitInfo.PIKEMAN.ID, 14), (ELITE_BERSERK_ID, 6), (UnitInfo.CROSSBOWMAN.ID, 8)],
+            occupied_tiles=occupied_tiles,
         ),
         "G1_East": add_guarded_camp_with_leash(
             tm, t_arm_garrisons, "Settle_G1_East", PlayerId.FIVE, *s_coords["G1_East"],
             units_spec=[(UnitInfo.HUSKARL.ID, 12), (UnitInfo.PIKEMAN.ID, 10), (FLAMING_CAMEL_ID, 3)],
+            occupied_tiles=occupied_tiles,
         ),
         "G2_Snipers": add_guarded_camp_with_leash(
             tm, t_arm_garrisons, "Settle_G2_Snipers", PlayerId.SIX, *s_coords["G2_Snipers"],
             units_spec=[(UnitInfo.ELITE_JANISSARY.ID, 7), (SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 16)],
+            occupied_tiles=occupied_tiles,
         ),
         "G2_Mages": add_guarded_camp_with_leash(
             tm, t_arm_garrisons, "Settle_G2_Mages", PlayerId.SEVEN, *s_coords["G2_Mages"],
             units_spec=[(UnitInfo.CAVALIER.ID, 14), (HUSSAR_ID, 8), (IMAM_UNIT_ID, 1)],
+            occupied_tiles=occupied_tiles,
         ),
         "G3_North": add_guarded_camp_with_leash(
             tm, t_arm_garrisons, "Settle_G3_North", PlayerId.EIGHT, *s_coords["G3_North"],
             units_spec=[(ELITE_BATTLE_ELEPHANT_ID, 3), (UnitInfo.HALBERDIER.ID, 20), (UnitInfo.PALADIN.ID, 12)],
+            occupied_tiles=occupied_tiles,
         ),
         "G3_East": add_guarded_camp_with_leash(
             tm, t_arm_garrisons, "Settle_G3_East", PlayerId.EIGHT, *s_coords["G3_East"],
             units_spec=[(ELITE_BATTLE_ELEPHANT_ID, 3), (UnitInfo.ARBALESTER.ID, 20), (SIEGE_ONAGER_ID, 2)],
+            occupied_tiles=occupied_tiles,
         ),
     }
 
@@ -596,8 +677,9 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     # 6. GLOBALNA AURA MAGÓW (AUTOMAT DWUSTANOWY NA REJESTRZE - ETAP 5 - BUG-05)
     # ==============================================================================
     r_local = BALANCE["mage_local_radius"]
-    mx1, my1 = max(0, gate_center[0] - r_local), max(0, gate_center[1] - r_local)
-    mx2, my2 = min(MAP_SIZE - 1, gate_center[0] + r_local), min(MAP_SIZE - 1, gate_center[1] + r_local)
+    mage_aura_center = (110, 114)
+    mx1, my1 = max(0, mage_aura_center[0] - r_local), max(0, mage_aura_center[1] - r_local)
+    mx2, my2 = min(MAP_SIZE - 1, mage_aura_center[0] + r_local), min(MAP_SIZE - 1, mage_aura_center[1] + r_local)
 
     global_shielded_units = [spec.unit_id for spec in ENEMY_UNIT_REGISTRY.values() if spec.receives_mage_shield]
 
@@ -623,7 +705,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_shield_on.new_effect.activate_trigger, trigger_id=t_shield_off.trigger_id)
     send_highlight_chat(
         t_shield_on, "<PURPLE>",
-        "[GLOBALNA AURA MAGA]: Arcymag w strefie 50x50 przed Brama Centralna dal GLOBALNIE +30/+30 Pancerza calej Hordzie (P5-P8) oraz LOKALNIE leczy jednostki w tej strefie! Skupcie na nim ogien!",
+        "[GLOBALNA AURA MAGA]: Arcymag na przedpolu Bramy Centralnej dal GLOBALNIE +30/+30 Pancerza calej Hordzie (P5-P8) oraz LOKALNIE leczy jednostki w tej strefie! Skupcie na nim ogien!",
         flare_x=114, flare_y=114,
     )
 
@@ -754,11 +836,11 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_enable_esc3.new_condition.timer, timer=BALANCE["endgame_escalation_start_sec"])
     add_enemy_combat_buff(
         t_enable_esc3, ai_players,
-        hp_add=BALANCE["endgame_escalation_hp_add"], atk_add=2,
+        hp_add=BALANCE["endgame_escalation_hp_add"], atk_add=1,
     )
     send_highlight_chat(
         t_enable_esc3, "<RED>",
-        f"[ESKALACJA ENDGAME]: Elitarne dywizje Hordy zyskuja kolejne +{BALANCE['endgame_escalation_hp_add']} HP i +2 Ataku!",
+        f"[ESKALACJA ENDGAME]: Elitarne dywizje Hordy zyskuja kolejne +{BALANCE['endgame_escalation_hp_add']} HP i +1 Ataku!",
     )
 
     t_escalate3 = tm.add_trigger("04f_Endgame_Horde_Escalation_Every_5m", enabled=False, looping=True)
@@ -766,11 +848,11 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_escalate3.new_condition.timer, timer=BALANCE["escalation_interval_sec"])
     add_enemy_combat_buff(
         t_escalate3, ai_players,
-        hp_add=BALANCE["endgame_escalation_hp_add"], atk_add=2,
+        hp_add=BALANCE["endgame_escalation_hp_add"], atk_add=1,
     )
     send_highlight_chat(
         t_escalate3, "<RED>",
-        f"[ESKALACJA ENDGAME]: Elitarne dywizje Hordy zyskuja kolejne +{BALANCE['endgame_escalation_hp_add']} HP i +2 Ataku!",
+        f"[ESKALACJA ENDGAME]: Elitarne dywizje Hordy zyskuja kolejne +{BALANCE['endgame_escalation_hp_add']} HP i +1 Ataku!",
     )
 
     # ==============================================================================
@@ -786,10 +868,18 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     deep_target_east = (68, 162)
 
     diff_tags = {-2: "M2", -1: "M1", 0: "0", 1: "P1", 2: "P2"}
+    diff_obj_labels = {
+        -2: "Poziom Trudnosci (6,150): -2 BARDZO LATWY (-40% fal, -30% HP)",
+        -1: "Poziom Trudnosci (6,150): -1 LATWY (-20% fal, -15% HP)",
+        0: "Poziom Trudnosci (6,150): 0 DOMYSLNY (100% fal i statystyk)",
+        1: "Poziom Trudnosci (6,150): +1 TRUDNY (+25% fal, +15 HP, +2 Atk)",
+        2: "Poziom Trudnosci (6,150): +2 EKSTREMALNY (+50% fal, +30 HP, +4 Atk)",
+    }
     state_markers = {}
     for lvl, tag in diff_tags.items():
         trig = tm.add_trigger(f"State_Diff_Lvl_{tag}", enabled=(lvl == 0), looping=False)
         safe_call(trig.new_condition.timer, timer=999999)
+        set_as_objective(trig, diff_obj_labels[lvl], order=109, is_header=True)
         state_markers[lvl] = trig
 
     settlement_spawn_configs = {
@@ -798,7 +888,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         "G2_Snipers": (PlayerId.SIX,   68, 60,   *deep_target_north),
         "G2_Mages":   (PlayerId.SEVEN, 116, 114, *deep_target_center),
         "G3_North":   (PlayerId.EIGHT, 106, 72,  *deep_target_center),
-        "G3_East":    (PlayerId.EIGHT, 136, 82,  *deep_target_east),
+        "G3_East":    (PlayerId.EIGHT, 156, 152, *deep_target_east),
     }
 
     wave_definitions = get_wave_definitions()
@@ -821,12 +911,12 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     t_endless_sapper = tm.add_trigger("03_Endless_Forest_Breach_Assault", enabled=False, looping=False)
     add_spawn_and_attack_effect(
         t_endless_sapper, PlayerId.SIX,
-        [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14), (ELITE_BERSERK_ID, 8)],
+        [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14), (UnitInfo.ELITE_JANISSARY.ID, 8)],
         spawn_x=78, spawn_y=94, target_x=68, target_y=130,
     )
     add_spawn_and_attack_effect(
         t_endless_sapper, PlayerId.SIX,
-        [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14), (UnitInfo.HUSKARL.ID, 10)],
+        [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14), (UnitInfo.ARBALESTER.ID, 10)],
         spawn_x=115, spawn_y=140, target_x=68, target_y=146,
     )
     safe_call(t_endless_sapper.new_effect.deactivate_trigger, trigger_id=t_endless_sapper.trigger_id)
@@ -864,7 +954,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
                 scaled_trade = scale_comp_for_level(endless_trade_base_comp, lvl)
                 add_spawn_and_attack_effect(
                     t_end_var, PlayerId.EIGHT, scaled_trade,
-                    spawn_x=162, spawn_y=180, target_x=190, target_y=194,
+                    spawn_x=162, spawn_y=180, target_x=96, target_y=194,
                 )
                 send_highlight_chat(
                     t_end_var, "<ORANGE>",
@@ -923,7 +1013,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             ("G2_Snipers", PlayerId.SIX,   w_def.g2_snipers, 68, 60,   *deep_target_north),
             ("G2_Mages",   PlayerId.SEVEN, w_def.g2_mages,   116, 114, *deep_target_center),
             ("G3_North",   PlayerId.EIGHT, w_def.g3_north,   106, 72,  *deep_target_center),
-            ("G3_East",    PlayerId.EIGHT, w_def.g3_east,    136, 82,  *deep_target_east),
+            ("G3_East",    PlayerId.EIGHT, w_def.g3_east,    156, 152, *deep_target_east),
         ]
 
         for s_key, ai_p, comp, sx, sy, tx, ty in per_settlement_wave:
@@ -964,7 +1054,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
                     scaled_trade = scale_comp_for_level(trade_raid_comp, lvl)
                     add_spawn_and_attack_effect(
                         t_var, PlayerId.EIGHT, scaled_trade,
-                        spawn_x=162, spawn_y=180, target_x=190, target_y=194,
+                        spawn_x=162, spawn_y=180, target_x=96, target_y=194,
                     )
                     send_highlight_chat(
                         t_var, "<ORANGE>",
@@ -1004,7 +1094,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
                 safe_call(t_breach_n.new_effect.remove_object, selected_object_ids=[tr_u.reference_id])
             add_spawn_and_attack_effect(
                 t_breach_n, PlayerId.SIX,
-                [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14), (ELITE_BERSERK_ID, 8)],
+                [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14), (UnitInfo.ELITE_JANISSARY.ID, 8)],
                 spawn_x=78, spawn_y=94, target_x=68, target_y=130,
             )
             send_highlight_chat(
@@ -1034,7 +1124,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
                 safe_call(t_breach_e.new_effect.remove_object, selected_object_ids=[tr_u.reference_id])
             add_spawn_and_attack_effect(
                 t_breach_e, PlayerId.SIX,
-                [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 16), (UnitInfo.HUSKARL.ID, 12)],
+                [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 16), (UnitInfo.ARBALESTER.ID, 12)],
                 spawn_x=115, spawn_y=140, target_x=68, target_y=146,
             )
             send_highlight_chat(

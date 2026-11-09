@@ -344,7 +344,7 @@ def spawn_settlement_buildings(um, grid: SafeMapGrid, player: PlayerId, cx: int,
         core = grid.place_building(um, player, BuildingInfo.CASTLE.ID, cx, cy, size_tiles=4, no_tree_margin=3)
         grid.place_building(um, player, BuildingInfo.ARCHERY_RANGE.ID, cx - 7, cy - 5, size_tiles=3, no_tree_margin=2)
         grid.place_building(um, player, BuildingInfo.MONASTERY.ID, cx + 7, cy - 5, size_tiles=3, no_tree_margin=2)
-        for tx, ty in [(-9, -9), (9, -9), (-9, 9), (9, 9)]:
+        for tx, ty in [(-9, -9), (5, -9), (-9, 9), (9, 9)]:
             grid.place_building(um, player, BuildingInfo.GUARD_TOWER.ID, cx + tx, cy + ty, size_tiles=2, no_tree_margin=2)
         return core
 
@@ -531,7 +531,7 @@ def build_map_and_entities(scenario) -> dict:
 
     for sx, sy in [
         (48, 86), (52, 86), (68, 60), (78, 87), (106, 72),
-        (116, 114), (116, 162), (117, 140), (117, 178), (136, 82), (162, 180),
+        (116, 114), (116, 162), (117, 140), (117, 178), (156, 152), (162, 180),
         (68, 48), (76, 84), (120, 152), (120, 162), (128, 36), (134, 78), (160, 62),
     ]:
         grid.mark_no_trees(sx, sy, radius=7)
@@ -598,6 +598,12 @@ def build_map_and_entities(scenario) -> dict:
     north_breach_trees, east_breach_trees = populate_forest_trees(
         mm, um, grid, north_breach_box=north_breach_box, east_breach_box=east_breach_box
     )
+    occupied_tiles = set(grid.occupied_tiles)
+    for x in range(MAP_SIZE):
+        for y in range(MAP_SIZE):
+            if mm.get_tile(x, y).terrain_id == TERRAIN_WATER:
+                occupied_tiles.add((x, y))
+
     return {
         "ai_players": ai_players,
         "allied_citadel": allied_citadel,
@@ -608,6 +614,7 @@ def build_map_and_entities(scenario) -> dict:
         "gate_north": gate_north,
         "human_players": human_players,
         "north_breach_trees": north_breach_trees,
+        "occupied_tiles": occupied_tiles,
         "p_coords": p_coords,
         "q1_bldg": q1_bldg,
         "q1_pos": q1_pos,

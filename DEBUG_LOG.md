@@ -1,4 +1,4 @@
-# DEBUG_LOG.md — Dokumentacja Architektury, Stanu Bazowego i Błędów (`Kroniki Rubieży: Horda i Ekspedycje` v6.3 -> v6.5)
+# DEBUG_LOG.md — Dokumentacja Architektury, Stanu Bazowego i Błędów (`Kroniki Rubieży: Horda i Ekspedycje` v6.3 -> v6.6)
 
 ## 0. Identyfikacja stanu bazowego i zasady dla Agenta IDE (Antigravity / VS Code)
 - **Repozytorium bazowe:** `https://github.com/trzesnim/AoE_Scenarios/tree/main` (stan odpowiadający wersji `v6.3 -> v6.4` po audycie kodu i testów).
@@ -385,3 +385,42 @@ Dzięki temu przejście `0 -> -1` odejmuje dokładnie `hp_delta_down` (ok. 15% b
   - Dodano automatyczną kompilację scenariusza w `get_compiled_scenario()`, jeśli plik wynikowy nie istnieje.
   - Uszczelniono `test_sanctuary_cycle_mathematical_zero_drift` (weryfikacja na rzeczywistych efektach `MODIFY_ATTRIBUTE` z 8 skompilowanych triggerów `09_Diff_*`) oraz `test_wave_clocks_variants_and_endless_gates_bug03` (usunięcie warunkowego `if clock_name in self.t_map:`, ścisła weryfikacja wszystkich oczekiwanych zegarów, wartości `timer` i warunków `trigger_active`).
   - Dodano nowe testy binarne: `test_lobby_ai_players_and_locked_civilizations`, `test_starting_houses_per_player_and_distance` oraz `test_crash_safe_wave_countdown_timer`.
+
+### Wdrożenie 10: Etap R9 — Wdrożenie poprawek v6.6 (Grupy 1–3 po dwóch audytach) [STATUS: OK]
+- **Grupa 1 (Naprawa błędów geometrycznych, wodnych i kolizji spawnu z budynkami):**
+  - **1. Przeniesienie spawnu fal `G3_East` na `(156, 152)` i skierowanie na Bramę Wschodnią (`horde_map.py`, `horde_waves.py`):**
+    * Dotychczasowy punkt `(136, 82)` kolidował z rzeką (`TERRAIN_WATER = 1` na `135..139, 76..80`) oraz z południowo-zachodnią wieżą `G2_Mages` `(139, 81)` i kierował wojsko przez Bramę Centralną.
+    * Przeniesiono punkt spawnu `G3_East` w `settlement_spawn_configs`, `per_settlement_wave` oraz wycięcie polany `mark_no_trees(..., radius=7)` na `(156, 152)` (na południe od grzbietu skalnego `(124, 134)..(158, 134)`), z celem `deep_target_east = (68, 162)`. Odległość Czebyszewa od wszystkich obozów `P8` wynosi $\ge 38$ dla środka ($\ge 33 > 20$ dla skrajnych kratek $\pm 5$).
+  - **2. Eliminacja kolizji `Garrison_Spawn_*` z budynkami głównymi i wieżami 10 obozów (`horde_map.py`, `horde_waves.py`):**
+    * W `horde_map.py` wyeksportowano `ctx["occupied_tiles"]` zawierający wszystkie kafelki zajęte przez budynki, mury, klify i drzewa oraz wszystkie kafelki `TERRAIN_WATER`.
+    * W `horde_waves.py` utworzono dedykowaną funkcję `add_garrison_spawn_effect`, która dla każdego z 10 obozów wyszukuje wolne kafelki w pierścieniach `r = 3..12` wokół `(cx, cy + 2)` wewnątrz `ring_inner = 14` (`max(|nx - cx|, |ny - cy|) < 13`) i wydaje rozkaz `attack_move` na obszar `cx ± 13, cy ± 13`.
+  - **3. Korekta pozycji wieży strażniczej `G2_Snipers` stojącej w rzece (`horde_map.py`):**
+    * W `spawn_settlement_buildings` (`grade == 2`) zmieniono offset północno-wschodniej wieży `GUARD_TOWER` z `(9, -9)` na `(5, -9)`. W `G2_Snipers (68, 34)` wieża staje na `(73, 25)` (obrys `[72, 73] × [24, 25]`), całkowicie na suchym lądzie przed korytem rzeki (`x >= 74`).
+  - **4. Spójność właściciela garnizonu `Quest4_BloodAltar` (`horde_waves.py`):**
+    * Zmieniono właściciela garnizonu i smyczy `Quest4_BloodAltar` `(105, 20)` z `PlayerId.EIGHT` na `PlayerId.SEVEN` (zgodnie z właścicielem budynków Q4).
+- **Grupa 2 (Mechanika rozgrywki, balans fal i czytelność taktyczna):**
+  - **1. Zawalenie się budynków pobocznych obozu po zniszczeniu rdzenia (`horde_quests.py`):**
+    * Dodano funkcję `collapse_camp_buildings` wywołującą `kill_object` w prostokącie `cx ± 14, cy ± 14` dla 9 typów budynków obozowych (`CASTLE`, `KEEP`, `GUARD_TOWER`, `BARRACKS`, `STABLE`, `ARCHERY_RANGE`, `SIEGE_WORKSHOP`, `MONASTERY`, `FORTIFIED_WALL`) w `t_q2`, `t_q3_unlock`, `t_q4` oraz we wszystkich 6 triggerach `05_Settlement_Destroyed_{s_key}`.
+  - **2. Wczesne zaangażowanie Bramy Centralnej P1 w Falach 2 i 3 oraz synchronizacja prędkości Tanka/Moździerza (`horde_config.py`, `horde_waves.py`):**
+    * W `get_wave_definitions()` dodano dla `g2_mages`: Fala 2 (`13:00`): `[(SCOUT_CAVALRY, 5), (ARCHER, 6)]`, Fala 3 (`18:00`): `[(KNIGHT, 6), (BATTERING_RAM, 1)]`.
+    * Zwiększono `BALANCE["tank_speed"]` z `0.52` na `0.72` oraz `BALANCE["mortar_speed"]` z `0.42` na `0.58` (egzekwowane również w `enforce_specialized_unit_caps`).
+  - **3. Korekta Risk/Reward dla Settlementów `G1–G3` i wyważenie eskalacji Late-Game (`horde_config.py`, `horde_waves.py`, `horde_quests.py`):**
+    * Uzależniono nagrodę surowcową i Furię w `settlement_defs` od stopnia obozu: Grade 1 (`+700F/+700G`, Furia `+5 HP / +0 Atk`), Grade 2 (`+1000F/+1000G`, Furia `+10 HP / +1 Atk`), Grade 3 (`+1500F/+1500G`, Furia `+15 HP / +2 Atk`).
+    * Złagodzono Bieg 3 eskalacji (`55:00+`): `endgame_escalation_hp_add = 6`, `atk_add = 1` w `04e` i `04f` (łącznie `+20 HP i +3 Ataku` co 5 min od 55. minuty).
+  - **4. Korekta celu `Trade_Line_Attack`, bramy wypadowe w murze `Q1` oraz Saperzy P6 (`horde_waves.py`, `horde_quests.py`):**
+    * Zmieniono cel `attack_move` dla `Trade_Line_Attack` z `(190, 194)` na `(96, 194)` w Falach 8, 10, 12, 14 i Endless.
+    * W `06_Quest1_Build_Trade_Wall_And_Pop` pozostawiono w murze na `y = 186` dwa 2-kratkowe otwory wypadowe (`x = 122..123` oraz `x = 170..171`) osłonięte przesuniętymi basztami `KEEP` na `x = {115, 122, 145, 160, 170, 190}` (91 segmentów muru).
+    * W wyłomach saperskich (`03_W09_Forest_Breach_North_Execute`, `03_W12_Forest_Breach_East_Execute`, `03_Endless_Forest_Breach_Assault`) zastąpiono `ELITE_BERSERK_ID` i `HUSKARL` jednostkami frakcji `P6` (`ELITE_JANISSARY` i `ARBALESTER`).
+  - **5. Doprecyzowanie strefy Aury Arcymaga (`horde_config.py`, `horde_waves.py`):**
+    * Zmniejszono `BALANCE["mage_local_radius"]` z `25` na `18` i wyśrodkowano strefę detekcji `(mx1, my1)..(mx2, my2)` wokół punktu `(110, 114)` (`x = 92..128, y = 96..132`).
+- **Grupa 3 (Ulepszenia UI, listy jednostek DE, niezawodność testów i dokumentacja):**
+  - **1. Ulepszenia UI w panelu Objectives (`horde_waves.py`, `horde_quests.py`):**
+    * W `set_as_objective` dodano ustawianie `trigger.description = text` oraz `trigger.display_as_objective = 1` (gdy `not is_header`).
+    * Usunięto statyczny `00_Obj_Balance_Info` z `horde_quests.py` i podpięto `set_as_objective(..., order=109, is_header=True)` bezpośrednio pod 5 znaczników `State_Diff_Lvl_{M2, M1, 0, P1, P2}`.
+    * Doprecyzowano etykiety `G2_Snipers` (`usuwa Snajperow, Mozdzierze i Saperow`) oraz `G3_East` (`usuwa Slonie Wsch. i Rajdy Handlowe`).
+  - **2. Uzupełnienie list `PLAYER_*` i prędkości Łuczników Konnych w `Q2` (`horde_config.py`, `horde_quests.py`):**
+    * Rozszerzono `PLAYER_RANGED_UNITS` (`JANISSARY`, `ELITE_JANISSARY`, `ARAMBAI`, `ELITE_ARAMBAI`, `CHAKRAM_THROWER`, `ELITE_CHAKRAM_THROWER`, `RATHA_RANGED`), `PLAYER_CAVALRY_UNITS` (`SAVAR`, `WAR_ELEPHANT`, `ELITE_WAR_ELEPHANT`, `SHRIVAMSHA_RIDER`, `ELITE_SHRIVAMSHA_RIDER`, `CAMEL_SCOUT`, `RATHA_MELEE`), `PLAYER_INFANTRY_UNITS` (`SERJEANT`, `ELITE_SERJEANT`, `FLEMISH_MILITIA`) i `PLAYER_PROD_BUILDINGS` (`BuildingInfo.DONJON.ID`).
+    * Utworzono listę `PLAYER_MOUNTED_RANGED_UNITS` (15 jednostek konnych strzelców) otrzymującą w `t_q2` mnożnik `1.12` do `ATTR_MOVEMENT_SPEED`.
+  - **3. Wymuszenie świeżej kompilacji i twarde asercje antykolizyjne w `test_horde_scenario.py`:**
+    * `get_compiled_scenario()` zawsze wykonuje świeżą kompilację `build_horde_scenario()`.
+    * Dodano pełną rekonstrukcję obrysów wszystkich budynków startowych oraz kafelków wody (`TERRAIN_WATER = 1`) i potwierdzono w teście binarnym: **0 kafelków budynków na wodzie, 0 kolizji budynków między sobą, 0 efektów `CREATE_OBJECT` na wodzie oraz 0 jednostek lądowych spawnowanych na budynkach lub drzewach (26/26 testów OK)**.`

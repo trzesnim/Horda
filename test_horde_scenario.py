@@ -1,6 +1,6 @@
 """
 test_horde_scenario.py - Kompleksowy zestaw testow jednostkowych, integracyjnych
-oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Horda (v6.5).
+oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Horda (v6.6).
 """
 
 import unittest
@@ -26,12 +26,22 @@ from horde_config import (
     ELITE_BATTLE_ELEPHANT_ID,
     ELITE_BERSERK_ID,
     ENEMY_UNIT_REGISTRY,
+    FEITORIA_ID,
     FLAMING_CAMEL_ID,
+    FLARE_UNIT_ID,
+    FORTIFIED_PALISADE_ID,
     HUSSAR_ID,
     IMAM_UNIT_ID,
     KREPOST_ID,
+    MAP_SIZE,
     OUTPUT_SCENARIO,
+    PALISADE_GATE_NW_SE_ID,
+    PALISADE_GATE_SW_NE_ID,
     PETARD_ID,
+    PLAYER_MOUNTED_RANGED_UNITS,
+    RES_FOOD,
+    RES_GOLD,
+    ROCK_CLIFF_ID,
     SIEGE_ONAGER_ID,
     TECH_BALLISTICS,
     TECH_BLAST_FURNACE,
@@ -51,6 +61,7 @@ from horde_config import (
     TECH_SCALE_MAIL,
     TECH_SIEGE_ENGINEERS,
     TECH_SQUIRES,
+    TERRAIN_WATER,
     TREE_OAK_ID,
     TREE_PINE_ID,
     get_wave_definitions,
@@ -63,8 +74,7 @@ _CACHED_SCENARIO: AoE2DEScenario | None = None
 def get_compiled_scenario() -> AoE2DEScenario:
     global _CACHED_SCENARIO
     if _CACHED_SCENARIO is None:
-        if not OUTPUT_SCENARIO.exists():
-            build_horde_scenario()
+        build_horde_scenario()
         _CACHED_SCENARIO = AoE2DEScenario.from_file(str(OUTPUT_SCENARIO))
     return _CACHED_SCENARIO
 
@@ -253,7 +263,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         cls.t_map = {t.name: t for t in cls.triggers}
 
     def test_state_markers_and_sanctuary_lock(self):
-        """Tylko State_Diff_Lvl_0 jest aktywny na starcie. Mechanizmy blokad i relay zostaly usuniete."""
+        """Tylko State_Diff_Lvl_0 jest aktywny na starcie i stanowi dynamiczny baner Objectives (order=109). Mechanizmy blokad i relay zostaly usuniete."""
         for lvl_tag in ["M2", "M1", "0", "P1", "P2"]:
             name = f"State_Diff_Lvl_{lvl_tag}"
             self.assertIn(name, self.t_map)
@@ -261,6 +271,13 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             expected_enabled = 1 if lvl_tag == "0" else 0
             self.assertEqual(tr.enabled, expected_enabled, f"{name} ma zly stan enabled!")
             self.assertEqual(tr.looping, 0)
+            self.assertEqual(tr.display_on_screen, 1)
+            self.assertEqual(tr.description_order, 109)
+            self.assertEqual(tr.header, 1)
+            self.assertEqual(tr.description, tr.short_description)
+            self.assertIn("Poziom Trudnosci (6,150):", tr.short_description)
+
+        self.assertNotIn("00_Obj_Balance_Info", self.t_map)
 
         # Upewnij sie, ze stare triggery blokujace i przekaznikowe nie istnieja
         for t_name in self.t_map:
@@ -301,20 +318,20 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                         f"{d_name} modyfikuje trigger fali {target_tr.name}! (Regresja BUG-01)",
                     )
 
-        # Porzadek topologiczny trigger_id (565..572)
-        # Pad GORNY: P1->P2 (565) < 0->P1 (566) < M1->0 (567) < M2->M1 (568)
+        # Porzadek topologiczny trigger_id (571..578)
+        # Pad GORNY: P1->P2 (571) < 0->P1 (572) < M1->0 (573) < M2->M1 (574)
         id_up_p1_p2 = self.t_map["09_Diff_Up_P1_to_P2"].trigger_id
         id_up_0_p1 = self.t_map["09_Diff_Up_0_to_P1"].trigger_id
         id_up_m1_0 = self.t_map["09_Diff_Up_M1_to_0"].trigger_id
         id_up_m2_m1 = self.t_map["09_Diff_Up_M2_to_M1"].trigger_id
-        self.assertEqual((id_up_p1_p2, id_up_0_p1, id_up_m1_0, id_up_m2_m1), (565, 566, 567, 568))
+        self.assertEqual((id_up_p1_p2, id_up_0_p1, id_up_m1_0, id_up_m2_m1), (571, 572, 573, 574))
 
-        # Pad DOLNY: M1->M2 (569) < 0->M1 (570) < P1->0 (571) < P2->P1 (572)
+        # Pad DOLNY: M1->M2 (575) < 0->M1 (576) < P1->0 (577) < P2->P1 (578)
         id_down_m1_m2 = self.t_map["09_Diff_Down_M1_to_M2"].trigger_id
         id_down_0_m1 = self.t_map["09_Diff_Down_0_to_M1"].trigger_id
         id_down_p1_0 = self.t_map["09_Diff_Down_P1_to_0"].trigger_id
         id_down_p2_p1 = self.t_map["09_Diff_Down_P2_to_P1"].trigger_id
-        self.assertEqual((id_down_m1_m2, id_down_0_m1, id_down_p1_0, id_down_p2_p1), (569, 570, 571, 572))
+        self.assertEqual((id_down_m1_m2, id_down_0_m1, id_down_p1_0, id_down_p2_p1), (575, 576, 577, 578))
 
     def test_siege_onager_blast_attack_level_bug02(self):
         """01b musi ustawiac ATTR_BLAST_ATTACK_LEVEL = 44 na 2 dla SIEGE_ONAGER_ID dla wszystkich 4 graczy AI."""
@@ -389,10 +406,14 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         self.assertEqual(t_off.enabled, 0)
         self.assertEqual(t_off.looping, 0)
 
-        # 02d ma warunek inverted=1
+        # 02a i 02d maja wycentrowana strefe detekcji (92, 96)..(128, 132) a 02d ma inverted=1
+        cond_on = [c for c in t_on.conditions if c.condition_type == ConditionId.OBJECTS_IN_AREA]
+        self.assertEqual(len(cond_on), 1)
+        self.assertEqual((cond_on[0].area_x1, cond_on[0].area_y1, cond_on[0].area_x2, cond_on[0].area_y2), (92, 96, 128, 132))
         cond_oia = [c for c in t_off.conditions if c.condition_type == ConditionId.OBJECTS_IN_AREA]
         self.assertEqual(len(cond_oia), 1)
         self.assertEqual(cond_oia[0].inverted, 1)
+        self.assertEqual((cond_oia[0].area_x1, cond_oia[0].area_y1, cond_oia[0].area_x2, cond_oia[0].area_y2), (92, 96, 128, 132))
 
         # 02d reaktywuje 02a
         act_effs = [e.trigger_id for e in t_off.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER]
@@ -406,7 +427,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                         self.assertNotEqual(e.trigger_id, t_on.trigger_id, f"{tr.name} aktywuje 02a!")
 
     def test_trade_wall_geometry_and_cleaning_bug09(self):
-        """Q1: Usuniecie wiez P5, mur na y=186, baszty na y=184."""
+        """Q1: Usuniecie wiez P5, mur na y=186 z otworami wypadowymi x=122..123 i 170..171, baszty na y=184."""
         t_q1 = self.t_map["06_Quest1_Build_Trade_Wall_And_Pop"]
 
         # remove_object wiez P5
@@ -418,33 +439,40 @@ class TestScenarioBinaryStructure(unittest.TestCase):
 
         # mury i baszty
         wall_y_values = set()
+        wall_x_values = set()
         keep_y_values = set()
+        keep_x_values = set()
         for eff in t_q1.effects:
             if eff.effect_type == EffectId.CREATE_OBJECT:
                 if eff.object_list_unit_id == BuildingInfo.FORTIFIED_WALL.ID:
                     wall_y_values.add(eff.location_y)
+                    wall_x_values.add(eff.location_x)
                 elif eff.object_list_unit_id == BuildingInfo.KEEP.ID:
                     keep_y_values.add(eff.location_y)
+                    keep_x_values.add(eff.location_x)
 
         self.assertEqual(wall_y_values, {186}, f"Mury Q1 na zlym Y: {wall_y_values}")
         self.assertEqual(keep_y_values, {184}, f"Baszty Q1 na zlym Y: {keep_y_values}")
+        self.assertEqual(keep_x_values, {115, 122, 145, 160, 170, 190})
+        expected_wall_x = set(range(105, MAP_SIZE)) - {122, 123, 170, 171}
+        self.assertEqual(wall_x_values, expected_wall_x)
 
     def test_camp_deactivations_bug06(self):
-        """Zniszczenie kazdego z 10 obozow musi dezaktywowac spawn, leash i 4 detektory."""
+        """Zniszczenie kazdego z 10 obozow musi dezaktywowac spawn, leash i 4 detektory oraz zawalic budynki poboczne (kill_object)."""
         camps = [
-            ("06_Quest1_Build_Trade_Wall_And_Pop", "Quest1_Caravan"),
-            ("06_Quest2_Sniper_Cliff_Buff", "Quest2_SniperCliff"),
-            ("06a_Quest3_Siege_Vault_Unlock", "Quest3_SiegeVault"),
-            ("06_Quest4_Blood_Altar_Super_Army", "Quest4_BloodAltar"),
-            ("05_Settlement_Destroyed_G1_North", "Settle_G1_North"),
-            ("05_Settlement_Destroyed_G1_East", "Settle_G1_East"),
-            ("05_Settlement_Destroyed_G2_Snipers", "Settle_G2_Snipers"),
-            ("05_Settlement_Destroyed_G2_Mages", "Settle_G2_Mages"),
-            ("05_Settlement_Destroyed_G3_North", "Settle_G3_North"),
-            ("05_Settlement_Destroyed_G3_East", "Settle_G3_East"),
+            ("06_Quest1_Build_Trade_Wall_And_Pop", "Quest1_Caravan", None),
+            ("06_Quest2_Sniper_Cliff_Buff", "Quest2_SniperCliff", PlayerId.SIX.value),
+            ("06a_Quest3_Siege_Vault_Unlock", "Quest3_SiegeVault", PlayerId.EIGHT.value),
+            ("06_Quest4_Blood_Altar_Super_Army", "Quest4_BloodAltar", PlayerId.SEVEN.value),
+            ("05_Settlement_Destroyed_G1_North", "Settle_G1_North", PlayerId.FIVE.value),
+            ("05_Settlement_Destroyed_G1_East", "Settle_G1_East", PlayerId.FIVE.value),
+            ("05_Settlement_Destroyed_G2_Snipers", "Settle_G2_Snipers", PlayerId.SIX.value),
+            ("05_Settlement_Destroyed_G2_Mages", "Settle_G2_Mages", PlayerId.SEVEN.value),
+            ("05_Settlement_Destroyed_G3_North", "Settle_G3_North", PlayerId.EIGHT.value),
+            ("05_Settlement_Destroyed_G3_East", "Settle_G3_East", PlayerId.EIGHT.value),
         ]
 
-        for dest_name, camp_tag in camps:
+        for dest_name, camp_tag, kill_owner in camps:
             tr_dest = self.t_map[dest_name]
             deact_ids = {e.trigger_id for e in tr_dest.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER}
 
@@ -457,19 +485,38 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                 t_det = self.t_map[f"Garrison_Detect_{camp_tag}_P{p}"]
                 self.assertIn(t_det.trigger_id, deact_ids)
 
+            if kill_owner is not None:
+                kill_effs = [
+                    e for e in tr_dest.effects
+                    if e.effect_type == EffectId.KILL_OBJECT and e.source_player == kill_owner
+                ]
+                self.assertEqual(len(kill_effs), 9, f"{dest_name} powinien miec 9 efektow KILL_OBJECT dla budynkow obozu!")
+
     def test_settlement_fury_gradation_and_retaliations(self):
-        """Gradacja Furii Settlementow Grade 1-3 oraz kierunkowe punkty spawnu odwetow w 05_Settlement_Destroyed_*."""
+        """Gradacja Furii i Nagrod Settlementow Grade 1-3 oraz kierunkowe punkty spawnu odwetow w 05_Settlement_Destroyed_*."""
         grades = {
-            "05_Settlement_Destroyed_G1_North": (8, 1, 48, 86, 48, 138),
-            "05_Settlement_Destroyed_G1_East": (8, 1, 117, 178, 68, 162),
-            "05_Settlement_Destroyed_G2_Snipers": (12, 1, 48, 86, 48, 138),
-            "05_Settlement_Destroyed_G2_Mages": (12, 1, 116, 114, 54, 146),
-            "05_Settlement_Destroyed_G3_North": (16, 2, 116, 114, 54, 146),
-            "05_Settlement_Destroyed_G3_East": (16, 2, 117, 178, 68, 162),
+            "05_Settlement_Destroyed_G1_North": (700, 5, 0, 48, 86, 48, 138, "G1 - Polnocny (usuwa Berserkerow i Petardy)"),
+            "05_Settlement_Destroyed_G1_East": (700, 5, 0, 117, 178, 68, 162, "G1 - Wschodni (usuwa Huskarlow i Wielblady)"),
+            "05_Settlement_Destroyed_G2_Snipers": (1000, 10, 1, 48, 86, 48, 138, "G2 - Akademia (usuwa Snajperow, Mozdzierze i Saperow)"),
+            "05_Settlement_Destroyed_G2_Mages": (1000, 10, 1, 116, 114, 54, 146, "G2 - Klasztor (usuwa Magow i Szakale)"),
+            "05_Settlement_Destroyed_G3_North": (1500, 15, 2, 116, 114, 54, 146, "G3 - Cytadela Pln. (usuwa Slonie-Tanki Pln.)"),
+            "05_Settlement_Destroyed_G3_East": (1500, 15, 2, 117, 178, 68, 162, "G3 - Cytadela Wsch. (usuwa Slonie Wsch. i Rajdy Handlowe)"),
         }
 
-        for trig_name, (exp_hp, exp_atk, exp_sx, exp_sy, exp_tx, exp_ty) in grades.items():
+        for trig_name, (exp_res, exp_hp, exp_atk, exp_sx, exp_sy, exp_tx, exp_ty, exp_label) in grades.items():
             tr = self.t_map[trig_name]
+            self.assertEqual(tr.short_description, exp_label)
+            self.assertEqual(tr.description, exp_label)
+            self.assertEqual(tr.display_on_screen, 1)
+            self.assertEqual(tr.display_as_objective, 1)
+
+            res_mods = [
+                e.quantity for e in tr.effects
+                if e.effect_type == EffectId.MODIFY_RESOURCE and e.tribute_list in (RES_FOOD, RES_GOLD)
+            ]
+            self.assertEqual(len(res_mods), 8, f"{trig_name} powinien dawac zywnosc i zloto 4 graczom!")
+            self.assertTrue(all(val == exp_res for val in res_mods), f"{trig_name} zla nagroda surowcowa: {res_mods}")
+
             hp_mods = [e.quantity for e in tr.effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE and e.object_attributes == ATTR_HIT_POINTS]
             self.assertGreater(len(hp_mods), 0, f"{trig_name} brak modyfikacji HP!")
             self.assertTrue(all(val == exp_hp for val in hp_mods), f"{trig_name} zly buff HP: {hp_mods}")
@@ -478,8 +525,11 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                 (e.armour_attack_quantity if e.armour_attack_quantity is not None else (e.quantity % 65536))
                 for e in tr.effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE and e.object_attributes == ATTR_ATTACK
             ]
-            self.assertGreater(len(atk_mods), 0, f"{trig_name} brak modyfikacji Atk!")
-            self.assertTrue(all(val == exp_atk for val in atk_mods), f"{trig_name} zly buff Atk: {atk_mods}")
+            if exp_atk == 0:
+                self.assertEqual(len(atk_mods), 0, f"{trig_name} nie powinien zwiekszac ataku dla Grade 1!")
+            else:
+                self.assertGreater(len(atk_mods), 0, f"{trig_name} brak modyfikacji Atk!")
+                self.assertTrue(all(val == exp_atk for val in atk_mods), f"{trig_name} zly buff Atk: {atk_mods}")
 
             creates = [e for e in tr.effects if e.effect_type == EffectId.CREATE_OBJECT and e.source_player == PlayerId.EIGHT.value]
             self.assertGreater(len(creates), 0, f"{trig_name} brak jednostek odwetu!")
@@ -490,23 +540,43 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             self.assertEqual((atk_moves[0].location_x, atk_moves[0].location_y), (exp_tx, exp_ty))
 
     def test_player_perks_q2_and_q4(self):
-        """Perki graczy w Q2 i Q4 obejmuja rozszerzone listy jednostek (w tym UU i Krepost)."""
+        """Perki graczy w Q2 i Q4 obejmuja rozszerzone listy jednostek (w tym UU, strzelcow konnych, Krepost i Donjon)."""
         t_q2 = self.t_map["06_Quest2_Sniper_Cliff_Buff"]
         q2_units = {e.object_list_unit_id for e in t_q2.effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE}
-        # Elite Steppe Lancer (1372), Heavy Camel (330), Longbowman, Cataphract, Leitis
+        # Elite Steppe Lancer (1372), Heavy Camel (330), Longbowman, Cataphract, Leitis, Janissary, Arambai, Chakram, Ratha, Savar, Shrivamsha
         self.assertIn(1372, q2_units)
         self.assertIn(330, q2_units)
         self.assertIn(UnitInfo.ELITE_LONGBOWMAN.ID, q2_units)
         self.assertIn(UnitInfo.ELITE_CATAPHRACT.ID, q2_units)
         self.assertIn(UnitInfo.ELITE_LEITIS.ID, q2_units)
+        self.assertIn(UnitInfo.ELITE_JANISSARY.ID, q2_units)
+        self.assertIn(UnitInfo.ELITE_ARAMBAI.ID, q2_units)
+        self.assertIn(UnitInfo.ELITE_CHAKRAM_THROWER.ID, q2_units)
+        self.assertIn(UnitInfo.RATHA_RANGED.ID, q2_units)
+        self.assertIn(UnitInfo.SAVAR.ID, q2_units)
+        self.assertIn(UnitInfo.ELITE_WAR_ELEPHANT.ID, q2_units)
+        self.assertIn(UnitInfo.ELITE_SHRIVAMSHA_RIDER.ID, q2_units)
+        self.assertIn(UnitInfo.CAMEL_SCOUT.ID, q2_units)
+        self.assertIn(UnitInfo.RATHA_MELEE.ID, q2_units)
+
+        # Weryfikacja +12% predkosci dla jednostek konnych z PLAYER_RANGED_UNITS (PLAYER_MOUNTED_RANGED_UNITS)
+        q2_speed_units = {
+            e.object_list_unit_id for e in t_q2.effects
+            if e.effect_type == EffectId.MODIFY_ATTRIBUTE and e.object_attributes == ATTR_MOVEMENT_SPEED
+        }
+        for mr_id in PLAYER_MOUNTED_RANGED_UNITS:
+            self.assertIn(mr_id, q2_speed_units, f"Brak buffa szybkosci w Q2 dla strzelca konnego ID={mr_id}!")
 
         t_q4 = self.t_map["06_Quest4_Blood_Altar_Super_Army"]
         q4_units = {e.object_list_unit_id for e in t_q4.effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE}
-        # Militia (74), Eagle Scout (751), Siege Workshop (49), Krepost (1251), Teutonic Knight, Huskarl
+        # Militia (74), Eagle Scout (751), Siege Workshop (49), Krepost (1251), Donjon, Serjeant, Flemish Militia, Teutonic Knight, Huskarl
         self.assertIn(74, q4_units)
         self.assertIn(751, q4_units)
         self.assertIn(49, q4_units)
         self.assertIn(KREPOST_ID, q4_units)
+        self.assertIn(BuildingInfo.DONJON.ID, q4_units)
+        self.assertIn(UnitInfo.ELITE_SERJEANT.ID, q4_units)
+        self.assertIn(UnitInfo.FLEMISH_MILITIA.ID, q4_units)
         self.assertIn(UnitInfo.ELITE_TEUTONIC_KNIGHT.ID, q4_units)
         self.assertIn(UnitInfo.ELITE_HUSKARL.ID, q4_units)
 
@@ -609,7 +679,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         self.assertGreater(checked_spawns, 0, "Brak sprawdzonych spawnów Szakala P7!")
 
     def test_spawn_grid_11col_and_all_camp_leash_separation(self):
-        """Weryfikuje 11-kolumnowa siatke [-5..+5, -5..+5], brak kolizji z Garrison_Leash_* oraz drzewami."""
+        """Weryfikuje 11-kolumnowa siatke fal, pierscienie garnizonow, brak kolizji z woda, budynkami, smyczami i drzewami."""
         camps_by_player = {
             PlayerId.FIVE.value: [
                 ("Settle_G1_North", 76, 72),
@@ -622,20 +692,109 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             ],
             PlayerId.SEVEN.value: [
                 ("Settle_G2_Mages", 148, 72),
+                ("Quest4_BloodAltar", 105, 20),
             ],
             PlayerId.EIGHT.value: [
                 ("Settle_G3_North", 142, 24),
                 ("Settle_G3_East", 176, 56),
                 ("Quest3_SiegeVault", 142, 118),
-                ("Quest4_BloodAltar", 105, 20),
             ],
         }
         ring_inner = 14
         ring_outer = 20
 
+        mm = self.scenario.map_manager
+        water_tiles = {
+            (x, y)
+            for x in range(MAP_SIZE)
+            for y in range(MAP_SIZE)
+            if mm.get_tile(x, y).terrain_id == TERRAIN_WATER
+        }
+        self.assertGreater(len(water_tiles), 0, "Brak kafelkow TERRAIN_WATER na mapie!")
+
+        # Rekonstrukcja footprintow wszystkich budynkow i murów na mapie startowej oraz weryfikacja braku wody/kolizji
+        bldg_size_map = {
+            FEITORIA_ID: 5,
+            BuildingInfo.TOWN_CENTER.ID: 4,
+            BuildingInfo.MARKET.ID: 4,
+            BuildingInfo.WONDER.ID: 4,
+            BuildingInfo.CASTLE.ID: 4,
+            BuildingInfo.UNIVERSITY.ID: 4,
+            KREPOST_ID: 4,
+            BuildingInfo.BARRACKS.ID: 3,
+            BuildingInfo.STABLE.ID: 3,
+            BuildingInfo.ARCHERY_RANGE.ID: 3,
+            BuildingInfo.SIEGE_WORKSHOP.ID: 3,
+            BuildingInfo.MONASTERY.ID: 3,
+            BuildingInfo.BLACKSMITH.ID: 3,
+            BuildingInfo.HOUSE.ID: 2,
+            BuildingInfo.GUARD_TOWER.ID: 2,
+            BuildingInfo.KEEP.ID: 2,
+            BuildingInfo.FORTIFIED_WALL.ID: 1,
+            FORTIFIED_PALISADE_ID: 1,
+            ROCK_CLIFF_ID: 1,
+        }
+        gate_ids = {PALISADE_GATE_NW_SE_ID, PALISADE_GATE_SW_NE_ID}
+
+        building_tiles: set[tuple[int, int]] = set()
+        for p_idx in range(9):
+            for u in self.scenario.unit_manager.units[p_idx]:
+                u_tiles: list[tuple[int, int]] = []
+                if u.unit_const in bldg_size_map:
+                    sz = bldg_size_map[u.unit_const]
+                    half = sz // 2
+                    cx, cy = int(u.x), int(u.y)
+                    if sz % 2 == 0:
+                        u_tiles = [(x, y) for x in range(cx - half, cx + half) for y in range(cy - half, cy + half)]
+                    else:
+                        u_tiles = [(x, y) for x in range(cx - half, cx + half + 1) for y in range(cy - half, cy + half + 1)]
+                elif u.unit_const in gate_ids:
+                    cx, cy = int(u.x), int(u.y)
+                    if u.x % 1 == 0.0:
+                        u_tiles = [(x, cy) for x in range(cx - 2, cx + 2)]
+                    else:
+                        u_tiles = [(cx, y) for y in range(cy - 2, cy + 2)]
+
+                for tx, ty in u_tiles:
+                    self.assertNotIn(
+                        (tx, ty),
+                        water_tiles,
+                        f"Budynek unit_const={u.unit_const} gracza P{p_idx} na ({u.x}, {u.y}) stoi na wodzie ({tx}, {ty})!",
+                    )
+                    self.assertNotIn(
+                        (tx, ty),
+                        building_tiles,
+                        f"Budynek unit_const={u.unit_const} gracza P{p_idx} na ({u.x}, {u.y}) koliduje z innym budynkiem na ({tx}, {ty})!",
+                    )
+                    building_tiles.add((tx, ty))
+
         # Zbierz wspolrzedne drzew na mapie (poza drzewami wycinanymi przez Saperow w Fali 9 i 12)
         breach_n_tr = self.t_map["03_W09_Forest_Breach_North_Execute"]
         breach_e_tr = self.t_map["03_W12_Forest_Breach_East_Execute"]
+        endless_breach_tr = self.t_map["03_Endless_Forest_Breach_Assault"]
+        expected_breach_units = {
+            "03_W09_Forest_Breach_North_Execute": {
+                SIEGE_ONAGER_ID, UnitInfo.HALBERDIER.ID, UnitInfo.ELITE_JANISSARY.ID,
+            },
+            "03_W12_Forest_Breach_East_Execute": {
+                SIEGE_ONAGER_ID, UnitInfo.HALBERDIER.ID, UnitInfo.ARBALESTER.ID,
+            },
+            "03_Endless_Forest_Breach_Assault": {
+                SIEGE_ONAGER_ID, UnitInfo.HALBERDIER.ID, UnitInfo.ELITE_JANISSARY.ID, UnitInfo.ARBALESTER.ID,
+            },
+        }
+        for b_tr in (breach_n_tr, breach_e_tr, endless_breach_tr):
+            b_units = {
+                e.object_list_unit_id
+                for e in b_tr.effects
+                if e.effect_type == EffectId.CREATE_OBJECT and e.object_list_unit_id != FLARE_UNIT_ID
+            }
+            self.assertEqual(
+                b_units,
+                expected_breach_units[b_tr.name],
+                f"{b_tr.name} ma nieprawidlowy zestaw jednostek P6: {b_units}!",
+            )
+
         n_removed_ids = {
             eff.selected_object_ids[0]
             for eff in breach_n_tr.effects
@@ -654,6 +813,53 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             if u.unit_const in (TREE_OAK_ID, TREE_PINE_ID) and u.reference_id not in (n_removed_ids | e_removed_ids):
                 permanent_tree_tiles.add((int(u.x), int(u.y)))
 
+        # Weryfikacja, ze ZADEN create_object w calym scenariuszu nie laduje na wodzie, a jednostki ladowe nie laduja na budynkach/drzewach
+        q1_build_bldg_ids = {
+            BuildingInfo.FORTIFIED_WALL.ID,
+            BuildingInfo.KEEP.ID,
+            BuildingInfo.MARKET.ID,
+        }
+        for tr in self.triggers:
+            for eff in tr.effects:
+                if eff.effect_type == EffectId.CREATE_OBJECT:
+                    ux, uy = eff.location_x, eff.location_y
+                    self.assertNotIn(
+                        (ux, uy),
+                        water_tiles,
+                        f"{tr.name} tworzy obiekt unit={eff.object_list_unit_id} na wodzie ({ux}, {uy})!",
+                    )
+                    if eff.object_list_unit_id not in q1_build_bldg_ids and eff.object_list_unit_id != FLARE_UNIT_ID:
+                        self.assertNotIn(
+                            (ux, uy),
+                            building_tiles,
+                            f"{tr.name} spawnuje jednostke unit={eff.object_list_unit_id} na budynku ({ux}, {uy})!",
+                        )
+                        self.assertNotIn(
+                            (ux, uy),
+                            permanent_tree_tiles,
+                            f"{tr.name} spawnuje jednostke unit={eff.object_list_unit_id} na drzewie ({ux}, {uy})!",
+                        )
+
+        # Weryfikacja celu Trade_Line_Attack -> (96, 194) oraz nowego spawnu G3_East -> (156, 152)
+        g3_east_diff_triggers = [t for t in self.triggers if "G3_East_Diff_" in t.name]
+        self.assertGreater(len(g3_east_diff_triggers), 0)
+        trade_raid_triggers = [
+            t for t in g3_east_diff_triggers
+            if any(tag in t.name for tag in ("03_W08_", "03_W10_", "03_W12_", "03_W14_", "03_Endless_"))
+        ]
+        self.assertEqual(len(trade_raid_triggers), 25)
+        for g3_tr in g3_east_diff_triggers:
+            first_cr = next(e for e in g3_tr.effects if e.effect_type == EffectId.CREATE_OBJECT)
+            self.assertEqual((first_cr.location_x + 5, first_cr.location_y + 5), (156, 152))
+            am_effs = [e for e in g3_tr.effects if e.effect_type == EffectId.ATTACK_MOVE]
+            if g3_tr in trade_raid_triggers:
+                self.assertEqual(len(am_effs), 2)
+                self.assertEqual((am_effs[0].location_x, am_effs[0].location_y), (68, 162))
+                self.assertEqual((am_effs[1].location_x, am_effs[1].location_y), (96, 194))
+            else:
+                self.assertEqual(len(am_effs), 1)
+                self.assertEqual((am_effs[0].location_x, am_effs[0].location_y), (68, 162))
+
         max_group_size = 0
         total_spawn_groups = 0
 
@@ -668,40 +874,60 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                     max_group_size = max(max_group_size, group_len)
                     self.assertLessEqual(group_len, 121, f"{tr.name} spawnuje {group_len} > 121 jednostek!")
 
-                    # Srodek spawnu wyznaczony z pierwszej jednostki (idx=0 -> dx=-5, dy=-5) i zgodny z obszarem rozkazu +-8
-                    spawn_x = current_creates[0].location_x + 5
-                    spawn_y = current_creates[0].location_y + 5
-                    self.assertEqual(eff.area_x1, max(0, spawn_x - 8))
-                    self.assertEqual(eff.area_y1, max(0, spawn_y - 8))
-                    self.assertEqual(eff.area_x2, min(199, spawn_x + 8))
-                    self.assertEqual(eff.area_y2, min(199, spawn_y + 8))
-
-                    for idx, cr_eff in enumerate(current_creates):
-                        dx = cr_eff.location_x - spawn_x
-                        dy = cr_eff.location_y - spawn_y
-                        self.assertEqual(dx, (idx % 11) - 5, f"{tr.name} zla kolumna dx dla idx={idx}")
-                        self.assertEqual(dy, (idx // 11) - 5, f"{tr.name} zly wiersz dy dla idx={idx}")
-                        self.assertGreaterEqual(dx, -5)
-                        self.assertLessEqual(dx, 5)
-                        self.assertGreaterEqual(dy, -5)
-                        self.assertLessEqual(dy, 5)
-
-                        ux, uy = cr_eff.location_x, cr_eff.location_y
-                        self.assertNotIn(
-                            (ux, uy),
-                            permanent_tree_tiles,
-                            f"{tr.name} spawnuje jednostke na drzewie ({ux}, {uy})!",
+                    if tr.name.startswith("Garrison_Spawn_"):
+                        camp_key = tr.name.replace("Garrison_Spawn_", "")
+                        own_camp = next(
+                            (c for c in camps_by_player[current_creates[0].source_player] if c[0] == camp_key),
+                            None,
                         )
+                        self.assertIsNotNone(own_camp, f"Brak obozu {camp_key} u gracza P{current_creates[0].source_player}!")
+                        _, cx, cy = own_camp
+                        self.assertEqual(eff.area_x1, max(0, cx - 13))
+                        self.assertEqual(eff.area_y1, max(0, cy - 13))
+                        self.assertEqual(eff.area_x2, min(199, cx + 13))
+                        self.assertEqual(eff.area_y2, min(199, cy + 13))
 
-                        for camp_name, cx, cy in camps_by_player[cr_eff.source_player]:
-                            dist = max(abs(ux - cx), abs(uy - cy))
-                            if tr.name == f"Garrison_Spawn_{camp_name}":
-                                self.assertLess(
-                                    dist,
-                                    ring_inner,
-                                    f"{tr.name} spawnuje garnizon w obrebie smyczy ({ux}, {uy}), d={dist}!",
-                                )
-                            else:
+                        seen_coords = set()
+                        for cr_eff in current_creates:
+                            ux, uy = cr_eff.location_x, cr_eff.location_y
+                            self.assertNotIn((ux, uy), seen_coords, f"{tr.name} duplikuje wspolrzedne ({ux}, {uy})!")
+                            seen_coords.add((ux, uy))
+                            for c_name, ocx, ocy in camps_by_player[cr_eff.source_player]:
+                                dist = max(abs(ux - ocx), abs(uy - ocy))
+                                if c_name == camp_key:
+                                    self.assertLess(
+                                        dist,
+                                        ring_inner,
+                                        f"{tr.name} spawnuje garnizon w obrebie smyczy ({ux}, {uy}), d={dist}!",
+                                    )
+                                else:
+                                    self.assertGreater(
+                                        dist,
+                                        ring_outer,
+                                        f"{tr.name} spawnuje jednostke w smyczy innego obozu {c_name} ({ux}, {uy}), d={dist}!",
+                                    )
+                    else:
+                        # Srodek spawnu wyznaczony z pierwszej jednostki (idx=0 -> dx=-5, dy=-5) i zgodny z obszarem rozkazu +-8
+                        spawn_x = current_creates[0].location_x + 5
+                        spawn_y = current_creates[0].location_y + 5
+                        self.assertEqual(eff.area_x1, max(0, spawn_x - 8))
+                        self.assertEqual(eff.area_y1, max(0, spawn_y - 8))
+                        self.assertEqual(eff.area_x2, min(199, spawn_x + 8))
+                        self.assertEqual(eff.area_y2, min(199, spawn_y + 8))
+
+                        for idx, cr_eff in enumerate(current_creates):
+                            dx = cr_eff.location_x - spawn_x
+                            dy = cr_eff.location_y - spawn_y
+                            self.assertEqual(dx, (idx % 11) - 5, f"{tr.name} zla kolumna dx dla idx={idx}")
+                            self.assertEqual(dy, (idx // 11) - 5, f"{tr.name} zly wiersz dy dla idx={idx}")
+                            self.assertGreaterEqual(dx, -5)
+                            self.assertLessEqual(dx, 5)
+                            self.assertGreaterEqual(dy, -5)
+                            self.assertLessEqual(dy, 5)
+
+                            ux, uy = cr_eff.location_x, cr_eff.location_y
+                            for camp_name, cx, cy in camps_by_player[cr_eff.source_player]:
+                                dist = max(abs(ux - cx), abs(uy - cy))
                                 self.assertGreater(
                                     dist,
                                     ring_outer,
@@ -775,7 +1001,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                         return eff.armour_attack_quantity if eff.armour_attack_quantity is not None else (eff.quantity % 65536)
                     return eff.quantity
 
-                # Zelazny Slon: atak 3, pancerz 10/12, predkosc 0.52
+                # Zelazny Slon: atak 3, pancerz 10/12, predkosc 0.72
                 self.assertEqual(get_set_val(ELITE_BATTLE_ELEPHANT_ID, ATTR_ATTACK, 4), BALANCE["tank_unit_atk"])
                 self.assertEqual(get_set_val(ELITE_BATTLE_ELEPHANT_ID, ATTR_ARMOR, 4), BALANCE["tank_melee_armor"])
                 self.assertEqual(get_set_val(ELITE_BATTLE_ELEPHANT_ID, ATTR_ARMOR, 3), BALANCE["tank_pierce_armor"])
@@ -796,8 +1022,9 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                     self.assertEqual(get_set_val(kam_id, ATTR_ARMOR, 3), 0)
                     self.assertAlmostEqual(get_set_val(kam_id, ATTR_MOVEMENT_SPEED), BALANCE["kamikaze_speed"], places=2)
 
-                # Mozdzierz Oblezniczy: zasieg 21
+                # Mozdzierz Oblezniczy: zasieg 21, predkosc 0.58
                 self.assertEqual(get_set_val(SIEGE_ONAGER_ID, ATTR_MAXIMUM_RANGE), BALANCE["mortar_range"])
+                self.assertAlmostEqual(get_set_val(SIEGE_ONAGER_ID, ATTR_MOVEMENT_SPEED), BALANCE["mortar_speed"], places=2)
 
                 # Snajper Imperialny: zasieg 19 oraz Arcymag Tarczy: predkosc 0.78
                 self.assertEqual(get_set_val(UnitInfo.ELITE_JANISSARY.ID, ATTR_MAXIMUM_RANGE), BALANCE["sniper_range"])
