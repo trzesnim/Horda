@@ -1,4 +1,4 @@
-# DEBUG_LOG.md — Dokumentacja Architektury, Stanu Bazowego i Błędów (`Kroniki Rubieży: Horda i Ekspedycje` v6.3 -> v6.6)
+# DEBUG_LOG.md — Dokumentacja Architektury, Stanu Bazowego i Błędów (`Kroniki Rubieży: Horda i Ekspedycje` v6.3 -> v6.7)
 
 ## 0. Identyfikacja stanu bazowego i zasady dla Agenta IDE (Antigravity / VS Code)
 - **Repozytorium bazowe:** `https://github.com/trzesnim/AoE_Scenarios/tree/main` (stan odpowiadający wersji `v6.3 -> v6.4` po audycie kodu i testów).
@@ -53,7 +53,7 @@ Wszyscy 4 gracze są w sojuszu (`DiplomacyState.ALLY`), mają od `0:01` zbadaną
 - **`PlayerId.FOUR` (Żółty):** Town Center na `(76, 168)`. Odpowiada za umocnienia Bramy Wschodniej `(104, 162)` i Bramy Handlowej `(104, 193)`.
 
 ### Gracze AI (`ai_players = [PlayerId.FIVE, PlayerId.SIX, PlayerId.SEVEN, PlayerId.EIGHT]`)
-Wszyscy 4 gracze AI są w sojuszu między sobą i w stanie wojny (`DiplomacyState.ENEMY`) z `P1–P4`. Startują z `0` wszystkich surowców, bez wieśniaków i bez mobilnych jednostek na mapie w `0:00`. Wszyscy 4 gracze AI otrzymują zunifikowany zestaw technologii Kuźni, Koszar, Stajni i Uniwersytetu (`01d` w `8:30`: `Forging`, `Scale Mail`, `Scale Barding`, `Fletching`, `Bloodlines` z korektą `-20 HP` dla Szakala; `01e` w `18:00`: `Iron Casting`, `Chain Mail`, `Squires`, `Chain Barding`, `Bodkin Arrow`, `Ballistics`, `Husbandry`; `01f` w `34:30`: `Blast Furnace`, `Plate Mail`, `Plate Barding`, `Bracer`, `Chemistry`, `Siege Engineers`), po których `enforce_specialized_unit_caps` zamraża statystyki jednostek specjalnych:
+Wszyscy 4 gracze AI są w sojuszu między sobą i w stanie wojny (`DiplomacyState.ENEMY`) z `P1–P4`. Startują z `0` wszystkich surowców, bez wieśniaków i bez mobilnych jednostek na mapie w `0:00`. Wszyscy 4 gracze AI otrzymują zunifikowany zestaw technologii Kuźni, Koszar, Stajni, Uniwersytetu i Klasztoru (`01d` w `8:30`: `Forging`, `Scale Mail`, `Scale Barding`, `Fletching`, `Bloodlines` z korektą `-20 HP` dla Szakala i Słonia; `01e` w `18:00`: `Iron Casting`, `Chain Mail`, `Squires`, `Chain Barding`, `Bodkin Arrow`, `Ballistics`, `Husbandry`, `Faith`; `01f` w `34:30`: `Blast Furnace`, `Plate Mail`, `Plate Barding`, `Bracer`, `Chemistry`, `Siege Engineers`), po których `enforce_specialized_unit_caps` zamraża statystyki jednostek specjalnych:
 - **`PlayerId.FIVE` (Turkusowy — Szturmowcy i Kamikaze):**
   - Jednostki specjalne: Berserker Szturmowy (`ELITE_BERSERK_ID = 694`), Fanatyk Kamikaze (`PETARD_ID = 440`), Płonący Wielbłąd (`FLAMING_CAMEL_ID = 1263`).
   - Budynki: Settlement `G1_North` `(76, 72)`, Settlement `G1_East` `(132, 152)`, Quest 1 Karawanseraj `(154, 190)`.
@@ -423,4 +423,24 @@ Dzięki temu przejście `0 -> -1` odejmuje dokładnie `hp_delta_down` (ok. 15% b
     * Utworzono listę `PLAYER_MOUNTED_RANGED_UNITS` (15 jednostek konnych strzelców) otrzymującą w `t_q2` mnożnik `1.12` do `ATTR_MOVEMENT_SPEED`.
   - **3. Wymuszenie świeżej kompilacji i twarde asercje antykolizyjne w `test_horde_scenario.py`:**
     * `get_compiled_scenario()` zawsze wykonuje świeżą kompilację `build_horde_scenario()`.
-    * Dodano pełną rekonstrukcję obrysów wszystkich budynków startowych oraz kafelków wody (`TERRAIN_WATER = 1`) i potwierdzono w teście binarnym: **0 kafelków budynków na wodzie, 0 kolizji budynków między sobą, 0 efektów `CREATE_OBJECT` na wodzie oraz 0 jednostek lądowych spawnowanych na budynkach lub drzewach (26/26 testów OK)**.`
+    * Dodano pełną rekonstrukcję obrysów wszystkich budynków startowych oraz kafelków wody (`TERRAIN_WATER = 1`) i potwierdzono w teście binarnym: **0 kafelków budynków na wodzie, 0 kolizji budynków między sobą, 0 efektów `CREATE_OBJECT` na wodzie oraz 0 jednostek lądowych spawnowanych na budynkach lub drzewach (26/26 testów OK)**.
+
+### Wdrożenie 11: Etap R10 — Punktowa aktualizacja v6.7 (Zamknięcie exploitów Red Teaming + Signature Waves) [STATUS: OK]
+* **Zmodyfikowane pliki:** `horde_config.py`, `horde_waves.py`, `test_horde_scenario.py`, `horda.md`, `ROADMAP.md`, `SCENARIO_DOSSIER.md`, `DEBUG_LOG.md`.
+* **Opis zmian i przyczyny:**
+  * **1. Ochrona obozów przed snajpieniem trebuszami i szybsza smycz (`horde_waves.py`):**
+    * W `add_guarded_camp_with_leash` dodano parametr `detect_radius: int = 20` (zamiast sztywnego `15`); dla `"Quest1_Caravan"` `(154, 190)` przekazano `detect_radius=14`, aby wozy handlowe jadące drogą na `y=194` nie budziły garnizonu Q1, a pozostałe 9 obozów (`Q2–Q4`, `G1–G3`) używają domyślnego `detect_radius=20`.
+    * Zmniejszono timer smyczy `t_leash` z `timer=3` na `timer=2`.
+  * **2. Ochrona polan spawnu przed zamurowaniem (`horde_waves.py`):**
+    * W `add_spawn_and_attack_effect` bezpośrednio przed pętlą `create_object` dodano dla `PlayerId.ONE..FOUR` efekt `kill_object(..., object_type=ObjectType.BUILDING)` (`ObjectType.BUILDING == 2`) w prostokącie `spawn_x ± 6, spawn_y ± 6` dla zewnętrznych spawnów (`spawn_x > 105 or spawn_y < 96`).
+    * Dla spawnów południowo-wschodnich (`spawn_x > 105 and spawn_y >= 172`, tj. `G1_East` `(117, 178)` i `Trade_Line_Attack` `(162, 180)`) zastosowano ograniczenie `ky2 = min(ky2, 182)`, aby czyszczenie strefy spawnu nigdy nie uszkodziło budynków nagrody Q1 (`Keep` na `y=184`, `Fortified Wall` na `y=186`).
+  * **3. `TECH_FAITH` i ograniczenie spamu flar Arcymaga (`horde_waves.py`):**
+    * W `01e_AI_Techs_Castle_18m` (`1080s`) dodano `TECH_FAITH` dla wszystkich `ai_players` (`P5–P8`).
+    * W `02c_Mage_Visual_Flare_Beacon_8s` zmieniono timer z `8` na `20`.
+    * Zaktualizowano ciąg wersji w czacie `t_init` (`v6.6` -> `v6.7`).
+  * **4. Signature Waves i `PLAYER_MOUNTED_RANGED_UNITS` (`horde_config.py`):**
+    * W `get_wave_definitions()` nadano profil falom: Fala 7 (`Fala 7/14 (40:00 - Wczesny Imperial: PANCERNA SZARZA!)`: `g2_mages` `CAVALIER` `14->18`, `g3_north` `CAVALIER` `12->16` + `2x SIEGE_RAM`), Fala 10 (`Fala 10/14 (56m - NOC SZAKALI + ATAK NA TRADE LINE!)`: `raider_count=22`), Fala 11 (`Fala 11/14 (62m - NAWALNICA ARTYLERII I SNAJPEROW!)`: `g2_snipers` `ELITE_JANISSARY` `5->8` i `SIEGE_ONAGER_ID` `2->4`, `g3_east` `SIEGE_ONAGER_ID` `2->4`), Fala 13 (`Fala 13/14 (73m - STRAZ PRZEDNIA TYTANOW!)`: `g2_mages` `3x IMAM_UNIT_ID`, `g3_north` i `g3_east` `ELITE_BATTLE_ELEPHANT_ID` `5->6`).
+    * Uzupełniono `PLAYER_MOUNTED_RANGED_UNITS` o `WAR_WAGON`, `ELITE_WAR_WAGON`, `GENITOUR`, `ELITE_GENITOUR` (łącznie 19 jednostek) oraz podbito nagłówek w `populate_ingame_scenario_descriptions` do `v6.7`.
+* **Weryfikacja binarna:**
+  * `python -m ruff check .` -> `All checks passed!`.
+  * `python test_horde_scenario.py -v` -> `Ran 27 tests in 38.434s` (`OK`, `27/27` testów w tym `test_v67_camp_detectors_leash_beacon_and_spawn_clearing` oraz weryfikacja `TECH_FAITH` w `01e_AI_Techs_Castle_18m`).

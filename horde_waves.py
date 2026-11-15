@@ -4,6 +4,7 @@ from AoE2ScenarioParser.datasets.players import PlayerId
 from AoE2ScenarioParser.datasets.trigger_lists import (
     ActionType,
     DiplomacyState,
+    ObjectType,
     Operation,
 )
 from AoE2ScenarioParser.datasets.units import UnitInfo
@@ -236,8 +237,8 @@ def add_garrison_spawn_effect(
 
 
 def add_guarded_camp_with_leash(tm, enable_parent_trigger, name: str, ai_player: PlayerId, cx: int, cy: int,
-                                units_spec: list[tuple[int, int]], occupied_tiles: set[tuple[int, int]]):
-    detect_radius = 15
+                                units_spec: list[tuple[int, int]], occupied_tiles: set[tuple[int, int]],
+                                detect_radius: int = 20):
     x1, y1 = max(0, cx - detect_radius), max(0, cy - detect_radius)
     x2, y2 = min(MAP_SIZE - 1, cx + detect_radius), min(MAP_SIZE - 1, cy + detect_radius)
 
@@ -245,7 +246,7 @@ def add_guarded_camp_with_leash(tm, enable_parent_trigger, name: str, ai_player:
     add_garrison_spawn_effect(t_spawn, ai_player, units_spec, cx=cx, cy=cy, occupied_tiles=occupied_tiles)
 
     t_leash = tm.add_trigger(f"Garrison_Leash_{name}", enabled=False, looping=True)
-    safe_call(t_leash.new_condition.timer, timer=3)
+    safe_call(t_leash.new_condition.timer, timer=2)
     ring_inner = 14
     ring_outer = 20
     leash_strips = [
@@ -293,6 +294,25 @@ def add_guarded_camp_with_leash(tm, enable_parent_trigger, name: str, ai_player:
 def add_spawn_and_attack_effect(trigger, ai_player: PlayerId, units_spec: list[tuple[int, int]],
                                 spawn_x: int, spawn_y: int, target_x: int, target_y: int,
                                 ignore_frontline_move_only: bool = False):
+    if spawn_x > 105 or spawn_y < 96:
+        kx1 = max(0, spawn_x - 6)
+        ky1 = max(0, spawn_y - 6)
+        kx2 = min(MAP_SIZE - 1, spawn_x + 6)
+        ky2 = min(MAP_SIZE - 1, spawn_y + 6)
+        # Spawny na południu po wschodniej stronie nie mogą naruszać baszt (y=183..184) i muru (y=186) z Q1
+        if spawn_x > 105 and spawn_y >= 172:
+            ky2 = min(ky2, 182)
+        for h_p in [PlayerId.ONE, PlayerId.TWO, PlayerId.THREE, PlayerId.FOUR]:
+            safe_call(
+                trigger.new_effect.kill_object,
+                source_player=h_p,
+                object_type=ObjectType.BUILDING,
+                area_x1=kx1,
+                area_y1=ky1,
+                area_x2=kx2,
+                area_y2=ky2,
+            )
+
     idx = 0
     for unit_id, count in units_spec:
         for _ in range(count):
@@ -503,6 +523,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             TECH_BODKIN_ARROW,
             TECH_BALLISTICS,
             TECH_HUSBANDRY,
+            TECH_FAITH,
         ],
     )
     enforce_specialized_unit_caps(t_ai_smith_castle, ai_players)
@@ -546,7 +567,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     send_highlight_chat(
         t_init, "<YELLOW>",
-        "=== KRONIKI RUBIEZY v6.6 === Inzynier Balansu P1 czeka na (6, 150)! W panelu Celow (Objectives) dziala ZEGAR FALI odliczajacy czas do kolejnego uderzenia!",
+        "=== KRONIKI RUBIEZY v6.7 === Inzynier Balansu P1 czeka na (6, 150)! W panelu Celow (Objectives) dziala ZEGAR FALI odliczajacy czas do kolejnego uderzenia!",
     )
 
     t_mutate = tm.add_trigger("01b_Apply_Specialized_Unit_Archetypes", enabled=True, looping=False)
@@ -625,6 +646,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             tm, t_arm_garrisons, "Quest1_Caravan", PlayerId.FIVE, *q1_pos,
             units_spec=[(UnitInfo.STEPPE_LANCER.ID, 12), (UnitInfo.CROSSBOWMAN.ID, 10), (ELITE_BERSERK_ID, 4)],
             occupied_tiles=occupied_tiles,
+            detect_radius=14,
         ),
         "Quest2_SniperCliff": add_guarded_camp_with_leash(
             tm, t_arm_garrisons, "Quest2_SniperCliff", PlayerId.SIX, *q2_pos,
@@ -725,7 +747,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             quantity=BALANCE["mage_aoe_heal_3s"],
         )
 
-    safe_call(t_mage_beacon.new_condition.timer, timer=8)
+    safe_call(t_mage_beacon.new_condition.timer, timer=20)
     safe_call(
         t_mage_beacon.new_condition.objects_in_area,
         source_player=PlayerId.SEVEN,

@@ -1,6 +1,6 @@
 """
 test_horde_scenario.py - Kompleksowy zestaw testow jednostkowych, integracyjnych
-oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Horda (v6.6).
+oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Horda (v6.7).
 """
 
 import unittest
@@ -10,7 +10,7 @@ from AoE2ScenarioParser.datasets.conditions import ConditionId
 from AoE2ScenarioParser.datasets.effects import EffectId
 from AoE2ScenarioParser.datasets.object_support import Civilization
 from AoE2ScenarioParser.datasets.players import PlayerId
-from AoE2ScenarioParser.datasets.trigger_lists import ActionType, Operation
+from AoE2ScenarioParser.datasets.trigger_lists import ActionType, ObjectType, Operation
 from AoE2ScenarioParser.datasets.units import UnitInfo
 from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 
@@ -51,6 +51,7 @@ from horde_config import (
     TECH_CHAIN_BARDING,
     TECH_CHAIN_MAIL,
     TECH_CHEMISTRY,
+    TECH_FAITH,
     TECH_FLETCHING,
     TECH_FORGING,
     TECH_HUSBANDRY,
@@ -947,7 +948,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             },
             "01e_AI_Techs_Castle_18m": {
                 TECH_IRON_CASTING, TECH_CHAIN_MAIL, TECH_SQUIRES, TECH_CHAIN_BARDING,
-                TECH_BODKIN_ARROW, TECH_BALLISTICS, TECH_HUSBANDRY,
+                TECH_BODKIN_ARROW, TECH_BALLISTICS, TECH_HUSBANDRY, TECH_FAITH,
             },
             "01f_AI_Techs_Imperial_34m30s": {
                 TECH_BLAST_FURNACE, TECH_PLATE_MAIL, TECH_PLATE_BARDING,
@@ -1180,6 +1181,98 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             act_ids = [e.trigger_id for e in t_tick.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER]
             self.assertEqual(deact_ids, [ui_triggers[idx - 1].trigger_id])
             self.assertEqual(act_ids, [ui_triggers[idx].trigger_id])
+
+    def test_v67_camp_detectors_leash_beacon_and_spawn_clearing(self):
+        """Weryfikuje zmiany Red Teaming v6.7: detect_radius (14 dla Q1, 20 dla 9 obozow), smycz 2s, flare 20s, czyszczenie polan spawnu, Signature Waves i Q2."""
+        camps = [
+            ("Quest1_Caravan", 154, 190, 14),
+            ("Quest2_SniperCliff", 28, 32, 20),
+            ("Quest3_SiegeVault", 142, 118, 20),
+            ("Quest4_BloodAltar", 105, 20, 20),
+            ("Settle_G1_North", 76, 72, 20),
+            ("Settle_G1_East", 132, 152, 20),
+            ("Settle_G2_Snipers", 68, 34, 20),
+            ("Settle_G2_Mages", 148, 72, 20),
+            ("Settle_G3_North", 142, 24, 20),
+            ("Settle_G3_East", 176, 56, 20),
+        ]
+        for camp_tag, cx, cy, exp_r in camps:
+            t_leash = self.t_map[f"Garrison_Leash_{camp_tag}"]
+            self.assertEqual(len(t_leash.conditions), 1)
+            self.assertEqual(t_leash.conditions[0].condition_type, ConditionId.TIMER)
+            self.assertEqual(t_leash.conditions[0].timer, 2)
+
+            exp_box = (max(0, cx - exp_r), max(0, cy - exp_r), min(MAP_SIZE - 1, cx + exp_r), min(MAP_SIZE - 1, cy + exp_r))
+            for p in range(1, 5):
+                t_det = self.t_map[f"Garrison_Detect_{camp_tag}_P{p}"]
+                self.assertEqual(len(t_det.conditions), 1)
+                cond = t_det.conditions[0]
+                self.assertEqual(cond.condition_type, ConditionId.OBJECTS_IN_AREA)
+                self.assertEqual((cond.area_x1, cond.area_y1, cond.area_x2, cond.area_y2), exp_box)
+
+        t_beacon = self.t_map["02c_Mage_Visual_Flare_Beacon_8s"]
+        timer_conds = [c for c in t_beacon.conditions if c.condition_type == ConditionId.TIMER]
+        self.assertEqual(len(timer_conds), 1)
+        self.assertEqual(timer_conds[0].timer, 20)
+
+        # Weryfikacja czyszczenia polan spawnu przed budynkami graczy P1-P4 oraz ochrony murow/baszt Q1 (y=183..186)
+        human_ids = {PlayerId.ONE.value, PlayerId.TWO.value, PlayerId.THREE.value, PlayerId.FOUR.value}
+        expected_spawn_clearings = [
+            ("03_W07_G3_North_Diff_0", 106, 72, 182),
+            ("03_W08_G1_East_Diff_0", 117, 178, 182),
+            ("03_W08_G3_East_Diff_0", 162, 180, 182),
+            ("03_W09_Forest_Breach_North_Execute", 78, 94, 199),
+            ("03_W12_Forest_Breach_East_Execute", 115, 140, 199),
+        ]
+        for trig_name, sx, sy, max_y2 in expected_spawn_clearings:
+            tr = self.t_map[trig_name]
+            exp_rect = (max(0, sx - 6), max(0, sy - 6), min(MAP_SIZE - 1, sx + 6), min(MAP_SIZE - 1, sy + 6, max_y2))
+            kill_bldgs = [
+                e for e in tr.effects
+                if e.effect_type == EffectId.KILL_OBJECT
+                and e.object_type == ObjectType.BUILDING.value
+                and (e.area_x1, e.area_y1, e.area_x2, e.area_y2) == exp_rect
+            ]
+            self.assertEqual({e.source_player for e in kill_bldgs}, human_ids, f"{trig_name} brak kill_object dla P1-P4 na {exp_rect}!")
+            first_kill_idx = min(
+                i for i, e in enumerate(tr.effects)
+                if e.effect_type == EffectId.KILL_OBJECT and e.object_type == ObjectType.BUILDING.value
+            )
+            first_create_idx = min(i for i, e in enumerate(tr.effects) if e.effect_type == EffectId.CREATE_OBJECT)
+            self.assertLess(first_kill_idx, first_create_idx)
+
+        # Upewnij sie, ze zaden KILL_OBJECT ze spawnow nie nachodzi na mury/baszty Q1 na y=183..186
+        for tr in self.triggers:
+            if tr.name.startswith("03_W") or tr.name.startswith("03_Endless") or tr.name.startswith("05_Settlement_Destroyed_"):
+                for e in tr.effects:
+                    if e.effect_type == EffectId.KILL_OBJECT and e.source_player in human_ids and e.area_x2 >= 105:
+                        self.assertLessEqual(
+                            e.area_y2, 182,
+                            f"{tr.name} ma KILL_OBJECT na P{e.source_player} siegajacy y2={e.area_y2} > 182 (kolizja z Q1 Keep/Wall)!",
+                        )
+
+        # Signature Waves 7, 10, 11, 13 oraz uzupelnione PLAYER_MOUNTED_RANGED_UNITS
+        for u_id in (UnitInfo.WAR_WAGON.ID, UnitInfo.ELITE_WAR_WAGON.ID, UnitInfo.GENITOUR.ID, UnitInfo.ELITE_GENITOUR.ID):
+            self.assertIn(u_id, PLAYER_MOUNTED_RANGED_UNITS)
+
+        wave_map = {w.wave_num: w for w in get_wave_definitions()}
+        self.assertEqual(wave_map[7].wave_title, "Fala 7/14 (40:00 - Wczesny Imperial: PANCERNA SZARZA!)")
+        self.assertEqual(dict(wave_map[7].g2_mages)[UnitInfo.CAVALIER.ID], 18)
+        self.assertEqual(dict(wave_map[7].g3_north)[UnitInfo.CAVALIER.ID], 16)
+        self.assertEqual(dict(wave_map[7].g3_north)[UnitInfo.SIEGE_RAM.ID], 2)
+
+        self.assertEqual(wave_map[10].wave_title, "Fala 10/14 (56m - NOC SZAKALI + ATAK NA TRADE LINE!)")
+        self.assertEqual(wave_map[10].raider_count, 22)
+
+        self.assertEqual(wave_map[11].wave_title, "Fala 11/14 (62m - NAWALNICA ARTYLERII I SNAJPEROW!)")
+        self.assertEqual(dict(wave_map[11].g2_snipers)[UnitInfo.ELITE_JANISSARY.ID], 8)
+        self.assertEqual(dict(wave_map[11].g2_snipers)[SIEGE_ONAGER_ID], 4)
+        self.assertEqual(dict(wave_map[11].g3_east)[SIEGE_ONAGER_ID], 4)
+
+        self.assertEqual(wave_map[13].wave_title, "Fala 13/14 (73m - STRAZ PRZEDNIA TYTANOW!)")
+        self.assertEqual(dict(wave_map[13].g2_mages)[IMAM_UNIT_ID], 3)
+        self.assertEqual(dict(wave_map[13].g3_north)[ELITE_BATTLE_ELEPHANT_ID], 6)
+        self.assertEqual(dict(wave_map[13].g3_east)[ELITE_BATTLE_ELEPHANT_ID], 6)
 
 
 if __name__ == "__main__":

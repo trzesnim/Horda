@@ -1,4 +1,4 @@
-# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v6.6)
+# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v6.7)
 
 ## 0. Protokół Wykonawczy dla Agenta IDE (Antigravity / VS Code)
 1. **Atomowość etapów:** Realizuj podetapy ściśle po kolei (`Etap 0` -> `1A` -> `1B` -> `2` -> `3A` -> `3B` -> `3C` -> `4` -> `5` -> `6A` -> `6B` -> `6C` -> `7` -> `8`). **Zabrania się łączenia kilku podetapów (szczególnie 3A, 3B i 3C) w jedną edycję.**
@@ -403,7 +403,7 @@ Zaktualizuj `horda.md` oraz teksty w `populate_ingame_scenario_descriptions()` (
 
 ---
 
-## Plan Naprawczy Po Audycie i Playteście v6.3 -> v6.6 (Etapy R1–R9)
+## Plan Naprawczy Po Audycie i Playteście v6.3 -> v6.7 (Etapy R1–R10)
 
 - **Etap R1 `[FLASH-SAFE]` `[DONE / WDROŻONE]`:** Czyszczenie konfiguracji, usunięcie duplikatów `PLAYER_*` i `populate_ingame_scenario_descriptions`, usunięcie błędnego `object_list_unit_id` z `objects_in_area`, uszczelnienie `safe_call` i usunięcie `try...except` z `safe_modify_attribute`.
 - **Etap R2 `[FLASH-SAFE]` `[DONE / WDROŻONE]`:** Unifikacja mutacji 6 archetypów w `01b` dla wszystkich `ai_players` (`P5–P8`), `TECH_BLOODLINES` dla wszystkich `ai_players` w `01d` (z korektą `-20 HP` dla Szakala) oraz `enforce_specialized_unit_caps` w `01d`, `01e`, `01f`.
@@ -435,9 +435,19 @@ Zaktualizuj `horda.md` oraz teksty w `populate_ingame_scenario_descriptions()` (
      - Uzupełnienie `set_as_objective` o `description` i `display_as_objective`, dynamiczny nagłówek trudności (`order = 109`) na `State_Diff_Lvl_{M2, M1, 0, P1, P2}` (zamiast statycznego `00_Obj_Balance_Info`) oraz doprecyzowane etykiety `G2_Snipers` i `G3_East`.
      - Rozszerzenie list `PLAYER_*` (m.in. `Janissary`, `Arambai`, `Chakram Thrower`, `Ratha`, `Savar`, `War Elephant`, `Shrivamsha Rider`, `Camel Scout`, `Serjeant`, `Flemish Militia`, `Donjon`) i dodanie `+12%` prędkości dla konnych strzelców (`PLAYER_MOUNTED_RANGED_UNITS`) w `Q2`.
      - Wymuszenie świeżej kompilacji w `get_compiled_scenario()` oraz twardych asercji antykolizyjnych (0 budynków i 0 jednostek lądowych na `TERRAIN_WATER`, 0 kolizji spawnu z budynkami i drzewami) w `test_horde_scenario.py`.
+- **Etap R10 `[RED TEAMING v6.7]` `[DONE / WDROŻONE]`:**
+  1. **Ochrona obozów przed snajpieniem trebuszami (`horde_waves.py`):** `detect_radius: int = 20` w `add_guarded_camp_with_leash` (`14` dla `Quest1_Caravan`, `20` dla pozostałych 9 obozów) oraz skrócenie timera smyczy `Garrison_Leash_*` z `3s` na `2s`.
+  2. **Ochrona polan spawnu przed zamurowaniem (`horde_waves.py`):** pre-spawn `kill_object` (`ObjectType.BUILDING`) dla `P1–P4` na `spawn_x ± 6, spawn_y ± 6` dla zewnętrznych spawnów (`spawn_x > 105 or spawn_y < 96`), z ograniczeniem `y2 <= 182` dla południowo-wschodnich spawnów (`G1_East`, `Trade_Line_Attack`) chroniącym baszty i Mur Handlowy Q1 (`y=183..186`).
+  3. **Odporność na konwersję i cisza na czacie (`horde_waves.py`):** `TECH_FAITH` dla wszystkich `ai_players` (`P5–P8`) w `01e_AI_Techs_Castle_18m` (`1080s`) oraz zmiana interwału flary Arcymaga w `02c_Mage_Visual_Flare_Beacon_8s` z `8s` na `20s`.
+  4. **Signature Waves i uzupełnienie `Q2` (`horde_config.py`, `test_horde_scenario.py`):** Fala 7 (*Pancerna Szarża*: `18x Cav` w `G2_Mages`, `16x Cav + 2x Siege Ram` w `G3_North`), Fala 10 (*Noc Szakali*: `22` Szakali), Fala 11 (*Nawałnica Artylerii i Snajperów*: `8x Jan + 4x S.Onag` w `G2_Snipers`, `4x S.Onag` w `G3_East`), Fala 13 (*Straż Przednia Tytanów*: `3x Imam` w `G2_Mages`, po `6x Ele` w `G3_North` i `G3_East`); dopisanie `WAR_WAGON`, `ELITE_WAR_WAGON`, `GENITOUR`, `ELITE_GENITOUR` do `PLAYER_MOUNTED_RANGED_UNITS`; rozszerzenie walidatora `test_horde_scenario.py` do **27/27 testów OK**.
 
 ---
 
-## Opcjonalny Backlog R&D na przyszłość
+## Opcjonalny Backlog R&D na przyszłość (`v7.0+`)
 
 * **Zastąpienie 169-etapowej drabinki `00_Wave_Timer_UI_*` natywnym skryptem XS (`XsManager`) lub pojedynczym licznikiem zmiennych (`Variable`)**, jeśli przyszłe wersje `AoE2ScenarioParser` i silnika DE udostępnią stabilne API tekstowe bez ryzyka crasha `display_timer`.
+* **Pomysły rozwojowe `v7.0` z audytu Red Teaming (Sonnet — do oceny po playteście):**
+  1. *Dwuetapowy Q2:* 3 nieruchome baterie `Siege Onager` P6 chroniące nietykalny Uniwersytet na Klifie Artylerii + nagroda przyczółka po zniszczeniu baterii.
+  2. *Dwuetapowy Q4:* przejęcie Reliktu z Krwawego Ołtarza + natychmiastowy kontratak P7 + konieczność odniesienia Reliktu do Klasztoru gracza.
+  3. *3 mikro-zdarzenia eksploracyjne na mapie:* Kamień Wędrowca, Opuszczony Wóz Karawany oraz Zagubiony Zwiadowca.
+  4. *Mechanika „Ostatni Settlement = Finałowy Boss Fight”* (ostatni ocalały obóz zyskuje wzmocnienie bossa finałowego) oraz *aktywne wsparcie Kwatermistrza dla Gracza 2*.

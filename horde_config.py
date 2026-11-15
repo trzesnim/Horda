@@ -258,6 +258,10 @@ PLAYER_MOUNTED_RANGED_UNITS = [
     UnitInfo.ARAMBAI.ID,
     UnitInfo.ELITE_ARAMBAI.ID,
     UnitInfo.RATHA_RANGED.ID,
+    UnitInfo.WAR_WAGON.ID,
+    UnitInfo.ELITE_WAR_WAGON.ID,
+    UnitInfo.GENITOUR.ID,
+    UnitInfo.ELITE_GENITOUR.ID,
 ]
 
 PLAYER_CAVALRY_UNITS = [
@@ -368,7 +372,7 @@ def populate_ingame_scenario_descriptions(scenario):
         return
 
     instructions_text = (
-        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v6.6 - 4P Co-op)\n\n"
+        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v6.7 - 4P Co-op)\n\n"
         "USTAWIENIA LOBBY I STARTU:\n"
         "- Gracze P5-P8 sa automatycznie skonfigurowani jako AI z zablokowanymi cywilizacjami (P5 Wikingowie, P6 Turcy, P7 Saraceni, P8 Persowie). Ustaw trudnosc AI na EKSTREMALNY (Extreme)!\n"
         "- Gracze P1, P3 i P4 startuja z 2 wybudowanymi domkami na polnoc od TC, a Gracz P2 z 6 domkami (kompensacja 20 popu zajmowanego przez Feitorie).\n"
@@ -702,12 +706,12 @@ def get_wave_definitions() -> list[WaveDefinition]:
             8,
         ),
         (
-            7, 2400, "Fala 7/14 (40:00 - Wczesny Imperial Age)",
+            7, 2400, "Fala 7/14 (40:00 - Wczesny Imperial: PANCERNA SZARZA!)",
             [(UnitInfo.HALBERDIER.ID, 20), (ELITE_BERSERK_ID, 5), (PETARD_ID, 3), (UnitInfo.CAPPED_RAM.ID, 3)],
             [(UnitInfo.HUSKARL.ID, 16), (FLAMING_CAMEL_ID, 3), (UnitInfo.CAPPED_RAM.ID, 2)],
             [(UnitInfo.ARBALESTER.ID, 18), (UnitInfo.ELITE_JANISSARY.ID, 4), (SIEGE_ONAGER_ID, 1)],
-            [(IMAM_UNIT_ID, 1), (UnitInfo.CAVALIER.ID, 14)],
-            [(ELITE_BATTLE_ELEPHANT_ID, 2), (UnitInfo.CAVALIER.ID, 12), (UnitInfo.HALBERDIER.ID, 12)],
+            [(IMAM_UNIT_ID, 1), (UnitInfo.CAVALIER.ID, 18)],
+            [(ELITE_BATTLE_ELEPHANT_ID, 2), (UnitInfo.CAVALIER.ID, 16), (UnitInfo.HALBERDIER.ID, 12), (UnitInfo.SIEGE_RAM.ID, 2)],
             [(ELITE_BATTLE_ELEPHANT_ID, 1), (UnitInfo.ARBALESTER.ID, 16)],
             9,
         ),
@@ -742,15 +746,31 @@ def get_wave_definitions() -> list[WaveDefinition]:
             extra_tag += " + ATAK NA TRADE LINE"
         if w_late == 12:
             extra_tag += " + PRZEBICIE PRZEZ LAS"
+        wave_title = f"Fala {w_late}/14 ({minute_mark}m - Late Imperial{extra_tag}!)"
+
+        g1_north = [(UnitInfo.HALBERDIER.ID, 25 + m * 3), (ELITE_BERSERK_ID, 7 + m), (PETARD_ID, 3 + (m // 2)), (UnitInfo.SIEGE_RAM.ID, 4)]
+        g1_east = [(UnitInfo.HUSKARL.ID, 20 + m * 3), (FLAMING_CAMEL_ID, 3 + (m // 2)), (UnitInfo.SIEGE_RAM.ID, 4)]
+        g2_snipers = [(UnitInfo.ARBALESTER.ID, 22 + m * 3), (UnitInfo.ELITE_JANISSARY.ID, 4 + (m // 2)), (SIEGE_ONAGER_ID, 2 + (m // 3))]
+        g2_mages = [(IMAM_UNIT_ID, 2 + (m // 3)), (UnitInfo.PALADIN.ID, 16 + m * 3), (UnitInfo.SIEGE_RAM.ID, 4)]
+        g3_north = [(ELITE_BATTLE_ELEPHANT_ID, 3 + (m // 2)), (UnitInfo.PALADIN.ID, 16 + m * 3), (UnitInfo.HALBERDIER.ID, 16 + m * 2)]
+        g3_east = [(ELITE_BATTLE_ELEPHANT_ID, 3 + (m // 2)), (UnitInfo.ARBALESTER.ID, 20 + m * 3), (SIEGE_ONAGER_ID, 2 + (m // 3))]
+        raider_count = 12 + m
+
+        if w_late == 10:
+            wave_title = "Fala 10/14 (56m - NOC SZAKALI + ATAK NA TRADE LINE!)"
+            raider_count = 22
+        elif w_late == 11:
+            wave_title = "Fala 11/14 (62m - NAWALNICA ARTYLERII I SNAJPEROW!)"
+            g2_snipers = [(UnitInfo.ARBALESTER.ID, 28), (UnitInfo.ELITE_JANISSARY.ID, 8), (SIEGE_ONAGER_ID, 4)]
+            g3_east = [(ELITE_BATTLE_ELEPHANT_ID, 4), (UnitInfo.ARBALESTER.ID, 26), (SIEGE_ONAGER_ID, 4)]
+        elif w_late == 13:
+            wave_title = "Fala 13/14 (73m - STRAZ PRZEDNIA TYTANOW!)"
+            g2_mages = [(IMAM_UNIT_ID, 3), (UnitInfo.PALADIN.ID, 28), (UnitInfo.SIEGE_RAM.ID, 4)]
+            g3_north = [(ELITE_BATTLE_ELEPHANT_ID, 6), (UnitInfo.PALADIN.ID, 28), (UnitInfo.HALBERDIER.ID, 24)]
+            g3_east = [(ELITE_BATTLE_ELEPHANT_ID, 6), (UnitInfo.ARBALESTER.ID, 32), (SIEGE_ONAGER_ID, 3)]
+
         wave_definitions.append((
-            w_late, wave_sec,
-            f"Fala {w_late}/14 ({minute_mark}m - Late Imperial{extra_tag}!)",
-            [(UnitInfo.HALBERDIER.ID, 25 + m * 3), (ELITE_BERSERK_ID, 7 + m), (PETARD_ID, 3 + (m // 2)), (UnitInfo.SIEGE_RAM.ID, 4)],
-            [(UnitInfo.HUSKARL.ID, 20 + m * 3), (FLAMING_CAMEL_ID, 3 + (m // 2)), (UnitInfo.SIEGE_RAM.ID, 4)],
-            [(UnitInfo.ARBALESTER.ID, 22 + m * 3), (UnitInfo.ELITE_JANISSARY.ID, 4 + (m // 2)), (SIEGE_ONAGER_ID, 2 + (m // 3))],
-            [(IMAM_UNIT_ID, 2 + (m // 3)), (UnitInfo.PALADIN.ID, 16 + m * 3), (UnitInfo.SIEGE_RAM.ID, 4)],
-            [(ELITE_BATTLE_ELEPHANT_ID, 3 + (m // 2)), (UnitInfo.PALADIN.ID, 16 + m * 3), (UnitInfo.HALBERDIER.ID, 16 + m * 2)],
-            [(ELITE_BATTLE_ELEPHANT_ID, 3 + (m // 2)), (UnitInfo.ARBALESTER.ID, 20 + m * 3), (SIEGE_ONAGER_ID, 2 + (m // 3))],
-            12 + m,
+            w_late, wave_sec, wave_title,
+            g1_north, g1_east, g2_snipers, g2_mages, g3_north, g3_east, raider_count,
         ))
     return [WaveDefinition(*w) for w in wave_definitions]
