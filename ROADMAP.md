@@ -443,7 +443,7 @@ Zaktualizuj `horda.md` oraz teksty w `populate_ingame_scenario_descriptions()` (
 - **Etap R11 `[ROZWÓJ v7.0]` `[DONE / WDROŻONE]`:**
   1. **Zamknięcie uwag `v6.7`:** opcjonalny `output_path` w `build_horde_scenario(output_path=None) -> Path` (`generate_horde_quests_scenario.py`) oraz `detect_y2_max=191` dla `Quest1_Caravan` (`horde_waves.py`).
   2. **Finałowy Boss Fight „Ostatni Szturm Wielkiego Chana” (`07a -> 07b`):** `FINAL_BOSS_HERO_ID = UnitInfo.SUBOTAI.ID` (`698`, `3500 HP`, `45` atk `cl=3`, pancerz `8/10`, speed `1.35`) w `ENEMY_UNIT_REGISTRY` (`29` jednostek) i `01b`; po upadku 6 Settlementów `07a` gasi eskalację i Endless, odsłania `(104, 114)`/`(116, 114)`, spawnuje Bossa z eskortą przed Bramą Centralną i aktywuje `07b_Victory_Final_Boss_Defeated`.
-  3. **Dwuetapowe `Q2` i `Q4`:** `Q2` otrzymuje `2x Bombard Tower` osłaniające Uniwersytet (`06_Quest2_Shield_Loop` + `06_Quest2_Batteries_Down`), `1x` Onager w garnizonie oraz `2x Bombard Cannon` (`P3`) + `MAP_REVEALER` na `G2_Snipers`; `Q4` przechodzi w `Stage1` (`RELIC` na `(105, 20)` + 30s kontratak `P7`) -> `Stage2` (dotychczasowe bonusy + `MONASTERY` i `2x MONK` `P1` na `(58, 152)`).
+  3. **Dwuetapowe `Q2` i `Q4`:** `Q2` otrzymuje `2x Bombard Tower` osłaniające Uniwersytet (`06_Quest2_Shield_Loop` + `06_Quest2_Batteries_Down`), `1x` Onager w garnizonie oraz `2x Bombard Cannon` (`P3`) + `MAP_REVEALER` na `G2_Snipers`; `Q4` przechodzi w `Stage1` (`RELIC` na `(105, 20)` + 30s kontratak `P7`) -> `Stage2` (dotychczasowe bonusy + `MONASTERY` `P1` na `(58, 152)` oraz `2x MONK` `P1` na `(58, 155)`).
   4. **Posterunek Kwatermistrza `P2` `(20, 162)` i dwa Map PoI:** `UnitInfo.KING` `P2` na `(17, 162)` + flagi Mil/Eco z wspólnym cooldownem `240s` (`4x Elite Conquistador + 2x Bombard Cannon` na `(54, 149)` lub `+300 F/W/G` + naprawa Twierdzy `+500 HP`); PoI 1 `(22, 74)` (`2x Capped Ram + 2x Petard + 200W/G`) oraz PoI 2 `(138, 174)` (`+350F/G + reveal Q1`); pełna walidacja **28/28 testów OK**.
 
 ---
@@ -456,3 +456,39 @@ Zaktualizuj `horda.md` oraz teksty w `populate_ingame_scenario_descriptions()` (
   2. `[WDROŻONE w Etapie R11 / v7.0]` *Dwuetapowy Q4* (`RELIC` w ruinach Krwawego Ołtarza + 30s Krwawy Odwet Zakonu `P7` + budowa `MONASTERY` i `2x MONK` `P1` w Twierdzy).
   3. `[WDROŻONE w Etapie R11 / v7.0]` *Zdarzenia eksploracyjne na mapie* (`PoI 1: Obóz Inżynierów (22, 74)` oraz `PoI 2: Zaginiona Karawana (138, 174)`).
   4. `[WDROŻONE w Etapie R11 / v7.0]` *Finałowy Boss Fight po upadku 6 Settlementów (`Wielki Chan Subotai`) oraz aktywny Posterunek Kwatermistrza P2 `(20, 162)`*.
+
+---
+
+## Plan Wdrożeniowy v7.0.1 (Etap R12 — Poprawki po potrójnym audycie Opus / Sonnet / GPT Sol) [TODO]
+
+1. **`[KRYTYCZNY]` Separacja spawnu Finałowego Bossa (`07a`), 45-sekundowe ostrzeżenie na powrót armii i dwustopniowe potwierdzenie spawnu (`07b -> 07c`):**
+   - Rozbicie `07a` na `07a_All_Settlements_Destroyed_Boss_Warning` (ogłasza alarm, wyłącza eskalację/Endless, czyści `kill_object` budynki graczy w `116±6, 114±6` i uruchamia 45-sekundowy timer, dając armii graczy czas na powrót zza rzeki oraz pozwalając wygasnąć ostatniemu kontratakowi Settlementu) -> `07b_Spawn_Final_Boss_Wave` (`timer=45`: spawnuje Chana `P8` i jego gwardię na `(116, 114)` oraz 2 Arcymagów `P7` na osobnych współrzędnych `(118, 122)` bez kolizji `idx=0`).
+   - Dodanie triggera pośredniego `07c_Confirm_Boss_Spawned` (`objects_in_area` dla `FINAL_BOSS_HERO_ID >= 1` bez inwersji), który dopiero po potwierdzeniu fizycznej obecności żywego Subotaia na mapie aktywuje trigger zwycięstwa `07d_Victory_Final_Boss_Defeated` (`inverted=True`). Eliminuje to ryzyko fałszywego zwycięstwa.
+   - Zmniejszenie prędkości `FINAL_BOSS_HERO_ID` z `1.35` na **`0.85`**, aby Wielki Chan maszerował w szyku ze swoimi Żelaznymi Słoniami (`0.72`), zamiast wybiegać 40 sekund przed eskortę.
+
+2. **`[KRYTYCZNY]` Naprawa pętli odnowienia `240s` Kwatermistrza P2 (`looping=True`) oraz filtr `UnitInfo.KING.ID`:**
+   - Zmiana `06d_P2_QM_Cooldown_240s` z `looping=False` na **`looping=True`** (w silniku Genie jednorazowy trigger `looping=False` po pierwszym osiągnięciu `240s` nie zeruje wewnętrznego licznika przy ponownym `activate_trigger`, co dawałoby `0s` cooldownu przy drugim i kolejnych użyciach; trigger `looping=True` z efektem autodezaktywacji poprawnie resetuje zegar przy każdym cyklu).
+   - Dodanie filtra `object_list=UnitInfo.KING.ID` w warunkach `objects_in_area` oraz `object_list_unit_id=UnitInfo.KING.ID` w efektach `teleport_object` dla `06d_P2_QM_Military_Drop` i `06d_P2_QM_Eco_Drop` (tylko Król-Kwatermistrz P2 może aktywować rozkazy).
+   - Odróżnienie wizualne obu flag Kwatermistrza (np. różne ID flag/posągów na `(20, 158)` i `(20, 166)`).
+
+3. **`[WYSOKI]` Bramka czasowa `10:00` (`timer=600`) dla Kwatermistrza P2 i `PoI 1` (ochrona wczesnej gry przed jednostkami z Imperium w `0:10`):**
+   - Na starcie gry triggery `06d_P2_QM_Military_Drop`, `06d_P2_QM_Eco_Drop` oraz `06e_PoI1_Engineers_P1..P4` są nieaktywne (`enabled=False`).
+   - Nowy trigger `06d_Unlock_Quartermaster_And_PoI1_10m` (`timer=600`, po Fali 1) aktywuje Posterunek Kwatermistrza P2 oraz Obóz Inżynierów `PoI 1` i informuje graczy na czacie.
+
+4. **`[WYSOKI]` Naprawa geometrii `PoI 1` (wyprowadzenie z wnętrza lasu `(20, 74)`) i `PoI 2`:**
+   - Przesunięcie `PoI 1` z `(22, 74)` (gdzie polana `r=4` była zamknięta wewnątrz kępy `FOREST_PINE (20, 74)` o `r=7.0`) na otwarty teren przed lasem: **`(30, 76)`**.
+   - Przesunięcie `PoI 2` z `(138, 174)` na **`(128, 174)`** (poza pierścień smyczy `Q1` i z dala od detektora `G1_East`).
+
+5. **`[WYSOKI]` Rozsunięcie współrzędnych `create_object` dla wielojednostkowych nagród (brak nakładania jednostek na jednym kafelku):**
+   - Rozłożenie spawnowanych jednostek na sąsiednie kafelki `(x + dx, y + dy)` dla: zrzutu Kwatermistrza P2 wokół `(54, 149)` (6 jednostek na 6 różnych polach), nagrody `Q2` wokół `(28, 36)` (2 Kolubryny na `(27, 36)` i `(29, 36)`), nagrody `Q4` (2 Mnichy na `(57, 155)` i `(59, 155)`) oraz `PoI 1` wokół `(30, 76)` (4 jednostki na 4 różnych polach).
+
+6. **`[ŚREDNI]` Dopracowanie `Q2` i `Q4` oraz ochrona placu `(58, 152)`:**
+   - W `Q2`: włączenie pętli `06_Quest2_Shield_Loop` dopiero po obudzeniu garnizonu `Q2` oraz dopisanie w etykiecie Objectives informacji: `"Q2: Klif Artylerii (zniszcz 2 Baszty Bombardowe, by zdjac tarcze Uniwersytetu)"`.
+   - W `Q4`: zastąpienie w kontrataku `4x HUSSAR_ID` (będących osłabionymi Szakalami z atakiem 2) przez `4x UnitInfo.ELITE_STEPPE_LANCER.ID`, postawienie wizualnych flag granicznych na `(58, 152)` oraz dodanie `kill_object` (`ObjectType.BUILDING` dla `P1–P4` w `56..60, 150..154`) tuż przed postawieniem Wielkiego Klasztoru.
+
+7. **`[ŚREDNI]` Ograniczenie naprawy budynków Kwatermistrza P2 (brak overhealu Feitorii) i uwzględnienie Muru Handlowego `Q1`:**
+   - Użycie bezpiecznego leczenia dla murów/wież (oraz objęcie pasu Muru Handlowego `105..199, 183..187`) bez sztucznego pompowania HP Feitorii ponad jej limit.
+
+8. **`[ŚREDNI]` Rozszerzenie walidatora w `test_horde_scenario.py`:**
+   - Dodanie weryfikacji unikalności współrzędnych `CREATE_OBJECT` w obrębie każdego triggera, sprawdzenie pełnego footprintu `3×3` Klasztoru `Q4` na `(58, 152)` oraz ponowne wczytanie pliku wygenerowanego do `TemporaryDirectory` przez `AoE2DEScenario.from_file()`.
+

@@ -32,7 +32,10 @@
 - **Plac Targowy graczy (SW):** czysty płaski plac `x=2..24, y=176..198` (`elev=0`, bez drzew, `DIRT_1` na `x=3..23, y=177..198`) pod Markety `P1–P4`
 - **Korytarz handlowy:** pas `y=189..199` (`x=2..199`, `elev=0`, bez drzew) z drogą (`ROAD`, `width=1`) na `y=194` (`x=3..198`) oraz pasem `y=183..188` (`x=104..199`, `elev=0`, bez drzew) zarezerwowanym pod Mur Handlowy Q1
 - **Puszcza Zaplecza i zagajniki wewnętrzne:** `FOREST_OAK` na `(0..12, 106..143)` i `(0..12, 157..174)`; `FOREST_PINE` na `(26..98, 180..188)`; zagajniki w Twierdzy na `(54, 122)` (`r=5.5`, Oak) i `(54, 172)` (`r=4.5`, Pine); wolny plac `(58, 152)` (`r=4`, bez drzew) pod Klasztor nagrody `Q4`
-- **Posterunek Kwatermistrza Twierdzy `P2` (`(20, 162)`):** strefa bez drzew `r=6` na `DIRT_1` `(16..22, 157..167)`; Kwatermistrz `UnitInfo.KING.ID` (`P2`) na `(17, 162)` (9999 HP, regen 5000/min); dwa pady `FLAG_A (600) + TORCH (499)` `GAIA`: **Mil** `(20, 158)` i **Eco** `(20, 166)` sterowane triggerami `06d_P2_QM_*` ze wspólnym cooldownem `240s` (`State_P2_QM_Ready`, `06d_P2_QM_Cooldown_240s`)
+- **Posterunek Kwatermistrza Twierdzy `P2` (`(20, 162)`):** strefa bez drzew `r=6` na `DIRT_1` `(16..22, 157..167)`; Kwatermistrz `UnitInfo.KING.ID` (`P2`) na `(17, 162)` (9999 HP, regen 5000/min); dwa pady `FLAG_A (600) + TORCH (499)` `GAIA` (`Mil` `(20, 158)` i `Eco` `(20, 166)`) sterowane triggerami `06d_P2_QM_*`. Gracz `P2` aktywuje rozkaz, fizycznie wchodząc jednostką na wybraną flagę (jednostka jest natychmiast zatrzymywana i teleportowana z powrotem na `(17, 162)`):
+  - **Flaga Północna `(20, 158)` — Zrzut Gwardii Najemnej (`06d_P2_QM_Military_Drop`):** spawnuje dla `P2` na dziedzińcu przed Cytadelą `(54, 149)` oddział `4x Elite Conquistador + 2x Bombard Cannon`.
+  - **Flaga Południowa `(20, 166)` — Konwój Zaopatrzeniowy (`06d_P2_QM_Eco_Drop`):** przyznaje każdemu z `P1–P4` po `+300 Food, +300 Wood, +300 Gold` (łącznie `3600` surowców dla drużyny) oraz naprawia budynki w Twierdzy (`0..110, 95..199`) dla `P1–P4` o `+500 HP`.
+  - **Wspólny czas odnowienia (`240s` / 4 minuty):** wybór dowolnej flagi wyłącza obie flagi (`State_P2_QM_Ready` -> `06d_P2_QM_Cooldown_240s`), a po upływie `240s` ogłasza gotowość na czacie i ponownie je aktywuje.
 - **Zdarzenia Eksploracyjne na Mapie (`Map PoI`, `06e_PoI*`):**
   - **PoI 1 — Opuszczony Obóz Inżynierów (`(22, 74)`):** strefa bez drzew `r=4`, `OUTPOST` `GAIA` na `(22, 73)` + `2x TORCH` `(21/23, 74)`; pierwszy odkrywca z `P1–P4` w `22±4, 74±4` otrzymuje `2x Capped Ram + 2x Petard` na `(22, 74)` oraz `+200W/+200G` dla wszystkich `P1–P4` (wzajemna dezaktywacja 4 triggerów)
   - **PoI 2 — Zaginiona Karawana (`(138, 174)`):** strefa bez drzew `r=4`, `GOLD_MINE` `GAIA` na `(138, 174)` + `2x TORCH` `(137/139, 174)`; pierwszy odkrywca w `138±4, 174±4` przyznaje `+350F/+350G` dla `P1–P4` oraz stawia `MAP_REVEALER` dla `P1–P4` nad `Q1 (154, 190)`
@@ -71,7 +74,7 @@
 - **11 organicznych lasów na rubieżach (`paint_organic_forest`):**
   - `FOREST_PINE`: `(20, 74)` `r=7.0`, `(16, 12)` `r=7.5`, `(126, 94)` `r=6.5`, `(184, 136)` `r=7.5`, `(184, 22)` `r=7.0`
   - `FOREST_OAK`: `(48, 74)` `r=5.5`, `(68, 12)` `r=6.5`, `(108, 56)` `r=6.0`, `(172, 96)` `r=7.0`, `(184, 158)` `r=5.0`, `(126, 172)` `r=5.0`
-- **18 polan spawnu i odwetu (`no_trees`, `r=7`):** `(48,86), (52,86), (68,60), (78,87), (106,72), (116,114), (116,162), (117,140), (117,178), (156,152), (162,180), (68,48), (76,84), (120,152), (120,162), (128,36), (134,78), (160,62)`
+- **19 polan spawnu i odwetu (`no_trees`, `r=7`):** `(48,86), (52,86), (68,60), (78,87), (106,72), (116,114), (116,162), (117,140), (117,178), (156,152), (162,180), (68,48), (76,84), (120,152), (120,162), (128,36), (134,78), (160,62), (105,34)`
 
 ---
 
