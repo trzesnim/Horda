@@ -154,4 +154,4 @@ Zburzenie każdego Settlementu powoduje natychmiastowe zawalenie się pobocznych
   * **`G3 - Cytadela Północna` `(142, 24)`:** usuwa Taran-Żółwie / Żelazne Słonie z natarcia północnego. Kontratak (Brama Centralna): **`1x Żelazny Słoń + 12x Paladin + 14x Halberdier`**. Furia: **+15 HP i +2 Ataku**.
   * **`G3 - Cytadela Wschodnia` `(176, 56)`:** usuwa Taran-Żółwie / Żelazne Słonie z natarcia wschodniego oraz rajdy na Szlak Handlowy w Falach 8, 10, 12, 14 i Endless. Kontratak (Brama Wschodnia): **`1x Żelazny Słoń + 12x Paladin + 14x Halberdier`**. Furia: **+15 HP i +2 Ataku**.
 
-**Warunek Zwycięstwa:** Zniszczenie wszystkich 6 Settlementów kończy scenariusz natychmiastowym zwycięstwem graczy!
+**Warunek Zwycięstwa:** Zniszczenie wszystkich 6 Settlementów kończy scenariusz natychmiastowym zwycięstwem graczy! 
