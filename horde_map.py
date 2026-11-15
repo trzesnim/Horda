@@ -10,7 +10,9 @@ from AoE2ScenarioParser.datasets.units import UnitInfo
 from horde_config import (
     BALANCE,
     FEITORIA_ID,
+    FLAG_A_ID,
     FORTIFIED_PALISADE_ID,
+    GOLD_MINE_ID,
     KREPOST_ID,
     MAP_REVEALER_ID,
     MAP_SIZE,
@@ -46,7 +48,7 @@ class SafeMapGrid:
             for y in range(max(0, min(y1, y2)), min(self.size, max(y1, y2) + 1)):
                 self.no_tree_zones.add((x, y))
 
-    def place_building(self, um, player: PlayerId, building_id: int, cx: int, cy: int, size_tiles: int, no_tree_margin: int = 3):
+    def mark_footprint(self, cx: int, cy: int, size_tiles: int, no_tree_margin: int = 3) -> tuple[float, float]:
         half = size_tiles // 2
         if size_tiles % 2 == 0:
             x_range = range(cx - half, cx + half)
@@ -61,6 +63,10 @@ class SafeMapGrid:
             for y in y_range:
                 self.occupied_tiles.add((x, y))
         self.mark_no_trees(cx, cy, half + no_tree_margin)
+        return bx, by
+
+    def place_building(self, um, player: PlayerId, building_id: int, cx: int, cy: int, size_tiles: int, no_tree_margin: int = 3):
+        bx, by = self.mark_footprint(cx, cy, size_tiles, no_tree_margin=no_tree_margin)
         return um.add_unit(player=player, unit_const=building_id, x=bx, y=by)
 
     def place_unit(self, um, player: PlayerId, unit_id: int, x: int, y: int, no_tree_margin: int = 2):
@@ -530,11 +536,14 @@ def build_map_and_entities(scenario) -> dict:
     s_g3_east  = spawn_settlement_buildings(um, grid, PlayerId.EIGHT, *s_coords["G3_East"], grade=3)
 
     for sx, sy in [
-        (48, 86), (52, 86), (68, 60), (78, 87), (106, 72),
+        (48, 86), (52, 86), (68, 60), (78, 87), (105, 34), (106, 72),
         (116, 114), (116, 162), (117, 140), (117, 178), (156, 152), (162, 180),
         (68, 48), (76, 84), (120, 152), (120, 162), (128, 36), (134, 78), (160, 62),
     ]:
         grid.mark_no_trees(sx, sy, radius=7)
+
+    # Plac pod Klasztor nagrody Q4 na (58, 152)
+    grid.mark_no_trees(58, 152, radius=4)
 
     reveal_building_center_permanent(um, *q1_pos)
     grid.mark_no_trees(*q1_pos, radius=9)
@@ -549,6 +558,9 @@ def build_map_and_entities(scenario) -> dict:
     q2_bldg = grid.place_building(um, PlayerId.SIX, BuildingInfo.UNIVERSITY.ID, q2_pos[0], q2_pos[1], size_tiles=4, no_tree_margin=2)
     grid.place_building(um, PlayerId.SIX, BuildingInfo.KEEP.ID, q2_pos[0] - 5, q2_pos[1] + 5, size_tiles=2, no_tree_margin=1)
     grid.place_building(um, PlayerId.SIX, BuildingInfo.KEEP.ID, q2_pos[0] + 5, q2_pos[1] + 5, size_tiles=2, no_tree_margin=1)
+    q2_bt1 = grid.place_building(um, PlayerId.SIX, BuildingInfo.BOMBARD_TOWER.ID, 24, 34, size_tiles=2, no_tree_margin=1)
+    q2_bt2 = grid.place_building(um, PlayerId.SIX, BuildingInfo.BOMBARD_TOWER.ID, 32, 34, size_tiles=2, no_tree_margin=1)
+    q2_bombard_towers = [q2_bt1, q2_bt2]
 
     reveal_building_center_permanent(um, *q3_pos)
     grid.mark_no_trees(*q3_pos, radius=11)
@@ -593,6 +605,31 @@ def build_map_and_entities(scenario) -> dict:
     ]:
         paint_organic_forest(mm, fx, fy, radius=r, terrain_id=t_id, seed=seed)
 
+    # Posterunek Kwatermistrza Twierdzy P2 wokół (20, 162)
+    grid.mark_no_trees(20, 162, radius=6)
+    set_box_terrain(mm, 16, 157, 22, 167, TerrainId.DIRT_1)
+    p2_qm_king = um.add_unit(player=PlayerId.TWO, unit_const=UnitInfo.KING.ID, x=17.5, y=162.5)
+    grid.occupied_tiles.add((17, 162))
+    grid.place_unit(um, PlayerId.GAIA, FLAG_A_ID, 20, 158, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 19, 158, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, FLAG_A_ID, 20, 166, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 19, 166, no_tree_margin=0)
+    p2_qm_pads = {"center": (17, 162), "mil_pad": (20, 158), "eco_pad": (20, 166)}
+
+    # PoI 1: Opuszczony Obóz Inżynierów na (22, 74)
+    grid.mark_no_trees(22, 74, radius=4)
+    set_circle_terrain(mm, 22, 74, radius=3, terrain_id=TerrainId.DIRT_2)
+    grid.place_building(um, PlayerId.GAIA, BuildingInfo.OUTPOST.ID, 22, 73, size_tiles=1, no_tree_margin=1)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 21, 74, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 23, 74, no_tree_margin=0)
+
+    # PoI 2: Zaginiona Karawana na (138, 174)
+    grid.mark_no_trees(138, 174, radius=4)
+    set_circle_terrain(mm, 138, 174, radius=3, terrain_id=TerrainId.DIRT_1)
+    grid.place_unit(um, PlayerId.GAIA, GOLD_MINE_ID, 138, 174, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 137, 174, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 139, 174, no_tree_margin=0)
+
     north_breach_box = (75, 95, 80, 105)
     east_breach_box = (99, 137, 109, 142)
     north_breach_trees, east_breach_trees = populate_forest_trees(
@@ -615,10 +652,13 @@ def build_map_and_entities(scenario) -> dict:
         "human_players": human_players,
         "north_breach_trees": north_breach_trees,
         "occupied_tiles": occupied_tiles,
+        "p2_qm_king": p2_qm_king,
+        "p2_qm_pads": p2_qm_pads,
         "p_coords": p_coords,
         "q1_bldg": q1_bldg,
         "q1_pos": q1_pos,
         "q2_bldg": q2_bldg,
+        "q2_bombard_towers": q2_bombard_towers,
         "q2_pos": q2_pos,
         "q3_bldg": q3_bldg,
         "q3_pos": q3_pos,

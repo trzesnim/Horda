@@ -2,7 +2,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
+from AoE2ScenarioParser.datasets.heroes import HeroInfo
+from AoE2ScenarioParser.datasets.other import OtherInfo
 from AoE2ScenarioParser.datasets.units import UnitInfo
+
+if not hasattr(UnitInfo, "SUBOTAI"):
+    UnitInfo.SUBOTAI = HeroInfo.SUBOTAI
+if not hasattr(UnitInfo, "RELIC"):
+    UnitInfo.RELIC = OtherInfo.RELIC
 
 TREE_OAK_ID = 349
 
@@ -14,6 +21,15 @@ ROCK_CLIFF_ID = 623
 
 
 RELIC_ID = 285
+
+
+FLAG_A_ID = OtherInfo.FLAG_A.ID
+
+
+GOLD_MINE_ID = OtherInfo.GOLD_MINE.ID
+
+
+FINAL_BOSS_HERO_ID = UnitInfo.SUBOTAI.ID
 
 
 MAP_REVEALER_ID = 837
@@ -372,7 +388,7 @@ def populate_ingame_scenario_descriptions(scenario):
         return
 
     instructions_text = (
-        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v6.7 - 4P Co-op)\n\n"
+        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v7.0 - 4P Co-op)\n\n"
         "USTAWIENIA LOBBY I STARTU:\n"
         "- Gracze P5-P8 sa automatycznie skonfigurowani jako AI z zablokowanymi cywilizacjami (P5 Wikingowie, P6 Turcy, P7 Saraceni, P8 Persowie). Ustaw trudnosc AI na EKSTREMALNY (Extreme)!\n"
         "- Gracze P1, P3 i P4 startuja z 2 wybudowanymi domkami na polnoc od TC, a Gracz P2 z 6 domkami (kompensacja 20 popu zajmowanego przez Feitorie).\n"
@@ -388,10 +404,14 @@ def populate_ingame_scenario_descriptions(scenario):
         "  * Poziom +1 (Trudny): +25% fal, +15 HP, +2 Ataku wroga.\n"
         "  * Poziom +2 (Ekstremalny): +50% fal, +30 HP, +4 Ataku wroga.\n"
         "- Po kazdej zmianie Krol jest automatycznie zatrzymywany i wraca na srodek (zmiana trudnosci jest dostepna w kazdym momencie gry, bez blokad).\n\n"
+        "POSTERUNEK KWATERMISTRZA P2 (Wspolrzedne 20, 162 w sektorze P2):\n"
+        "- Gracz 2 (Czerwony) posiada Kwatermistrza (Krola na 17, 162) z dwiema flagami rozkazow (odnowienie 240s / 4 min):\n"
+        "  * Flaga Polnocna (20, 158) - Wsparcie Militarne: zrzut 4x Elitarny Konkwistador + 2x Kolubryna na dziedziniec (54, 146).\n"
+        "  * Flaga Poludniowa (20, 166) - Konwoj Zaopatrzeniowy: +300 Zywnosci/Drewna/Zlota dla kazdego P1-P4 oraz naprawa murów/budynkow w Twierdzy (+500 HP).\n\n"
         "SZLAK HANDLOWY I PLAC GRACZY (Lewy dolny rog mapy x=2..24, y=176..198):\n"
         "- W lewym dolnym rogu bazy znajduje sie duzy, czysty Plac pod Targowiska graczy.\n"
         "- Zburzenie Q1 (Karawanseraj) stawia pojedyncze Targowisko sojusznicze w prawym rogu (195, 194) oraz buduje Kamienny Mur Obronny na y=186 (z 2-kratkowymi otworami wypadowymi na x=122..123 i x=170..171 oslonietych Basztami na y=184)!\n\n"
-        "ZASADY ROZGRYWKI (Horyzont 60-90 minut):\n"
+        "ZASADY ROZGRYWKI I WARUNEK ZWYCIESTWA (Horyzont 60-90 minut):\n"
         "- Fala 1 w 8:30 (bez taranow), Fala 2 w 13:00 (z taranem/mangonelem i uderzeniem na wszystkie 3 bramy, bez mutantow), Fala 3 w 18:00, kolejne co 5,5 min.\n"
         "- Trzypoziomowa eskalacja czasowa (natychmiastowy 1. tick i powtorzenie co 5 min):\n"
         "  * Od 20:00: +5 HP, +1 Atak co 5 min.\n"
@@ -399,6 +419,7 @@ def populate_ingame_scenario_descriptions(scenario):
         "  * Od 55:00: dodatkowo +6 HP, +1 Atak co 5 min (lacznie +20 HP, +3 Ataku co 5 min).\n"
         "- Od 45. minuty (Fale 8-14) co druga fala wysyla szturm na SZLAK HANDLOWY w kierunku Bramy Handlowej.\n"
         "- W Falach 9 (51:00) i 12 (67:30) Saperzy P6 wyrabuja przesieki w lesie (6x11 na polnocy, 11x6 na wschodzie)!\n"
+        "- FINALOWY BOSS FIGHT: Po zniszczeniu wszystkich 6 Settlementow Hordy Wielki Chan Subotai (3500 HP) prowadzi Ostatni Szturm na Brama Centralna (116, 114). Zgladz Chana, aby wygrac!\n"
     )
 
     hints_text = (
@@ -409,15 +430,19 @@ def populate_ingame_scenario_descriptions(scenario):
         "4. Mozdzierz Oblezniczy (Onager P6): 350 HP, szybkosc 0.58, 21 zasiegu, wybuch co 10s, MARTWA STREFA 6 kratek. Pociski maja Blast Attack Level = 2 (nie scinaja drzew wokol bram).\n"
         "5. Snajperzy (Janczarzy P6): 90 HP, 19 zasiegu, ~107 dmg w 1 cel.\n"
         "6. Berserkerzy i Kamikaze (P5): Szybkie jednostki szturmowe o zerowym pancerzu na strzaly.\n"
+        "7. Wielki Chan Subotai (P8 - Finalowy Boss): 3500 HP, 45 ataku, 8/10 pancerza, szybkosc 1.35. Pojawia sie z eskorta (4x Zelazny Slon, 14x Paladyn, 3x Siege Ram, 2x Arcymag) na (116, 114) po upadku 6 Settlementow!\n"
     )
 
     scouts_text = (
-        "RAPORT ZWIADOWCZY - 4 QUESTY I 6 SETTLEMENTOW:\n"
+        "RAPORT ZWIADOWCZY - 4 QUESTY, 2 PUNKTY EKSPLORACYJNE (PoI) I 6 SETTLEMENTOW:\n"
         "- UWAGA: Kazdy wykonany Quest (Q1-Q4) daje potezne nagrody graczom, ale wywoluje tez Adaptacje Hordy:\n"
         "  * Q1 Karawanseraj (154, 190): Mur Handlowy (y=186, baszty y=184, otwory wypadowe x=122..123 i 170..171), Market P2 (195, 194), +30 Popu, +20% szybsi Wiesniacy i 4 szybkie wozy handlowe. [Adaptacja Hordy: +8 HP, +1 Atak]\n"
-        "  * Q2 Klif Artylerii (28, 32): Balistyka, Chemia, Siege Engineers, Thumb Ring; +2 Zasiegu i +4 Ataku strzelcow (w tym UU); +12% szybkosci i +4 Ataku jazdy oraz +12% szybkosci strzelcow konnych (w tym UU). [Adaptacja Hordy: +8 HP, +1 Atak]\n"
+        "  * Q2 Klif Artylerii (28, 32 - Dwuetapowy): Najpierw zniszcz 2 wysuniete Baszty Artyleryjskie (24, 34 i 32, 34), aby zdjac oslone leczaca Uniwersytetu (+400 HP/2s)! Nagroda: Balistyka, Chemia, Siege Engineers, Thumb Ring, +2 Zasiegu i +4 Ataku strzelcow (w tym UU), +12% szybkosci i +4 Ataku jazdy, +12% szybkosci strzelcow konnych (w tym UU), 2x Kolubryna dla P3 (28, 36) i wizja na G2 Akademia! [Adaptacja Hordy: +8 HP, +1 Atak]\n"
         "  * Q3 Skarbiec (142, 118): +20 Popu i staly dochod co minute (+250F, +250W, +200G, +40S dla KAZDEGO gracza P1-P4). [Adaptacja Hordy: +10 HP, +1 Atak]\n"
-        "  * Q4 Krwawy Oltarz (105, 20): +30% HP armii, +2/+2 pancerza (piechota, jazda, strzelcy i UU), +40% szybsza produkcja wojska (w tym Krepost, Donjon i Siege Workshop); obnizenie HP Arcymaga do 120 HP. [Adaptacja Hordy: +10 HP, +1 Atak]\n"
+        "  * Q4 Krwawy Oltarz (105, 20 - Dwuetapowy): Zburzenie Klasztoru spawnuje Relikt i odwet P7 (6x Heavy Camel, 6x Elite Mameluke, 4x Hussar z 105, 34); utrzymaj wzgorze 30s! Nagroda: +30% HP armii, +2/+2 pancerza, +40% szybsza produkcja wojska, Arcymagowie oslabieni do 120 HP oraz budowa Klasztoru P1 i 2 Mnichow na (58, 152)! [Adaptacja Hordy: +10 HP, +1 Atak]\n"
+        "- Dwa Zdarzenia Eksploracyjne na Mapie (PoI - jednorazowe dla pierwszego odkrywcy):\n"
+        "  * PoI 1 Opuszczony Oboz Inzynierow (22, 74): 2x Tarany (Capped Ram) + 2x Petarda dla odkrywcy oraz +200W/+200G dla P1-P4.\n"
+        "  * PoI 2 Zaginiona Karawana (138, 174): +350F/+350G dla P1-P4 i odkrycie obozu Q1 (154, 190).\n"
         "- Stopniowanie Nagrod i Furii Settlementow (zburzenie obozu zawala jego budynki poboczne, wycofuje wojska z fal i wywoluje kontratak z odpowiedniego kierunku):\n"
         "  * Grade 1 (G1 Polnocny, G1 Wschodni): Nagroda +700F/+700G, Furia +5 HP i +0 Ataku wroga, odwet 8 Cavalier + 10 Pikeman.\n"
         "  * Grade 2 (G2 Akademia [usuwa tez Saperow], G2 Klasztor): Nagroda +1000F/+1000G, Furia +10 HP i +1 Atak wroga, odwet 10 Cavalier + 12 Halberdier.\n"
@@ -524,6 +549,12 @@ BALANCE = {
     "human_start_res": {"food": 500, "wood": 600, "gold": 400, "stone": 300},
     "human_start_houses": 2,
     "p2_start_houses": 6,
+
+    "final_boss_hp": 3500,
+    "final_boss_atk": 45,
+    "final_boss_melee_armor": 8,
+    "final_boss_pierce_armor": 10,
+    "final_boss_speed": 1.35,
 }
 
 
@@ -564,6 +595,9 @@ class EnemyUnitSpec:
     scales_hp: bool
     receives_mage_shield: bool
     mandatory_min_one: bool
+    base_atk: int = 0
+    is_ranged: bool = False
+    scales_atk: bool = False
 
     @property
     def hp_delta_down(self) -> int:
@@ -650,6 +684,24 @@ ENEMY_UNIT_REGISTRY: dict[int, EnemyUnitSpec] = {
     ),
     UnitInfo.SIEGE_RAM.ID: EnemyUnitSpec(
         unit_id=UnitInfo.SIEGE_RAM.ID, name="Siege Ram", base_hp=270, attack_class=None, scales_hp=False, receives_mage_shield=True, mandatory_min_one=True
+    ),
+    UnitInfo.HEAVY_CAMEL_RIDER.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.HEAVY_CAMEL_RIDER.ID, name="Heavy Camel Rider", base_hp=140, attack_class=4, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+    ),
+    UnitInfo.ELITE_MAMELUKE.ID: EnemyUnitSpec(
+        unit_id=UnitInfo.ELITE_MAMELUKE.ID, name="Elite Mameluke", base_hp=80, attack_class=4, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+    ),
+    FINAL_BOSS_HERO_ID: EnemyUnitSpec(
+        unit_id=FINAL_BOSS_HERO_ID,
+        name="Wielki Chan Subotai",
+        base_hp=3500,
+        attack_class=None,
+        scales_hp=False,
+        receives_mage_shield=False,
+        mandatory_min_one=True,
+        base_atk=45,
+        is_ranged=True,
+        scales_atk=False,
     ),
 }
 

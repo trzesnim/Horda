@@ -29,6 +29,7 @@ from horde_config import (
     ELITE_BERSERK_ID,
     ENEMY_UNIT_REGISTRY,
     FEITORIA_ID,
+    FINAL_BOSS_HERO_ID,
     FLAMING_CAMEL_ID,
     FLARE_UNIT_ID,
     FORTIFIED_PALISADE_ID,
@@ -236,11 +237,23 @@ def add_garrison_spawn_effect(
     )
 
 
-def add_guarded_camp_with_leash(tm, enable_parent_trigger, name: str, ai_player: PlayerId, cx: int, cy: int,
-                                units_spec: list[tuple[int, int]], occupied_tiles: set[tuple[int, int]],
-                                detect_radius: int = 20):
+def add_guarded_camp_with_leash(
+    tm,
+    enable_parent_trigger,
+    name: str,
+    ai_player: PlayerId,
+    cx: int,
+    cy: int,
+    units_spec: list[tuple[int, int]],
+    occupied_tiles: set[tuple[int, int]],
+    detect_radius: int = 20,
+    detect_y2_max: int | None = None,
+):
     x1, y1 = max(0, cx - detect_radius), max(0, cy - detect_radius)
-    x2, y2 = min(MAP_SIZE - 1, cx + detect_radius), min(MAP_SIZE - 1, cy + detect_radius)
+    x2, dy2 = min(MAP_SIZE - 1, cx + detect_radius), min(MAP_SIZE - 1, cy + detect_radius)
+    if detect_y2_max is not None:
+        dy2 = min(dy2, detect_y2_max)
+    y2 = dy2
 
     t_spawn = tm.add_trigger(f"Garrison_Spawn_{name}", enabled=False, looping=False)
     add_garrison_spawn_effect(t_spawn, ai_player, units_spec, cx=cx, cy=cy, occupied_tiles=occupied_tiles)
@@ -453,6 +466,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     human_players = ctx["human_players"]
     north_breach_trees = ctx["north_breach_trees"]
     occupied_tiles = ctx["occupied_tiles"]
+    p2_qm_king = ctx["p2_qm_king"]
     q1_bldg = ctx["q1_bldg"]
     q1_pos = ctx["q1_pos"]
     q2_bldg = ctx["q2_bldg"]
@@ -477,6 +491,8 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     safe_modify_attribute(t_init, PlayerId.ONE, UnitInfo.KING.ID, ATTR_HIT_POINTS, Operation.SET, 9999)
     safe_modify_attribute(t_init, PlayerId.ONE, UnitInfo.KING.ID, ATTR_REGENERATION_RATE, Operation.SET, 5000)
+    safe_modify_attribute(t_init, PlayerId.TWO, UnitInfo.KING.ID, ATTR_HIT_POINTS, Operation.SET, 9999)
+    safe_modify_attribute(t_init, PlayerId.TWO, UnitInfo.KING.ID, ATTR_REGENERATION_RATE, Operation.SET, 5000)
 
     safe_modify_attribute(t_init, PlayerId.TWO, FEITORIA_ID, ATTR_HIT_POINTS, Operation.ADD, 3000)
     add_player_resource(t_init, PlayerId.TWO, RES_BONUS_POP_CAP, 20)
@@ -546,6 +562,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     building_labels = [
         (balance_king, "Inzynier Balansu (Gora = Trudniej, Dol = Latwiej)"),
+        (p2_qm_king, "Kwatermistrz Twierdzy P2 (Gora = Wsparcie Militarne, Dol = Konwoj Eko)"),
         (allied_citadel, "Cytadela Sojuszu P2 (Serce Twierdzy - Broncie jej!)"),
         (q1_bldg, "Q1: Karawanseraj (Buduje Mur Handlowy, +30 Pop, +20% Eko)"),
         (q2_bldg, "Q2: Klif Artylerii (+2 Zasiegu, +4 Ataku, Szybkosc)"),
@@ -567,7 +584,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     send_highlight_chat(
         t_init, "<YELLOW>",
-        "=== KRONIKI RUBIEZY v6.7 === Inzynier Balansu P1 czeka na (6, 150)! W panelu Celow (Objectives) dziala ZEGAR FALI odliczajacy czas do kolejnego uderzenia!",
+        "=== KRONIKI RUBIEZY v7.0 === Inzynier Balansu P1 czeka na (6, 150), a Kwatermistrz P2 na (20, 162)! W panelu Celow (Objectives) dziala ZEGAR FALI!",
     )
 
     t_mutate = tm.add_trigger("01b_Apply_Specialized_Unit_Archetypes", enabled=True, looping=False)
@@ -638,6 +655,14 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         safe_modify_attribute(t_mutate, ai_p, ELITE_BERSERK_ID, ATTR_ATTACK, Operation.ADD, BALANCE["berserk_bonus_atk"], armor_class=4)
         safe_modify_attribute(t_mutate, ai_p, ELITE_BERSERK_ID, ATTR_ARMOR, Operation.SET, 0, armor_class=3)
 
+    # 7. WIELKI CHAN SUBOTAI (P8 - Finałowy Boss Ostatniego Szturmu)
+    safe_modify_attribute(t_mutate, PlayerId.EIGHT, FINAL_BOSS_HERO_ID, ATTR_HIT_POINTS, Operation.SET, BALANCE["final_boss_hp"])
+    safe_modify_attribute(t_mutate, PlayerId.EIGHT, FINAL_BOSS_HERO_ID, ATTR_HERO_STATUS, Operation.SET, 1)
+    safe_modify_attribute(t_mutate, PlayerId.EIGHT, FINAL_BOSS_HERO_ID, ATTR_ARMOR, Operation.SET, BALANCE["final_boss_melee_armor"], armor_class=4)
+    safe_modify_attribute(t_mutate, PlayerId.EIGHT, FINAL_BOSS_HERO_ID, ATTR_ARMOR, Operation.SET, BALANCE["final_boss_pierce_armor"], armor_class=3)
+    safe_modify_attribute(t_mutate, PlayerId.EIGHT, FINAL_BOSS_HERO_ID, ATTR_ATTACK, Operation.SET, BALANCE["final_boss_atk"], armor_class=3)
+    safe_modify_attribute(t_mutate, PlayerId.EIGHT, FINAL_BOSS_HERO_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["final_boss_speed"])
+
     t_arm_garrisons = tm.add_trigger("01c_Arm_Garrison_Detectors_At_4s", enabled=True, looping=False)
     safe_call(t_arm_garrisons.new_condition.timer, timer=4)
 
@@ -647,10 +672,11 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             units_spec=[(UnitInfo.STEPPE_LANCER.ID, 12), (UnitInfo.CROSSBOWMAN.ID, 10), (ELITE_BERSERK_ID, 4)],
             occupied_tiles=occupied_tiles,
             detect_radius=14,
+            detect_y2_max=191,
         ),
         "Quest2_SniperCliff": add_guarded_camp_with_leash(
             tm, t_arm_garrisons, "Quest2_SniperCliff", PlayerId.SIX, *q2_pos,
-            units_spec=[(UnitInfo.ELITE_JANISSARY.ID, 6), (SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14)],
+            units_spec=[(UnitInfo.ELITE_JANISSARY.ID, 6), (SIEGE_ONAGER_ID, 1), (UnitInfo.HALBERDIER.ID, 14)],
             occupied_tiles=occupied_tiles,
         ),
         "Quest3_SiegeVault": add_guarded_camp_with_leash(
@@ -959,6 +985,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     # Indywidualne Bramki Endless dla każdego Settlementu (bez blokowania Sanktuarium)
     endless_gates = {}
+    all_endless_variants = []
     for s_key, (ai_p, sx, sy, tx, ty) in settlement_spawn_configs.items():
         end_gate = tm.add_trigger(f"03_Endless_Gate_{s_key}", enabled=False, looping=True)
         safe_call(end_gate.new_condition.timer, timer=BALANCE["wave_interval_sec"])
@@ -1005,6 +1032,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
             all_settlement_wave_triggers[s_key].append(t_end_var)
             end_variants.append(t_end_var)
+            all_endless_variants.append(t_end_var)
 
         for ev in end_variants:
             safe_call(end_gate.new_effect.activate_trigger, trigger_id=ev.trigger_id)
@@ -1161,4 +1189,19 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     ctx["deep_target_center"] = deep_target_center
     ctx["deep_target_east"] = deep_target_east
     ctx["deep_target_north"] = deep_target_north
+    ctx["endless_triggers"] = [
+        t_end_gate_ann,
+        t_end_ann,
+        t_endless_sapper,
+        *endless_gates.values(),
+        *all_endless_variants,
+    ]
+    ctx["escalation_triggers"] = [
+        t_enable_esc1,
+        t_escalate1,
+        t_enable_esc2,
+        t_escalate2,
+        t_enable_esc3,
+        t_escalate3,
+    ]
     ctx["state_markers"] = state_markers

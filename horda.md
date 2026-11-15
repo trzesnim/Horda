@@ -1,7 +1,7 @@
-# Scenariusz 3: Kroniki Rubieży — Horda i Ekspedycje (v6.7 — 4P Co-op RPG/RTS)
+# Scenariusz 3: Kroniki Rubieży — Horda i Ekspedycje (v7.0 — 4P Co-op RPG/RTS)
 
 **Plik scenariusza:** `Kroniki_Rubiezy_Horda_Coop.aoe2scenario`  
-**Typ rozgrywki:** Obrona przed 14 falami Hordy + Tryb Endless + Zegar Fali + Sanktuarium Balansu + 4 Questy poboczne i niszczenie 6 Settlementów (Grades 1–3)  
+**Typ rozgrywki:** Obrona przed 14 falami Hordy + Tryb Endless + Zegar Fali + Sanktuarium Balansu + Posterunek Kwatermistrza P2 + Zdarzenia Eksploracyjne (Map PoI) + 4 Questy (w tym dwuetapowe Q2 i Q4) + 6 Settlementów i **Finałowy Boss Fight (Wielki Chan Subotai)**  
 **Horyzont czasowy partii:** 60–90 minut  
 **Rozmiar mapy:** 200×200 (Olbrzymia)  
 
@@ -18,13 +18,13 @@ W scenariuszu numery slotów i przypisane kolory ściśle determinują pozycję 
 | Slot / Kolor | Typ gracza | Rola w scenariuszu i sektor obrony | Drużyna | Przypisana / Rekomendowana cywilizacja |
 | :--- | :--- | :--- | :--- | :--- |
 | **1 (Niebieski)** | **Człowiek** | **Mistrz Balansu i Obrońca Bramy Centralnej:** Kontroluje nieśmiertelnego Inżyniera Balansu (Króla na `6, 150`), broni podejścia pod Bramę Centralną `(104, 114)` przed atakiem Magów P7 i Tytanów P8; odpowiada za stałą wizję celów (stałe Revealers). Startuje z **2 domkami**. | **Drużyna 1** | **Bizancjum** (tanie kontry i wytrzymałe budynki pod napór w centrum), **Brytowie** (daleki zasięg łuków na Magów i Snajperów), **Teutoni**, **Czesi** |
-| **2 (Czerwony)** | **Człowiek** | **Cytadela Sojuszu i Koordynator Handlu:** Chroni centralną Cytadelę Sojuszu (Feitoria na `54, 146` z +3000 HP — jej upadek to natychmiastowa porażka!). Startuje z **6 domkami** (+20 pop room kompensujące Feitorię od 0:00) oraz `+20` Bonus Pop Cap w 0:01. Zarządza Placem Targowym `(3..23, 177..198)` oraz sojuszniczym Marketem po Q1 `(195, 194)`. | **Drużyna 1** | **Hiszpanie** (**Kluczowy wybór!** Bonus drużynowy **+25% złota z handlu** na 190-kratkowym szlaku), **Portugalczycy**, **Frankowie**, **Burgundczycy** |
+| **2 (Czerwony)** | **Człowiek** | **Cytadela Sojuszu, Kwatermistrz i Koordynator Handlu:** Chroni centralną Cytadelę Sojuszu (Feitoria na `54, 146` z +3000 HP — jej upadek to natychmiastowa porażka!). Obsługuje **Posterunek Kwatermistrza Twierdzy `(20, 162)`** (wsparcie najemne lub konwój surowców i naprawa murów co 4 min), zarządza Placem Targowym `(3..23, 177..198)` oraz Marketem Q1 `(195, 194)`. Startuje z **6 domkami** (+20 pop room od 0:00) i `+20` Bonus Pop Cap w 0:01. | **Drużyna 1** | **Hiszpanie** (**Kluczowy wybór!** Bonus drużynowy **+25% złota z handlu** na 190-kratkowym szlaku), **Portugalczycy**, **Frankowie**, **Burgundczycy** |
 | **3 (Zielony)** | **Człowiek** | **Strażnik Przełęczy Północnej:** Broni Bramy Północnej `(48, 100)` przed szturmami Berserkerów P5 i Snajperów P6; zabezpiecza wyłom saperski w północnym lesie w Fali 9 (51:00); ma najbliżej do Q2 (Klif Artylerii). Startuje z **2 domkami**. | **Drużyna 1** | **Celtowie** (szybka piechota i machiny do kontrowania snajperów), **Goci** (masowa produkcja piechoty), **Polacy**, **Rzymianie** |
 | **4 (Żółty)** | **Człowiek** | **Obrońca Skrzydła Wschodniego i Szlaku Handlowego:** Broni Bramy Wschodniej `(104, 162)` i Bramy Handlowej `(104, 193)`; odpiera natarcia ze Wschodu (G1/G3), chroni szlak handlowy przed rajdami od 45:00 oraz wschodni wyłom w lesie w Fali 12 (67:30); ma najbliżej do Q1. Startuje z **2 domkami**. | **Drużyna 1** | **Litwini** (Leitis przebijający pancerz Słoni-Tanków P8!), **Hindustańczycy** (wielbłądy na kawalerię i słonie), **Węgrzy**, **Saraceni** |
 | **5 (Turkusowy)** | **Komputer (AI — narzucony w scenariuszu)** | **Awangarda Hordy (Szturmowcy, Berserkerzy i Saperzy):** Kontroluje Obozy G1 Północny `(76, 72)` i Wschodni `(132, 152)` oraz Q1 Karawanseraj `(154, 190)`. Wysyła Berserkerów, Huskarlów, Petardy, Płonące Wielbłądy, Tarany i Halabardników. | **Drużyna 2** | **Wikingowie (Vikings)** *(Zablokowana w scenariuszu — `lock_civ = True`)* |
 | **6 (Fioletowy)** | **Komputer (AI — narzucony w scenariuszu)** | **Korpus Oblężniczy (Snajperzy Imperialni i Artyleria):** Kontroluje Obóz G2 Akademia Snajperów `(68, 34)` oraz Q2 Klif Artylerii `(28, 32)`. Wysyła Snajperów Imperialnych (zasięg 19), Moździerze Oblężnicze (zasięg 21, nie niszczące drzew) oraz Onagery wyrębujące lasy. | **Drużyna 2** | **Turcy (Turks)** *(Zablokowana w scenariuszu — `lock_civ = True`)* |
 | **7 (Szary)** | **Komputer (AI — narzucony w scenariuszu)** | **Zakon Magów i Zagon Dywersyjny (Wsparcie i Eco-Raids):** Kontroluje Obóz G2 Klasztor Magów `(148, 72)` oraz Q4 Krwawy Ołtarz `(105, 20)`. Spawnuje Arcymaga Tarczy (Imam dający globalnie +30/+30 pancerza i lokalne leczenie) oraz Szakale Eco-Raiders polujące na wieśniaków pod TC. | **Drużyna 2** | **Saraceni (Saracens)** *(Zablokowana w scenariuszu — `lock_civ = True`)* |
-| **8 (Pomarańczowy)**| **Komputer (AI — narzucony w scenariuszu)** | **Żelazny Legion i Cytadele Tytanów (Boss i Najcięższy Pancerz):** Kontroluje Cytadelę Północną `(142, 24)`, Cytadelę Wschodnią `(176, 56)` oraz Q3 Skarbiec Krasnoludów `(142, 118)` (Krepost). Wysyła Taran-Żółwie / Żelazne Słonie (1450 HP, niewrażliwe na mnichów dzięki Hero Status i Faith). Od 18:00 **wszyscy gracze AI (`P5–P8`)** otrzymują technologię `Faith`, co chroni późne fale przed masową konwersją. | **Drużyna 2** | **Persowie (Persians)** *(Zablokowana w scenariuszu — `lock_civ = True`)* |
+| **8 (Pomarańczowy)**| **Komputer (AI — narzucony w scenariuszu)** | **Żelazny Legion, Cytadele Tytanów i Finałowy Boss:** Kontroluje Cytadelę Północną `(142, 24)`, Cytadelę Wschodnią `(176, 56)` oraz Q3 Skarbiec Krasnoludów `(142, 118)` (Krepost). Wysyła Żelazne Słonie (1450 HP, odporne na mnichów) oraz **Wielkiego Chana Subotaia (3500 HP)** w Ostatnim Szturmie po upadku wszystkich 6 Twierdz. Od 18:00 **wszyscy gracze AI (`P5–P8`)** otrzymują technologię `Faith`. | **Drużyna 2** | **Persowie (Persians)** *(Zablokowana w scenariuszu — `lock_civ = True`)* |
 
 ### Wymagane parametry pokoju (Lobby Settings)
 
@@ -72,6 +72,12 @@ Wszyscy 4 gracze startują na równych warunkach (500 żywności, 600 drewna, 40
 * **Cytadela Sojuszu (Feitoria Gracza 2):** W centrum Twierdzy `(54, 146)` stoi wzmocniona **Feitoria należąca do Gracza 2** (+3000 HP oraz +20 limitu populacji dla Gracza 2). Jej utrata oznacza porażkę drużyny.
 * **Trzy przełęcze bojowe + Brama Handlowa:** Brama Północna `(48, 100)`, Centralna `(104, 114)`, Wschodnia `(104, 162)` oraz Południowa Brama Handlowa `(104, 193)` są zamknięte pełną **Wzmocnioną Palisadą (+400 HP)** z **Bramą Palisadową** i **2 Wieżami Strażniczymi**.
 * **Działanie Mnichów:** Mnisi graczy (`P1–P4`) działają normalnie (leczą i konwertują zwykłe jednostki wroga). Mnisi komputerowi (`P5–P8`) mają zablokowaną konwersję, natomiast Arcymagowie (`P7`) leczą pobliskie jednostki Hordy obszarowo (+15 HP co 3s).
+* **Posterunek Kwatermistrza Twierdzy Gracza 2 `(20, 162)`:** W sektorze Czerwonego znajduje się dowództwo logistyczne z **Kwatermistrzem (Król P2 na `17, 162`)** i dwoma punktami rozkazów o wspólnym odnowieniu **4 minut (240s)**:
+  * **Flaga Północna `(20, 158)` — Gwardia Najemna:** teleportuje jednostkę z powrotem na `(17, 162)` i zrzuca na dziedziniec Cytadeli `(54, 149)` oddział **`4x Elitarny Konkwistador + 2x Kolubryna (Bombard Cannon)`** dla Gracza 2.
+  * **Flaga Południowa `(20, 166)` — Konwój Zaopatrzeniowy:** dodaje każdemu graczowi `P1–P4` po **`+300 Żywności, +300 Drewna, +300 Złota`** i naprawia mury, bramy oraz budynki w całej Twierdzy (`0..110, 95..199`) o **`+500 HP`**.
+* **Zdarzenia Eksploracyjne na Mapie (Map PoI — jednorazowe dla pierwszego odkrywcy z `P1–P4`):**
+  * **PoI 1 — Opuszczony Obóz Inżynierów `(22, 74)`:** `Outpost` + pochodnie w lesie NW. Pierwszy gracz, który wyśle tam oddział (`22±4, 74±4`), zdobywa **`2x Taran + 2x Petarda`** oraz **`+200 Drewna i +200 Złota` dla wszystkich sojuszników (`P1–P4`)**.
+  * **PoI 2 — Zaginiona Karawana `(138, 174)`:** `Gold Mine` + pochodnie na SE. Pierwszy odkrywca (`138±4, 174±4`) zapewnia drużynie **`+350 Żywności i +350 Złota` dla każdego gracza** oraz trwały podgląd na **Obóz Karawany `Q1 (154, 190)`**.
 
 ---
 
@@ -101,16 +107,17 @@ Wszyscy 4 gracze startują na równych warunkach (500 żywności, 600 drewna, 40
 
 ---
 
-## 5. Bestiariusz Hordy — 6 wyspecjalizowanych klas jednostek (z Poświatą Bohatera)
+## 5. Bestiariusz Hordy — 6 wyspecjalizowanych klas + Finałowy Boss (z Poświatą Bohatera)
 
 | Jednostka specjalna (Od której minuty) | Rola i specjalizacja | Sposób pokonania / Kontra |
 | :--- | :--- | :--- |
 | **1. Taran-Żółw / Żelazny Słoń** *(od 34:30 — Słoń Bojowy P8)* | **Tank i Niszczyciel Budynków:** **1450 HP** (z korektą -20 HP po Bloodlines), prędkość **`0.72`**, **+10/+12 pancerza**, **odporny na konwersję**. Ma **+220 obrażeń przeciwko budynkom i murom**, ale zadaje **zawsze tylko 3 obrażenia jednostkom** (pełna odporność na buffy ataku z Kuźni, eskalacji i trudności)! | W walce z armią jest niegroźny — zignorujcie go, wybijcie resztę fali, a potem otoczcie Halabardnikami (+60 bonus dmg) zanim dojdzie do zamków. |
 | **2. Szakale Dywersyjne** *(od 18:00 — Huzarzy P7)* | **Eco-Raiders:** Prędkość **`1.62`**, **+6 pancerza na strzały**, **zawsze tylko 2 ataku** (skalują wyłącznie HP). Wjeżdżają z rozkazem `MOVE` przez Bramę Północną lub Wschodnią prosto pod TC atakować chłopów (są wykluczone z globalnego `attack_move` na bramach bocznych)! | Schowajcie chłopów do TC i cofnijcie kilku rycerzy/pikinierów. |
-| **3. Arcymag Tarczy** *(od 23:30 — Imam P7)* | **Globalny Support Hordy:** Gdy stoi w strefie `36×36` (promień 18 kratek wokół `110, 114`) przed Bramą Centralną `(104, 114)`, daje **GLOBALNIE +30/+30 Pancerza wszystkim armiom Hordy (P5–P8 na całej mapie)** oraz **LOKALNIE leczy (+15 HP/3s)** jednostki Hordy w tej strefie `36×36`! | Ma złotą poświatę, flarę co 20s, **240 HP**, **3/4 pancerza** i **regenerację 5 HP/s**. Automat dwustanowy: zabicie Imama przed bramą natychmiast zdejmuje tarczę z całej Hordy. |
+| **3. Arcymag Tarczy** *(od 23:30 — Imam P7)* | **Globalny Support Hordy:** Gdy stoi w strefie `37×37` (promień 18 kratek wokół `110, 114`) przed Bramą Centralną `(104, 114)`, daje **GLOBALNIE +30/+30 Pancerza wszystkim armiom Hordy (P5–P8 na całej mapie)** oraz **LOKALNIE leczy (+15 HP/3s)** jednostki Hordy w tej strefie! | Ma złotą poświatę, flarę co 20s, **240 HP** (**120 HP** po Q4), **3/4 pancerza** i **regenerację 5 HP/s**. Automat dwustanowy: zabicie Imama przed bramą natychmiast zdejmuje tarczę z całej Hordy. |
 | **4. Moździerz Oblężniczy** *(od 29:00 — Onager P6)* | **Artyleria Dalekosiężna:** **350 HP**, prędkość **`0.58`**, **21 zasięgu**, **+75 ataku**, promień wybuchu **2,6 kratki**. Pociski mają **`Blast Attack Level = 2`** (nie ścinają drzew wokół bram). | **Martwa strefa 6 kratek (`Minimum Range = 6`)** oraz strzał raz na **10 s**. Bezbronny w zwarciu. |
 | **5. Snajperzy Imperialni** *(od 18:00 — Janczarzy P6)* | **Egzekutor pojedynczych celów:** **90 HP**, **19 zasięgu**, **+85 ataku** (~107 dmg w jeden cel). | Strzelają co **6,5 s** — zasypcie ich grupą tanich jednostek lub dojedźcie kawalerią. |
 | **6. Berserkerzy i Kamikaze** *(od 18:00 — P5)* | **Szturmowcy i Saperzy:** Szybcy (`1.40–1.50`), wysoki atak wręcz / wybuch obszarowy `2,4`. | **0 pancerza przeciw strzałom** — wycinajcie ich łucznikami i kusznikami zanim dobiegną. |
+| **7. Wielki Chan Subotai** *(Finałowy Boss P8 — po upadku 6 Settlementów)* | **Dowódca Ostatniego Szturmu:** **3500 HP**, **`45` ataku dystansowego**, **8/10 pancerza**, prędkość **`1.35`**, status Bohatera (odporny na konwersję i skalowanie HP/Atk). Uderza na `(116, 114) -> (54, 146)` z eskortą `4x Żelazny Słoń + 14x Paladyn + 3x Taran Oblężniczy + 2x Arcymag`. | Zatrzymajcie eskortę pod Bramą Centralną `(104, 114)`, zlikwidujcie najpierw Arcymagów P7 zdejmując globalną tarczę i skoncentrujcie ogień dystansowy/harcowników na Chanie. |
 
 ---
 
@@ -123,19 +130,17 @@ Każdy ukończony Quest powoduje spektakularne zawalenie się pobocznych wież i
    * W połączeniu z Waszym placem na Targowiska w lewym rogu bazy `(3..23, 177..198)` daje to maksymalny szlak handlowy przez całą szerokość mapy (190 kratek!).
    * Daje **+30 Limit Populacji na stałe** (`230 pop`), **+20% szybszą pracę Wieśniaków**, **+25% szybsze Wozy Handlowe**, 4 darmowe Wozy i +500 Złota dla każdego gracza.
    * *Adaptacja Hordy:* **+8 HP i +1 Ataku**.
-2. **`Q2 - Klif Artylerii (+2 Zasiegu, +4 Ataku, Szybkosc)` `(28, 32)`:**
-   * Darmowa Balistyka, Chemia, Inżynierowie Oblężniczy i Thumb Ring.
-   * **+2 Zasięgu i +4 Ataku** dla wszystkich strzelców graczy (w tym jednostek unikalnych i regionalnych: `Longbowman`, `Chu Ko Nu`, `Mangudai`, `War Wagon`, `Plumed Archer`, `Conquistador`, `Genoese Crossbowman`, `Camel Archer`, `Rattan Archer`, `Kipchak`, `Composite Bowman`, `Imperial Skirmisher`, `Elephant Archer`, `Genitour`, `Slinger`, `Janissary`, `Arambai`, `Chakram Thrower`, `Ratha`).
-   * **+12% prędkości i +4 Ataku** dla całej kawalerii graczy (w tym `Savar`, `War Elephant`, `Shrivamsha Rider`, `Camel Scout`, `Ratha`, `Elite Steppe Lancer`, `Heavy/Imperial Camel Rider`, `Battle Elephant` oraz jednostek unikalnych: `Cataphract`, `Leitis`, `Boyar`, `Tarkan`, `Magyar Huszar`, `Konnik`, `Keshik`, `Coustillier`, `Monaspa`, `Centurion`, `Winged Hussar`) oraz **+12% prędkości** dla wszystkich konnych jednostek dystansowych (`Cavalry Archer`, `Mangudai`, `Camel Archer`, `Kipchak`, `Conquistador`, `War Wagon / Elite War Wagon`, `Genitour / Elite Genitour`, `Elephant Archer`, `Arambai`, `Ratha`).
+2. **`Q2 - Klif Artylerii (+2 Zasiegu, +4 Ataku, 2x Kolubryna)` `(28, 32)` (Dwuetapowy):**
+   * *Etap 1/2 (Baterie Artyleryjskie):* Uniwersytet P6 jest chroniony osłoną regenerującą (`+400 HP` co 2s), dopóki na przedpolu stoją obie wysunięte **Baszty Artyleryjskie (`Bombard Tower`)** na `(24, 34)` i `(32, 34)`. Zniszczenie obu baszt zdejmuje tarczę (alternatywnie Uniwersytet można przebić skoncentrowanym ogniem).
+   * *Etap 2/2 (Nagroda):* Darmowa Balistyka, Chemia, Inżynierowie Oblężniczy i Thumb Ring, **+2 Zasięgu i +4 Ataku** strzelców, **+12% prędkości i +4 Ataku** jazdy, **+12% prędkości** konnych strzelców, **`2x Kolubryna (Bombard Cannon)` dla Gracza 3 na `(28, 36)`** oraz trwały podgląd nad Settlementem **`G2 - Akademia Snajperów` `(68, 34)`**.
    * *Adaptacja Hordy:* **+8 HP i +1 Ataku**.
 3. **`Q3 - Skarbiec Krasnoludów (+20 Pop i Duzy Staly Dochod)` `(142, 118)`:**
    * **+20 Limit Populacji na stałe** (`250 pop`) oraz jednorazowo +600 Złota i +300 Kamienia dla każdego gracza.
    * Stały dochód surowcowy co minutę **dla każdego z 4 graczy (`P1–P4`)**: **+250 Żywności, +250 Drewna, +200 Złota i +40 Kamienia co 60s**.
    * *Adaptacja Hordy:* **+10 HP i +1 Ataku**.
-4. **`Q4 - Krwawy Ołtarz (+30% HP Armii i +40% Produkcji)` `(105, 20)`:**
-   * **+30% Max HP i +2/+2 Pancerza** dla całej piechoty, jazdy i strzelców graczy (w tym `Militia`, `Legionary`, `Serjeant`, `Flemish Militia`, linia `Eagle Warrior` oraz wszystkie jednostki unikalne piechoty, jazdy i strzelców, takie jak `Teutonic Knight`, `Huskarl`, `Woad Raider`, `Obuch`, `Ghulam`, `Samurai`, `Berserk`, `Jaguar Warrior`, `Kamayuk`, `Condottiero`).
-   * **+40% szybsza produkcja wojska** we wszystkich budynkach militarnych (Koszary, Stajnie, Strzelnice, Zamki, Warsztaty Oblężnicze, `Krepost` oraz `Donjon`).
-   * Obniżenie Max HP wrogich Arcymagów do **120 HP**.
+4. **`Q4 - Krwawy Ołtarz (+30% HP Armii, +40% Produkcji i Klasztor P1)` `(105, 20)` (Dwuetapowy):**
+   * *Etap 1/2 (Zburzenie Ołtarza i Kontratak):* Po zburzeniu Klasztoru P7 zabudowa obozu się zawala, w gruzach pojawia się neutralny **Relikt `(105, 20)`**, a z `(105, 34)` nadciąga Krwawy Odwet Zakonu (`6x Heavy Camel Rider + 6x Elite Mameluke + 4x Hussar`). Należy przetrwać **30 sekund** rytuału.
+   * *Etap 2/2 (Ukończenie Rytuału):* **+30% Max HP i +2/+2 Pancerza** dla piechoty, jazdy i strzelców, **+40% szybsza produkcja** w budynkach wojskowych (w tym `Krepost` i `Donjon`), obniżenie HP Arcymagów do **120 HP** oraz budowa **Klasztoru Gracza 1 na `(58, 152)` wraz z `2x Mnich` na `(58, 155)`** wewnątrz Twierdzy.
    * *Adaptacja Hordy:* **+10 HP i +1 Ataku**.
 
 ---
@@ -154,4 +159,6 @@ Zburzenie każdego Settlementu powoduje natychmiastowe zawalenie się pobocznych
   * **`G3 - Cytadela Północna` `(142, 24)`:** usuwa Taran-Żółwie / Żelazne Słonie z natarcia północnego. Kontratak (Brama Centralna): **`1x Żelazny Słoń + 12x Paladin + 14x Halberdier`**. Furia: **+15 HP i +2 Ataku**.
   * **`G3 - Cytadela Wschodnia` `(176, 56)`:** usuwa Taran-Żółwie / Żelazne Słonie z natarcia wschodniego oraz rajdy na Szlak Handlowy w Falach 8, 10, 12, 14 i Endless. Kontratak (Brama Wschodnia): **`1x Żelazny Słoń + 12x Paladin + 14x Halberdier`**. Furia: **+15 HP i +2 Ataku**.
 
-**Warunek Zwycięstwa:** Zniszczenie wszystkich 6 Settlementów kończy scenariusz natychmiastowym zwycięstwem graczy! 
+**Warunek Zwycięstwa (Dwufazowy Finał):**
+1. **Faza 1 — Zniszczenie 6 Settlementów:** Rozbicie wszystkich 6 Twierdz Hordy zatrzymuje eskalację czasową oraz fale Trybu Endless i przywołuje **Ostatni Szturm Wielkiego Chana Subotaia** na `(116, 114)` przed Bramą Centralną (`Subotai 3500 HP + 4x Żelazny Słoń + 14x Paladyn + 3x Taran Oblężniczy + 2x Arcymag`).
+2. **Faza 2 — Zgładzenie Chana:** Pokonanie **Wielkiego Chana Subotaia** zapewnia Drużynie 1 natychmiastowe **Zwycięstwo**! (Utrata Cytadeli Sojuszu P2 na `(54, 146)` oznacza natychmiastową porażkę). 

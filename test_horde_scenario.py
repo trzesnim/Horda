@@ -1,16 +1,24 @@
 """
 test_horde_scenario.py - Kompleksowy zestaw testow jednostkowych, integracyjnych
-oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Horda (v6.7).
+oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Horda (v7.0).
 """
 
+import tempfile
 import unittest
+from pathlib import Path
 
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 from AoE2ScenarioParser.datasets.conditions import ConditionId
 from AoE2ScenarioParser.datasets.effects import EffectId
 from AoE2ScenarioParser.datasets.object_support import Civilization
+from AoE2ScenarioParser.datasets.other import OtherInfo
 from AoE2ScenarioParser.datasets.players import PlayerId
-from AoE2ScenarioParser.datasets.trigger_lists import ActionType, ObjectType, Operation
+from AoE2ScenarioParser.datasets.trigger_lists import (
+    ActionType,
+    ObjectState,
+    ObjectType,
+    Operation,
+)
 from AoE2ScenarioParser.datasets.units import UnitInfo
 from AoE2ScenarioParser.scenarios.aoe2_de_scenario import AoE2DEScenario
 
@@ -19,6 +27,7 @@ from horde_config import (
     ATTR_ARMOR,
     ATTR_ATTACK,
     ATTR_BLAST_ATTACK_LEVEL,
+    ATTR_HERO_STATUS,
     ATTR_HIT_POINTS,
     ATTR_MAXIMUM_RANGE,
     ATTR_MOVEMENT_SPEED,
@@ -27,20 +36,24 @@ from horde_config import (
     ELITE_BERSERK_ID,
     ENEMY_UNIT_REGISTRY,
     FEITORIA_ID,
+    FINAL_BOSS_HERO_ID,
     FLAMING_CAMEL_ID,
     FLARE_UNIT_ID,
     FORTIFIED_PALISADE_ID,
     HUSSAR_ID,
     IMAM_UNIT_ID,
     KREPOST_ID,
+    MAP_REVEALER_ID,
     MAP_SIZE,
     OUTPUT_SCENARIO,
     PALISADE_GATE_NW_SE_ID,
     PALISADE_GATE_SW_NE_ID,
     PETARD_ID,
     PLAYER_MOUNTED_RANGED_UNITS,
+    RELIC_ID,
     RES_FOOD,
     RES_GOLD,
+    RES_WOOD,
     ROCK_CLIFF_ID,
     SIEGE_ONAGER_ID,
     TECH_BALLISTICS,
@@ -464,7 +477,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             ("06_Quest1_Build_Trade_Wall_And_Pop", "Quest1_Caravan", None),
             ("06_Quest2_Sniper_Cliff_Buff", "Quest2_SniperCliff", PlayerId.SIX.value),
             ("06a_Quest3_Siege_Vault_Unlock", "Quest3_SiegeVault", PlayerId.EIGHT.value),
-            ("06_Quest4_Blood_Altar_Super_Army", "Quest4_BloodAltar", PlayerId.SEVEN.value),
+            ("06_Quest4_Stage1_Altar_Broken", "Quest4_BloodAltar", PlayerId.SEVEN.value),
             ("05_Settlement_Destroyed_G1_North", "Settle_G1_North", PlayerId.FIVE.value),
             ("05_Settlement_Destroyed_G1_East", "Settle_G1_East", PlayerId.FIVE.value),
             ("05_Settlement_Destroyed_G2_Snipers", "Settle_G2_Snipers", PlayerId.SIX.value),
@@ -491,7 +504,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                     e for e in tr_dest.effects
                     if e.effect_type == EffectId.KILL_OBJECT and e.source_player == kill_owner
                 ]
-                self.assertEqual(len(kill_effs), 9, f"{dest_name} powinien miec 9 efektow KILL_OBJECT dla budynkow obozu!")
+                self.assertEqual(len(kill_effs), 10, f"{dest_name} powinien miec 10 efektow KILL_OBJECT dla budynkow obozu!")
 
     def test_settlement_fury_gradation_and_retaliations(self):
         """Gradacja Furii i Nagrod Settlementow Grade 1-3 oraz kierunkowe punkty spawnu odwetow w 05_Settlement_Destroyed_*."""
@@ -568,7 +581,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         for mr_id in PLAYER_MOUNTED_RANGED_UNITS:
             self.assertIn(mr_id, q2_speed_units, f"Brak buffa szybkosci w Q2 dla strzelca konnego ID={mr_id}!")
 
-        t_q4 = self.t_map["06_Quest4_Blood_Altar_Super_Army"]
+        t_q4 = self.t_map["06_Quest4_Stage2_Ritual_Complete"]
         q4_units = {e.object_list_unit_id for e in t_q4.effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE}
         # Militia (74), Eagle Scout (751), Siege Workshop (49), Krepost (1251), Donjon, Serjeant, Flemish Militia, Teutonic Knight, Huskarl
         self.assertIn(74, q4_units)
@@ -731,6 +744,8 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             BuildingInfo.HOUSE.ID: 2,
             BuildingInfo.GUARD_TOWER.ID: 2,
             BuildingInfo.KEEP.ID: 2,
+            BuildingInfo.BOMBARD_TOWER.ID: 2,
+            BuildingInfo.OUTPOST.ID: 1,
             BuildingInfo.FORTIFIED_WALL.ID: 1,
             FORTIFIED_PALISADE_ID: 1,
             ROCK_CLIFF_ID: 1,
@@ -819,6 +834,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             BuildingInfo.FORTIFIED_WALL.ID,
             BuildingInfo.KEEP.ID,
             BuildingInfo.MARKET.ID,
+            BuildingInfo.MONASTERY.ID,
         }
         for tr in self.triggers:
             for eff in tr.effects:
@@ -829,7 +845,14 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                         water_tiles,
                         f"{tr.name} tworzy obiekt unit={eff.object_list_unit_id} na wodzie ({ux}, {uy})!",
                     )
-                    if eff.object_list_unit_id not in q1_build_bldg_ids and eff.object_list_unit_id != FLARE_UNIT_ID:
+                    if (
+                        eff.object_list_unit_id not in q1_build_bldg_ids
+                        and eff.object_list_unit_id not in (FLARE_UNIT_ID, MAP_REVEALER_ID)
+                        and not (
+                            tr.name == "06_Quest4_Stage1_Altar_Broken"
+                            and eff.object_list_unit_id == RELIC_ID
+                        )
+                    ):
                         self.assertNotIn(
                             (ux, uy),
                             building_tiles,
@@ -928,6 +951,8 @@ class TestScenarioBinaryStructure(unittest.TestCase):
 
                             ux, uy = cr_eff.location_x, cr_eff.location_y
                             for camp_name, cx, cy in camps_by_player[cr_eff.source_player]:
+                                if tr.name == "06_Quest4_Stage1_Altar_Broken" and camp_name == "Quest4_BloodAltar":
+                                    continue
                                 dist = max(abs(ux - cx), abs(uy - cy))
                                 self.assertGreater(
                                     dist,
@@ -1202,7 +1227,8 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             self.assertEqual(t_leash.conditions[0].condition_type, ConditionId.TIMER)
             self.assertEqual(t_leash.conditions[0].timer, 2)
 
-            exp_box = (max(0, cx - exp_r), max(0, cy - exp_r), min(MAP_SIZE - 1, cx + exp_r), min(MAP_SIZE - 1, cy + exp_r))
+            exp_y2 = min(MAP_SIZE - 1, cy + exp_r, 191) if camp_tag == "Quest1_Caravan" else min(MAP_SIZE - 1, cy + exp_r)
+            exp_box = (max(0, cx - exp_r), max(0, cy - exp_r), min(MAP_SIZE - 1, cx + exp_r), exp_y2)
             for p in range(1, 5):
                 t_det = self.t_map[f"Garrison_Detect_{camp_tag}_P{p}"]
                 self.assertEqual(len(t_det.conditions), 1)
@@ -1273,6 +1299,172 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         self.assertEqual(dict(wave_map[13].g2_mages)[IMAM_UNIT_ID], 3)
         self.assertEqual(dict(wave_map[13].g3_north)[ELITE_BATTLE_ELEPHANT_ID], 6)
         self.assertEqual(dict(wave_map[13].g3_east)[ELITE_BATTLE_ELEPHANT_ID], 6)
+
+    def test_v70_final_boss_two_stage_quests_p2_qm_and_pois(self):
+        """Weryfikuje funkcje v7.0: Boss Fight 07a->07b, 2-etapowe Q2 i Q4, Kwatermistrza P2, Map PoI 1-2 oraz opcjonalny output_path."""
+        # 1. Statystyki Bossa (Subotai) w rejestrze oraz 01b
+        spec_boss = ENEMY_UNIT_REGISTRY[FINAL_BOSS_HERO_ID]
+        self.assertEqual(spec_boss.base_hp, 3500)
+        self.assertEqual(spec_boss.base_atk, 45)
+        self.assertTrue(spec_boss.is_ranged)
+        self.assertFalse(spec_boss.scales_hp)
+        self.assertFalse(spec_boss.scales_atk)
+        self.assertFalse(spec_boss.receives_mage_shield)
+
+        t_mut = self.t_map["01b_Apply_Specialized_Unit_Archetypes"]
+        boss_mods = [
+            e for e in t_mut.effects
+            if e.effect_type == EffectId.MODIFY_ATTRIBUTE
+            and e.source_player == PlayerId.EIGHT.value
+            and e.object_list_unit_id == FINAL_BOSS_HERO_ID
+        ]
+        self.assertTrue(any(e.object_attributes == ATTR_HIT_POINTS and e.quantity == 3500 for e in boss_mods))
+        self.assertTrue(any(e.object_attributes == ATTR_HERO_STATUS and e.quantity == 1 for e in boss_mods))
+        def _armor_atk_val(e):
+            return e.armour_attack_quantity if e.armour_attack_quantity is not None else (e.quantity % 65536)
+
+        self.assertTrue(any(e.object_attributes == ATTR_ARMOR and e.armour_attack_class == 4 and _armor_atk_val(e) == 8 for e in boss_mods))
+        self.assertTrue(any(e.object_attributes == ATTR_ARMOR and e.armour_attack_class == 3 and _armor_atk_val(e) == 10 for e in boss_mods))
+        self.assertTrue(any(e.object_attributes == ATTR_ATTACK and e.armour_attack_class == 3 and _armor_atk_val(e) == 45 for e in boss_mods))
+        self.assertTrue(any(e.object_attributes == ATTR_MOVEMENT_SPEED and abs(e.quantity - 1.35) < 1e-6 for e in boss_mods))
+
+        # 2. Dwufazowe zwyciestwo 07a -> 07b
+        self.assertNotIn("07_Victory_All_6_Settlements_Destroyed", self.t_map)
+        t_07a = self.t_map["07a_All_Settlements_Destroyed_Spawn_Final_Boss"]
+        t_07b = self.t_map["07b_Victory_Final_Boss_Defeated"]
+        self.assertEqual(t_07a.enabled, 1)
+        self.assertEqual(t_07b.enabled, 0)
+        self.assertEqual(t_07b.description_order, 99)
+
+        deact_07a = {e.trigger_id for e in t_07a.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER}
+        for esc_name in [tr.name for tr in self.triggers if tr.name.startswith("04") or tr.name.startswith("03_Endless_")]:
+            self.assertIn(self.t_map[esc_name].trigger_id, deact_07a, f"07a nie dezaktywuje {esc_name}!")
+
+        act_07a = {e.trigger_id for e in t_07a.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER}
+        self.assertIn(t_07b.trigger_id, act_07a)
+
+        revealers_07a = {
+            (e.source_player, e.location_x, e.location_y)
+            for e in t_07a.effects
+            if e.effect_type == EffectId.CREATE_OBJECT and e.object_list_unit_id == MAP_REVEALER_ID
+        }
+        for p_idx in range(1, 5):
+            self.assertIn((p_idx, 104, 114), revealers_07a)
+            self.assertIn((p_idx, 116, 114), revealers_07a)
+
+        boss_army_07a = [
+            (e.source_player, e.object_list_unit_id)
+            for e in t_07a.effects
+            if e.effect_type == EffectId.CREATE_OBJECT and e.source_player in (PlayerId.SEVEN.value, PlayerId.EIGHT.value)
+        ]
+        self.assertEqual(boss_army_07a.count((PlayerId.EIGHT.value, FINAL_BOSS_HERO_ID)), 1)
+        self.assertEqual(boss_army_07a.count((PlayerId.EIGHT.value, ELITE_BATTLE_ELEPHANT_ID)), 4)
+        self.assertEqual(boss_army_07a.count((PlayerId.EIGHT.value, UnitInfo.PALADIN.ID)), 14)
+        self.assertEqual(boss_army_07a.count((PlayerId.EIGHT.value, UnitInfo.SIEGE_RAM.ID)), 3)
+        self.assertEqual(boss_army_07a.count((PlayerId.SEVEN.value, IMAM_UNIT_ID)), 2)
+
+        conds_07b = t_07b.conditions
+        self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 10 for c in conds_07b))
+        self.assertTrue(any(
+            c.condition_type == ConditionId.OBJECTS_IN_AREA
+            and c.source_player == PlayerId.EIGHT.value
+            and c.object_list == FINAL_BOSS_HERO_ID
+            and c.object_state == ObjectState.ALIVE.value
+            and c.inverted == 1
+            and (c.area_x1, c.area_y1, c.area_x2, c.area_y2) == (0, 0, MAP_SIZE - 1, MAP_SIZE - 1)
+            for c in conds_07b
+        ))
+        win_players = {e.source_player for e in t_07b.effects if e.effect_type == EffectId.DECLARE_VICTORY and e.enabled == 1}
+        self.assertEqual(win_players, {1, 2, 3, 4})
+
+        # 3. Q2 Dwuetapowe: 2x Bombard Tower, 1x Onager w garnizonie, tarcza i nagroda
+        p6_bt = [u for u in self.scenario.unit_manager.units[PlayerId.SIX.value] if u.unit_const == BuildingInfo.BOMBARD_TOWER.ID]
+        self.assertEqual({(int(u.x), int(u.y)) for u in p6_bt}, {(24, 34), (32, 34)})
+        t_q2_garr = self.t_map["Garrison_Spawn_Quest2_SniperCliff"]
+        q2_onagers = [e for e in t_q2_garr.effects if e.effect_type == EffectId.CREATE_OBJECT and e.object_list_unit_id == SIEGE_ONAGER_ID]
+        self.assertEqual(len(q2_onagers), 1)
+
+        t_q2_shield = self.t_map["06_Quest2_Shield_Loop"]
+        self.assertEqual(t_q2_shield.enabled, 1)
+        self.assertEqual(t_q2_shield.looping, 1)
+        self.assertTrue(any(e.effect_type == EffectId.HEAL_OBJECT and e.quantity == 400 and e.object_list_unit_id == BuildingInfo.UNIVERSITY.ID for e in t_q2_shield.effects))
+
+        t_q2_bat = self.t_map["06_Quest2_Batteries_Down"]
+        self.assertEqual(len([c for c in t_q2_bat.conditions if c.condition_type == ConditionId.DESTROY_OBJECT]), 2)
+        self.assertIn(t_q2_shield.trigger_id, {e.trigger_id for e in t_q2_bat.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER})
+
+        t_q2 = self.t_map["06_Quest2_Sniper_Cliff_Buff"]
+        deact_q2 = {e.trigger_id for e in t_q2.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER}
+        self.assertIn(t_q2_shield.trigger_id, deact_q2)
+        self.assertIn(t_q2_bat.trigger_id, deact_q2)
+        p3_bc = [e for e in t_q2.effects if e.effect_type == EffectId.CREATE_OBJECT and e.source_player == PlayerId.THREE.value and e.object_list_unit_id == UnitInfo.BOMBARD_CANNON.ID]
+        self.assertEqual(len(p3_bc), 2)
+        self.assertEqual({(e.location_x, e.location_y) for e in p3_bc}, {(28, 36)})
+
+        # 4. Q4 Dwuetapowe: Stage 1 Relikt + Odwet, Stage 2 Klasztor + Mnisi
+        t_q4_s1 = self.t_map["06_Quest4_Stage1_Altar_Broken"]
+        t_q4_s2 = self.t_map["06_Quest4_Stage2_Ritual_Complete"]
+        self.assertEqual(t_q4_s1.enabled, 1)
+        self.assertEqual(t_q4_s2.enabled, 0)
+        self.assertTrue(any(e.effect_type == EffectId.CREATE_OBJECT and e.source_player == PlayerId.GAIA.value and e.object_list_unit_id == RELIC_ID and (e.location_x, e.location_y) == (105, 20) for e in t_q4_s1.effects))
+        q4_counter = [e.object_list_unit_id for e in t_q4_s1.effects if e.effect_type == EffectId.CREATE_OBJECT and e.source_player == PlayerId.SEVEN.value]
+        self.assertEqual(q4_counter.count(UnitInfo.HEAVY_CAMEL_RIDER.ID), 6)
+        self.assertEqual(q4_counter.count(UnitInfo.ELITE_MAMELUKE.ID), 6)
+        self.assertEqual(q4_counter.count(HUSSAR_ID), 4)
+        self.assertIn(t_q4_s2.trigger_id, {e.trigger_id for e in t_q4_s1.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER})
+
+        self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 30 for c in t_q4_s2.conditions))
+        self.assertTrue(any(e.effect_type == EffectId.CREATE_OBJECT and e.source_player == PlayerId.ONE.value and e.object_list_unit_id == BuildingInfo.MONASTERY.ID and (e.location_x, e.location_y) == (58, 152) for e in t_q4_s2.effects))
+        q4_monks = [e for e in t_q4_s2.effects if e.effect_type == EffectId.CREATE_OBJECT and e.source_player == PlayerId.ONE.value and e.object_list_unit_id == UnitInfo.MONK.ID and (e.location_x, e.location_y) == (58, 155)]
+        self.assertEqual(len(q4_monks), 2)
+
+        # 5. Kwatermistrz P2 (20, 162)
+        p2_kings = [u for u in self.scenario.unit_manager.units[PlayerId.TWO.value] if u.unit_const == UnitInfo.KING.ID]
+        self.assertEqual(len(p2_kings), 1)
+        self.assertEqual((int(p2_kings[0].x), int(p2_kings[0].y)), (17, 162))
+
+        t_qm_ready = self.t_map["State_P2_QM_Ready"]
+        t_qm_cd = self.t_map["06d_P2_QM_Cooldown_240s"]
+        t_qm_mil = self.t_map["06d_P2_QM_Military_Drop"]
+        t_qm_eco = self.t_map["06d_P2_QM_Eco_Drop"]
+        self.assertEqual((t_qm_ready.enabled, t_qm_cd.enabled, t_qm_mil.enabled, t_qm_eco.enabled), (1, 0, 1, 1))
+        self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 240 for c in t_qm_cd.conditions))
+        self.assertEqual(
+            {e.trigger_id for e in t_qm_cd.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER},
+            {t_qm_ready.trigger_id, t_qm_mil.trigger_id, t_qm_eco.trigger_id},
+        )
+        mil_creates = [e.object_list_unit_id for e in t_qm_mil.effects if e.effect_type == EffectId.CREATE_OBJECT and e.source_player == PlayerId.TWO.value]
+        self.assertEqual(mil_creates.count(UnitInfo.ELITE_CONQUISTADOR.ID), 4)
+        self.assertEqual(mil_creates.count(UnitInfo.BOMBARD_CANNON.ID), 2)
+        eco_res = [e for e in t_qm_eco.effects if e.effect_type == EffectId.MODIFY_RESOURCE and e.tribute_list in (RES_FOOD, RES_WOOD, RES_GOLD)]
+        self.assertEqual(len(eco_res), 12)
+        self.assertTrue(all(e.quantity == 300 for e in eco_res))
+        self.assertEqual(len([e for e in t_qm_eco.effects if e.effect_type == EffectId.HEAL_OBJECT and e.quantity == 500]), 4)
+
+        # 6. Map PoI 1 i PoI 2
+        gaia_units = self.scenario.unit_manager.units[PlayerId.GAIA.value]
+        self.assertTrue(any(u.unit_const == BuildingInfo.OUTPOST.ID and (int(u.x), int(u.y)) == (22, 73) for u in gaia_units))
+        self.assertTrue(any(u.unit_const == OtherInfo.GOLD_MINE.ID and (int(u.x), int(u.y)) == (138, 174) for u in gaia_units))
+        poi1_ids = {self.t_map[f"06e_PoI1_Engineers_P{p}"].trigger_id for p in range(1, 5)}
+        poi2_ids = {self.t_map[f"06e_PoI2_Caravan_P{p}"].trigger_id for p in range(1, 5)}
+        for p in range(1, 5):
+            tp1 = self.t_map[f"06e_PoI1_Engineers_P{p}"]
+            self.assertEqual({e.trigger_id for e in tp1.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER}, poi1_ids)
+            self.assertEqual(len([e for e in tp1.effects if e.effect_type == EffectId.CREATE_OBJECT and e.source_player == p and e.object_list_unit_id == UnitInfo.CAPPED_RAM.ID]), 2)
+            self.assertEqual(len([e for e in tp1.effects if e.effect_type == EffectId.CREATE_OBJECT and e.source_player == p and e.object_list_unit_id == PETARD_ID]), 2)
+
+            tp2 = self.t_map[f"06e_PoI2_Caravan_P{p}"]
+            self.assertEqual({e.trigger_id for e in tp2.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER}, poi2_ids)
+            rev_q1 = [e for e in tp2.effects if e.effect_type == EffectId.CREATE_OBJECT and e.object_list_unit_id == MAP_REVEALER_ID and (e.location_x, e.location_y) == (154, 190)]
+            self.assertEqual(len(rev_q1), 4)
+
+        # 7. Opcjonalny output_path w build_horde_scenario
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            custom_path = Path(tmp_dir) / "test_custom_horda_v70.aoe2scenario"
+            returned_path = build_horde_scenario(output_path=custom_path)
+            self.assertEqual(returned_path, custom_path)
+            self.assertTrue(custom_path.exists())
+            self.assertGreater(custom_path.stat().st_size, 100_000)
 
 
 if __name__ == "__main__":

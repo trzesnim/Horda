@@ -1,4 +1,4 @@
-# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v6.7)
+# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v7.0)
 
 ## 0. Protokół Wykonawczy dla Agenta IDE (Antigravity / VS Code)
 1. **Atomowość etapów:** Realizuj podetapy ściśle po kolei (`Etap 0` -> `1A` -> `1B` -> `2` -> `3A` -> `3B` -> `3C` -> `4` -> `5` -> `6A` -> `6B` -> `6C` -> `7` -> `8`). **Zabrania się łączenia kilku podetapów (szczególnie 3A, 3B i 3C) w jedną edycję.**
@@ -440,14 +440,19 @@ Zaktualizuj `horda.md` oraz teksty w `populate_ingame_scenario_descriptions()` (
   2. **Ochrona polan spawnu przed zamurowaniem (`horde_waves.py`):** pre-spawn `kill_object` (`ObjectType.BUILDING`) dla `P1–P4` na `spawn_x ± 6, spawn_y ± 6` dla zewnętrznych spawnów (`spawn_x > 105 or spawn_y < 96`), z ograniczeniem `y2 <= 182` dla południowo-wschodnich spawnów (`G1_East`, `Trade_Line_Attack`) chroniącym baszty i Mur Handlowy Q1 (`y=183..186`).
   3. **Odporność na konwersję i cisza na czacie (`horde_waves.py`):** `TECH_FAITH` dla wszystkich `ai_players` (`P5–P8`) w `01e_AI_Techs_Castle_18m` (`1080s`) oraz zmiana interwału flary Arcymaga w `02c_Mage_Visual_Flare_Beacon_8s` z `8s` na `20s`.
   4. **Signature Waves i uzupełnienie `Q2` (`horde_config.py`, `test_horde_scenario.py`):** Fala 7 (*Pancerna Szarża*: `18x Cav` w `G2_Mages`, `16x Cav + 2x Siege Ram` w `G3_North`), Fala 10 (*Noc Szakali*: `22` Szakali), Fala 11 (*Nawałnica Artylerii i Snajperów*: `8x Jan + 4x S.Onag` w `G2_Snipers`, `4x S.Onag` w `G3_East`), Fala 13 (*Straż Przednia Tytanów*: `3x Imam` w `G2_Mages`, po `6x Ele` w `G3_North` i `G3_East`); dopisanie `WAR_WAGON`, `ELITE_WAR_WAGON`, `GENITOUR`, `ELITE_GENITOUR` do `PLAYER_MOUNTED_RANGED_UNITS`; rozszerzenie walidatora `test_horde_scenario.py` do **27/27 testów OK**.
+- **Etap R11 `[ROZWÓJ v7.0]` `[DONE / WDROŻONE]`:**
+  1. **Zamknięcie uwag `v6.7`:** opcjonalny `output_path` w `build_horde_scenario(output_path=None) -> Path` (`generate_horde_quests_scenario.py`) oraz `detect_y2_max=191` dla `Quest1_Caravan` (`horde_waves.py`).
+  2. **Finałowy Boss Fight „Ostatni Szturm Wielkiego Chana” (`07a -> 07b`):** `FINAL_BOSS_HERO_ID = UnitInfo.SUBOTAI.ID` (`698`, `3500 HP`, `45` atk `cl=3`, pancerz `8/10`, speed `1.35`) w `ENEMY_UNIT_REGISTRY` (`29` jednostek) i `01b`; po upadku 6 Settlementów `07a` gasi eskalację i Endless, odsłania `(104, 114)`/`(116, 114)`, spawnuje Bossa z eskortą przed Bramą Centralną i aktywuje `07b_Victory_Final_Boss_Defeated`.
+  3. **Dwuetapowe `Q2` i `Q4`:** `Q2` otrzymuje `2x Bombard Tower` osłaniające Uniwersytet (`06_Quest2_Shield_Loop` + `06_Quest2_Batteries_Down`), `1x` Onager w garnizonie oraz `2x Bombard Cannon` (`P3`) + `MAP_REVEALER` na `G2_Snipers`; `Q4` przechodzi w `Stage1` (`RELIC` na `(105, 20)` + 30s kontratak `P7`) -> `Stage2` (dotychczasowe bonusy + `MONASTERY` i `2x MONK` `P1` na `(58, 152)`).
+  4. **Posterunek Kwatermistrza `P2` `(20, 162)` i dwa Map PoI:** `UnitInfo.KING` `P2` na `(17, 162)` + flagi Mil/Eco z wspólnym cooldownem `240s` (`4x Elite Conquistador + 2x Bombard Cannon` na `(54, 149)` lub `+300 F/W/G` + naprawa Twierdzy `+500 HP`); PoI 1 `(22, 74)` (`2x Capped Ram + 2x Petard + 200W/G`) oraz PoI 2 `(138, 174)` (`+350F/G + reveal Q1`); pełna walidacja **28/28 testów OK**.
 
 ---
 
-## Opcjonalny Backlog R&D na przyszłość (`v7.0+`)
+## Opcjonalny Backlog R&D na przyszłość (`v7.1+`)
 
 * **Zastąpienie 169-etapowej drabinki `00_Wave_Timer_UI_*` natywnym skryptem XS (`XsManager`) lub pojedynczym licznikiem zmiennych (`Variable`)**, jeśli przyszłe wersje `AoE2ScenarioParser` i silnika DE udostępnią stabilne API tekstowe bez ryzyka crasha `display_timer`.
-* **Pomysły rozwojowe `v7.0` z audytu Red Teaming (Sonnet — do oceny po playteście):**
-  1. *Dwuetapowy Q2:* 3 nieruchome baterie `Siege Onager` P6 chroniące nietykalny Uniwersytet na Klifie Artylerii + nagroda przyczółka po zniszczeniu baterii.
-  2. *Dwuetapowy Q4:* przejęcie Reliktu z Krwawego Ołtarza + natychmiastowy kontratak P7 + konieczność odniesienia Reliktu do Klasztoru gracza.
-  3. *3 mikro-zdarzenia eksploracyjne na mapie:* Kamień Wędrowca, Opuszczony Wóz Karawany oraz Zagubiony Zwiadowca.
-  4. *Mechanika „Ostatni Settlement = Finałowy Boss Fight”* (ostatni ocalały obóz zyskuje wzmocnienie bossa finałowego) oraz *aktywne wsparcie Kwatermistrza dla Gracza 2*.
+* **Zrealizowane kierunki z audytu Red Teaming (`v7.0`):**
+  1. `[WDROŻONE w Etapie R11 / v7.0]` *Dwuetapowy Q2* (`2x Bombard Tower` + pętla tarczy Uniwersytetu + `2x Bombard Cannon` `P3` i wywiad nad `G2_Snipers`).
+  2. `[WDROŻONE w Etapie R11 / v7.0]` *Dwuetapowy Q4* (`RELIC` w ruinach Krwawego Ołtarza + 30s Krwawy Odwet Zakonu `P7` + budowa `MONASTERY` i `2x MONK` `P1` w Twierdzy).
+  3. `[WDROŻONE w Etapie R11 / v7.0]` *Zdarzenia eksploracyjne na mapie* (`PoI 1: Obóz Inżynierów (22, 74)` oraz `PoI 2: Zaginiona Karawana (138, 174)`).
+  4. `[WDROŻONE w Etapie R11 / v7.0]` *Finałowy Boss Fight po upadku 6 Settlementów (`Wielki Chan Subotai`) oraz aktywny Posterunek Kwatermistrza P2 `(20, 162)`*.

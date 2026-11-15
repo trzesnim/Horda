@@ -1,10 +1,10 @@
-# GEMINI.md — Instrukcja Architektoniczna i Środowiskowa (`Kroniki Rubieży: Horda` v6.6+)
+# GEMINI.md — Instrukcja Architektoniczna i Środowiskowa (`Kroniki Rubieży: Horda` v7.0)
 
 ## 1. Środowisko i Weryfikacja (Nie szukaj Pythona po systemie!)
 - Interpreter `python` oraz linter `ruff` są dostępne bezpośrednio w bieżącym środowisku. Nie wykonuj komend diagnostycznych szukających `python.exe` (`where`, `reg query`, przeszukiwanie `AppData`).
 - **Kolejność weryfikacji po edycji kodu:**
   1. `python -m ruff check .` — szybka kontrola składni i importów (<1 s).
-  2. `python test_horde_scenario.py -v` — automatycznie kompiluje świeży plik `.aoe2scenario` przez `build_horde_scenario()` i uruchamia 26 testów jednostkowych oraz walidację binarną (~35 s). Nie musisz uruchamiać `generate_horde_quests_scenario.py` osobno przed testami.
+  2. `python test_horde_scenario.py -v` — automatycznie kompiluje świeży plik `.aoe2scenario` przez `build_horde_scenario()` i uruchamia 28 testów jednostkowych oraz walidację binarną (~55 s). Nie musisz uruchamiać `generate_horde_quests_scenario.py` osobno przed testami.
 
 ## 2. Zasada Pełnego Kontekstu i Dokumentacji (`horda.md`, `DEBUG_LOG.md`, `ROADMAP.md`)
 - **Pełny odczyt przed edycją:** Przed modyfikacją kodu przeczytaj w całości modyfikowane moduły `.py`, `horda.md` oraz `DEBUG_LOG.md`, aby zachować spójność całego systemu i uniknąć regresji.
@@ -16,12 +16,12 @@
 - **Zakaz cichych wyjątków:** Nigdy nie używaj konstrukcji `try: ... except Exception: pass` wokół wywołań `AoE2ScenarioParser`. Używaj jawnego `safe_call` weryfikującego sygnatury przez `inspect.signature`.
 
 ## 3. Architektura Modułów Projektu
-- `generate_horde_quests_scenario.py` — punkt wejścia (Runner).
-- `horde_config.py` — stałe ID, słownik `BALANCE`, `ENEMY_UNIT_REGISTRY` (jedyne źródło prawdy o statystykach i skalowaniu 26 jednostek wroga), listy `PLAYER_*`, `get_wave_definitions()` oraz opisy w grze (`populate_ingame_scenario_descriptions`).
-- `horde_map.py` — generator mapy `200×200`, dwuwarstwowa siatka antykolizyjna `SafeMapGrid` (`occupied_tiles` vs `no_tree_zones`), wygładzanie elewacji $|\Delta h| \le 1$, bazy `P1–P4`, 6 Settlementów, 4 Questy i Sanktuarium Balansu `(6, 150)`.
-- `horde_waves.py` — inicjalizacja dyplomacji i technologii AI (`01_Init`, `01b`, `01d–01f` z `enforce_specialized_unit_caps`), garnizony (`add_garrison_spawn_effect` + `add_guarded_camp_with_leash`), Aura Arcymaga (`02a–02d`), przepychanie bram (`02e`), eskalacja czasowa (`04a–04f`) oraz fale 1–14 i Tryb Endless (`03_*`).
-- `horde_quests.py` — Zegar Fali (`00_Wave_Timer_*`), Sanktuarium Balansu (`09_Diff_*`), Questy `Q1–Q4` (`06_*`), zniszczenie Settlementów (`05_*` z `collapse_camp_buildings`) i warunki zwycięstwa/porażki (`07_*`, `08_*`).
-- `test_horde_scenario.py` — zestaw 26 testów (algorytmy skalowania, zerowy dryf HP/Atk, brak kolizji jednostek i budynków z wodą/drzewami/smyczami, struktura binarna triggerów).
+- `generate_horde_quests_scenario.py` — punkt wejścia (Runner z `build_horde_scenario(output_path=None)`).
+- `horde_config.py` — stałe ID, słownik `BALANCE`, `ENEMY_UNIT_REGISTRY` (jedyne źródło prawdy o statystykach i skalowaniu 29 jednostek wroga w tym Bossa `FINAL_BOSS_HERO_ID`), listy `PLAYER_*`, `get_wave_definitions()` oraz opisy w grze (`populate_ingame_scenario_descriptions`).
+- `horde_map.py` — generator mapy `200×200`, dwuwarstwowa siatka antykolizyjna `SafeMapGrid` (`occupied_tiles` vs `no_tree_zones`), wygładzanie elewacji $|\Delta h| \le 1$, bazy `P1–P4`, 6 Settlementów, 4 Questy (w tym 2x `BOMBARD_TOWER` przy Q2), Posterunek Kwatermistrza P2 `(20, 162)`, 2 Map PoI `(22, 74)` / `(138, 174)` i Sanktuarium Balansu `(6, 150)`.
+- `horde_waves.py` — inicjalizacja dyplomacji i technologii AI (`01_Init`, `01b`, `01d–01f` z `enforce_specialized_unit_caps`), garnizony (`add_garrison_spawn_effect` + `add_guarded_camp_with_leash` z `detect_y2_max`), Aura Arcymaga (`02a–02d`), przepychanie bram (`02e`), eskalacja czasowa (`04a–04f`) oraz fale 1–14 i Tryb Endless (`03_*`).
+- `horde_quests.py` — Zegar Fali (`00_Wave_Timer_*`), Sanktuarium Balansu (`09_Diff_*`), dwuetapowe Questy `Q1–Q4` (`06_*`), Posterunek Kwatermistrza P2 (`06d_*`), Map PoI (`06e_*`), zniszczenie Settlementów (`05_*` z `collapse_camp_buildings`) i dwufazowe warunki zwycięstwa/porażki (`07a_All_Settlements_Destroyed_Spawn_Final_Boss` -> `07b_Victory_Final_Boss_Defeated`, `08_*`).
+- `test_horde_scenario.py` — zestaw 28 testów (algorytmy skalowania, zerowy dryf HP/Atk, brak kolizji jednostek i budynków z wodą/drzewami/smyczami, struktura binarna triggerów `v7.0`).
 
 ## 4. Nienaruszalne Reguły Silnika Genie (AoE2: DE)
 1. **Zakaz efektów wywołujących crash C++:** Nigdy nie używaj `display_timer`, `display_instructions` ani ujemnego `tribute`. Do zasobów i limitu populacji (`RES_BONUS_POP_CAP = 32`) używaj wyłącznie `modify_resource` z `Operation.ADD`.
