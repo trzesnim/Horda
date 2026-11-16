@@ -584,7 +584,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     send_highlight_chat(
         t_init, "<YELLOW>",
-        "=== KRONIKI RUBIEZY v7.0.1 === Inzynier Balansu P1 czeka na (6, 150), a Kwatermistrz P2 na (20, 162) [od 10:00]! W panelu Celow (Objectives) dziala ZEGAR FALI!",
+        "=== KRONIKI RUBIEZY v7.0.2 === Inzynier Balansu P1 czeka w Sanktuarium (4, 138), a Kwatermistrz P2 w komnacie (4, 164) [od 10:00]! W panelu Celow (Objectives) dziala ZEGAR FALI oraz skrot zasad TL;DR!",
     )
 
     t_mutate = tm.add_trigger("01b_Apply_Specialized_Unit_Archetypes", enabled=True, looping=False)
@@ -917,11 +917,11 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     diff_tags = {-2: "M2", -1: "M1", 0: "0", 1: "P1", 2: "P2"}
     diff_obj_labels = {
-        -2: "Poziom Trudnosci (6,150): -2 BARDZO LATWY (-40% fal, -30% HP)",
-        -1: "Poziom Trudnosci (6,150): -1 LATWY (-20% fal, -15% HP)",
-        0: "Poziom Trudnosci (6,150): 0 DOMYSLNY (100% fal i statystyk)",
-        1: "Poziom Trudnosci (6,150): +1 TRUDNY (+25% fal, +15 HP, +2 Atk)",
-        2: "Poziom Trudnosci (6,150): +2 EKSTREMALNY (+50% fal, +30 HP, +4 Atk)",
+        -2: "Poziom Trudnosci (4,138): -2 BARDZO LATWY (-40% fal, -30% HP)",
+        -1: "Poziom Trudnosci (4,138): -1 LATWY (-20% fal, -15% HP)",
+        0: "Poziom Trudnosci (4,138): 0 DOMYSLNY (100% fal i statystyk)",
+        1: "Poziom Trudnosci (4,138): +1 TRUDNY (+25% fal, +15 HP, +2 Atk)",
+        2: "Poziom Trudnosci (4,138): +2 EKSTREMALNY (+50% fal, +30 HP, +4 Atk)",
     }
     state_markers = {}
     for lvl, tag in diff_tags.items():

@@ -1,4 +1,4 @@
-# DEBUG_LOG.md — Dokumentacja Architektury, Stanu Bazowego i Błędów (`Kroniki Rubieży: Horda i Ekspedycje` v6.3 -> v7.0.1)
+# DEBUG_LOG.md — Dokumentacja Architektury, Stanu Bazowego i Błędów (`Kroniki Rubieży: Horda i Ekspedycje` v6.3 -> v7.0.2)
 
 ## 0. Identyfikacja stanu bazowego i zasady dla Agenta IDE (Antigravity / VS Code)
 - **Repozytorium bazowe:** `https://github.com/trzesnim/AoE_Scenarios/tree/main` (stan odpowiadający wersji `v6.3 -> v6.4` po audycie kodu i testów).
@@ -18,17 +18,17 @@ Projekt generuje 4-osobowy scenariusz kooperacyjny RPG/RTS do *Age of Empires II
    - Udostępnia funkcję `build_horde_scenario(output_path: Path | str | None = None) -> Path` (domyślnie używa `OUTPUT_SCENARIO` i zwraca ścieżkę zapisanego pliku).
    - Wczytuje plik szablonu `INPUT_TEMPLATE` (`template.aoe2scenario`) przez `AoE2DEScenario.from_file()` i wywołuje kolejno `populate_ingame_scenario_descriptions`, `build_map_and_entities`, `setup_init_aura_and_waves`, `setup_sanctuary_quests_and_victory`.
 2. **`horde_config.py` — Konfiguracja, stałe ID, rejestr jednostek i definicje fal:**
-   - Zawiera stałe ID obiektów, jednostek specjalnych, Bossa (`FINAL_BOSS_HERO_ID = 698`), zasobów (`RES_*`), atrybutów silnika Genie (`ATTR_*`) oraz technologii (`TECH_*`), a także rejestr `ENEMY_UNIT_REGISTRY` (`29` jednostek wroga).
+   - Zawiera stałe ID obiektów, jednostek specjalnych, Bossa (`FINAL_BOSS_HERO_ID = 698`), zasobów (`RES_*`), atrybutów silnika Genie (`ATTR_*`) oraz technologii (`TECH_*`), a także rejestr `ENEMY_UNIT_REGISTRY` (`30` jednostek wroga).
    - Definiuje słownik `BALANCE` (czasy fal, progi eskalacji, statystyki 6 archetypów + Bossa `Subotai`, wartości nagród za Questy).
-   - Definiuje funkcje: `find_scenario_folder()`, `populate_ingame_scenario_descriptions(scenario)` oraz `get_wave_definitions()`.
+   - Definiuje funkcje: `find_scenario_folder()`, `populate_ingame_scenario_descriptions(scenario)` (z blokiem `TL;DR` umieszczonym zarówno w `instructions`, jak i na początku `hints`) oraz `get_wave_definitions()`.
 3. **`horde_map.py` — Silnik geometryczny mapy i spawner obiektów startowych:**
-   - Zawiera klasę siatki antykolizyjnej `SafeMapGrid` (`mark_footprint`, `mark_no_trees`) oraz funkcje rzeźby terenu, biomu, lasów, rzeki, klifów, baz graczy, Posterunku Kwatermistrza P2 `(20, 162)`, 2 Map PoI (`(22, 74)`, `(138, 174)`), przełęczy, Settlementów i Sanktuarium Balansu.
+   - Zawiera klasę siatki antykolizyjnej `SafeMapGrid` (`mark_footprint`, `mark_no_trees`) oraz funkcje rzeźby terenu, biomu, lasów, rzeki, klifów, baz graczy, odizolowanych komnat Sanktuarium P1 `(4, 138)` i Kwatermistrza P2 `(4, 164)` (z pasem gęstego lasu `x=8..13, y=128..176` i `x=1..13, y=144..158` oraz stałymi `MAP_REVEALER` dla `P1–P4`), 3 Map PoI (`(30, 76)`, `(128, 174)`, `(64, 88)`), przełęczy i Settlementów.
    - Główna funkcja `build_map_and_entities(scenario) -> dict` buduje mapę `200x200` i zwraca słownik `ctx` z referencjami do obiektów i współrzędnych.
 4. **`horde_waves.py` — Inicjalizacja AI, mutacje jednostek, Aura Maga, eskalacja i fale 1–14:**
-   - Zawiera funkcje pomocnicze triggerów (`safe_call`, `safe_modify_attribute`, `add_enemy_combat_buff`, `set_as_objective`, `send_highlight_chat`, `add_player_resource`, `research_techs`, `add_guarded_camp_with_leash` z `detect_y2_max`, `add_spawn_and_attack_effect`, `scale_comp`).
+   - Zawiera funkcje pomocnicze triggerów (`safe_call`, `safe_modify_attribute`, `add_enemy_combat_buff`, `set_as_objective`, `send_highlight_chat`, `add_player_resource`, `research_techs`, `add_guarded_camp_with_leash` z `detect_y2_max`, `add_spawn_and_attack_effect`, `scale_comp_for_level`).
    - Główna funkcja `setup_init_aura_and_waves(scenario, ctx)` tworzy triggery dyplomacji, technologii AI, mutacji jednostek specjalnych i Bossa (`01b`), garnizonów, Aury Arcymaga, 3-stopniowej eskalacji oraz 14 fal Hordy + Endless (eksportuje `escalation_triggers` i `endless_triggers`).
-5. **`horde_quests.py` — Zegar Fali, Sanktuarium Balansu, Questy Q1–Q4, Kwatermistrz P2, PoI, Settlementy i Boss Finałowy:**
-   - Główna funkcja `setup_sanctuary_quests_and_victory(scenario, ctx)` tworzy Zegar Fali (`00_Wave_Timer_*`), maszynę stanów Sanktuarium Balansu (`09_Diff_*`), dwuetapowe Questy `Q1–Q4` (`06_Quest*`), Posterunek Kwatermistrza P2 (`06d_*`), Map PoI (`06e_*`), zniszczenie 6 Settlementów (`05_Settlement_Destroyed_*`), dwufazowy Boss Fight (`07a -> 07b`) oraz warunek porażki (`08_Defeat_*`).
+5. **`horde_quests.py` — Zegar Fali, TL;DR w Objectives, Sanktuarium Balansu, Questy Q1–Q4, 3-poziomowy Kwatermistrz P2, PoI 1–3, Settlementy i Boss Finałowy:**
+   - Główna funkcja `setup_sanctuary_quests_and_victory(scenario, ctx)` tworzy Zegar Fali (`00_Wave_Timer_*`) i 4 triggery `00_TLDR_Modal_1..4` (`display_as_objective=1, display_on_screen=0, order=210..207`), maszynę stanów Sanktuarium Balansu (`09_Diff_*`), dwuetapowe Questy `Q1–Q4` (`06_Quest*`), 3-poziomowy Posterunek Kwatermistrza P2 (`06d_*`), Map PoI 1–3 (`06e_*`), zniszczenie 6 Settlementów (`05_Settlement_Destroyed_*`), czterofazowy Boss Fight z Tarczą Gwardii Słoni (`07a -> 07b (+ 07b_Boss_Elephant_Guard_Heal) -> 07c -> 07d`) oraz warunek porażki (`08_Defeat_*`).
 6. **`horda.md` — Dokumentacja scenariusza dla graczy.**
 
 ### Uruchamianie kompilacji
@@ -42,8 +42,8 @@ python generate_horde_quests_scenario.py
 
 ### Gracze ludzcy (`human_players = [PlayerId.ONE, PlayerId.TWO, PlayerId.THREE, PlayerId.FOUR]`)
 Wszyscy 4 gracze są w sojuszu (`DiplomacyState.ALLY`), mają od `0:01` zbadaną Kartografię (`TECH_CARTOGRAPHY = 19`) i startują z zasobami `500` Food, `600` Wood, `400` Gold, `300` Stone (`BALANCE["human_start_res"]`), 6 wieśniakami i 1 skautem wewnątrz Twierdzy Sojuszu w SW części mapy (`x = 0..104, y = 100..199`):
-- **`PlayerId.ONE` (Niebieski):** Town Center na `(76, 124)`. Posiada nieśmiertelnego Króla (`UnitInfo.KING.ID`) w Sanktuarium Balansu na `(6, 150)` oraz stałe obiekty `MAP_REVEALER_ID = 837` nad celami na mapie.
-- **`PlayerId.TWO` (Czerwony):** Town Center na `(32, 164)`. Właściciel centralnej **Cytadeli Sojuszu** (`FEITORIA_ID = 1021` na `54, 146`, +3000 HP; w `0:01` otrzymuje `+20` do `RES_BONUS_POP_CAP = 32`) oraz **Posterunku Kwatermistrza Twierdzy `(20, 162)`** (`UnitInfo.KING.ID` na `17, 162`, flagi wsparcia militarnego `20, 158` i konwoju `20, 166`, cooldown `240s`).
+- **`PlayerId.ONE` (Niebieski):** Town Center na `(76, 124)`. Posiada nieśmiertelnego Króla (`UnitInfo.KING.ID`) w szczelnie odizolowanym Sanktuarium Balansu na `(4, 138)` oraz stałe obiekty `MAP_REVEALER_ID = 837` nad celami na mapie (oraz wspólnie z `P2–P4` nad `(4, 138)` i `(4, 164)`).
+- **`PlayerId.TWO` (Czerwony):** Town Center na `(32, 164)`. Właściciel centralnej **Cytadeli Sojuszu** (`FEITORIA_ID = 1021` na `54, 146`, +3000 HP; w `0:01` otrzymuje `+20` do `RES_BONUS_POP_CAP = 32`) oraz szczelnie odizolowanego **Posterunku Kwatermistrza Twierdzy `(4, 164)`** (`UnitInfo.KING.ID` na `(4, 164)`, flagi wsparcia militarnego `(4, 161)` i konwoju `(4, 167)`, cooldown `240s`, 3-stopniowe skalowanie w `10:00`, `20:00` i `30:00`).
 - **`PlayerId.THREE` (Zielony):** Town Center na `(32, 122)`. Odpowiada za umocnienia Bramy Północnej `(48, 100)`.
 - **`PlayerId.FOUR` (Żółty):** Town Center na `(76, 168)`. Odpowiada za umocnienia Bramy Wschodniej `(104, 162)` i Bramy Handlowej `(104, 193)`.
 
@@ -76,10 +76,12 @@ Wszyscy 4 gracze AI są w sojuszu między sobą i w stanie wojny (`DiplomacyStat
 - **Korytarze wyrębu lasu przez Saperów:**
   - `north_breach_box = (75, 95, 80, 105)` (wymiar `6×11` kratek — Fala 9 w `51:00`),
   - `east_breach_box = (99, 137, 109, 142)` (wymiar `11×6` kratek — Fala 12 w `67:30`).
-- **Sanktuarium Balansu:**
-  - Środek komnaty: `(6, 150)` (`sanctuary_cx = 6, sanctuary_cy = 150`, obrys klifów `x = 3..9, y = 145..155`).
-  - Górna flaga (`pad_up_box` — Trudniej): `(4, 146)` do `(8, 147)`.
-  - Dolna flaga (`pad_down_box` — Łatwiej): `(4, 153)` do `(8, 154)`.
+- **Sanktuarium Balansu i Kwatermistrz P2 (pełna izolacja na zachodniej krawędzi):**
+  - Środek komnaty Sanktuarium P1: `(4, 138)` (`sanctuary_cx = 4, sanctuary_cy = 138`, obrys klifów `x = 1..7, y = 133..143`, wnętrze `ROAD` `2..6, 134..142`).
+  - Górna flaga (`pad_up_box` — Trudniej, `FLAG_A`): `(2, 134)` do `(6, 136)` (flaga na `(4, 135)`).
+  - Dolna flaga (`pad_down_box` — Łatwiej, `FLAG_B`): `(2, 140)` do `(6, 142)` (flaga na `(4, 141)`).
+  - Środek komnaty Kwatermistrza P2: `(4, 164)` (obrys klifów `x = 1..7, y = 159..169`, wnętrze `ROAD` `2..6, 160..168`, flaga militarna `FLAG_A` na `(4, 161)`, flaga zaopatrzeniowa `FLAG_B` na `(4, 167)`).
+  - Nieprzebrana ściana dębów `TREE_OAK_ID` na pasie buforowym `x = 8..13, y = 128..176` i między komnatami `x = 1..13, y = 144..158`.
 - **Układ Szlaku Handlowego (Południe):**
   - Plac pod Targowiska graczy w lewym dolnym rogu: `x = 2..24, y = 176..198`.
   - 10-kratkowy korytarz wzdłuż dolnej krawędzi: `x = 2..199, y = 189..199` (brukowana droga na `y = 194`).
@@ -483,3 +485,23 @@ Dzięki temu przejście `0 -> -1` odejmuje dokładnie `hp_delta_down` (ok. 15% b
   * `python -m ruff check .` -> `All checks passed!`.
   * `python test_horde_scenario.py -v` -> `Ran 28 tests in 78.407s` (`OK`, `28/28` testów, w tym pełna walidacja R12, unikalność współrzędnych `CREATE_OBJECT`, footprint `3×3` Klasztoru `Q4` i odczyt round-trip z `TemporaryDirectory`).
   * Metryki binarnego `Kroniki_Rubiezy_Horda_Coop.aoe2scenario`: **`234 812` bajtów**, **`950` triggerów**, **`5183` obiektów startowych** (`P0=4983, P1=35, P2=16, P3=24, P4=37, P5=13, P6=12, P7=10, P8=53`), topologiczne `trigger_id` Sanktuarium `09_Diff_*` nienaruszone (`571..578`).
+
+### Wdrożenie 14: Etap R13 — Aktualizacja v7.0.2 (Izolacja komnat, 3-poziomowy Kwatermistrz P2, Objectives TL;DR, PoI 3 i Tarcza Gwardii Słoni) [STATUS: OK]
+* **Zmodyfikowane pliki:** `horde_config.py`, `horde_map.py`, `horde_waves.py`, `horde_quests.py`, `test_horde_scenario.py`, `horda.md`, `PRZEWODNIK_GRACZA.md`, `SCENARIO_DOSSIER.md`, `DEBUG_LOG.md`, `ROADMAP.md`, `GEMINI.md`.
+* **Opis wdrożonych zmian i przyczyn:**
+  * **1. Pełna izolacja Sanktuarium P1 `(4, 138)` i Kwatermistrza P2 `(4, 164)` + bufor leśny (`horde_map.py`, `horde_waves.py`, `horde_quests.py`):**
+    * Przeniesiono obie komnaty na zachodnią krawędź mapy (`x=1..7`): Sanktuarium P1 `(4, 138)` (`build_balance_sanctuary`, pady `(4, 135)` i `(4, 141)`, `pad_up_box=(2,134,6,136)`, `pad_down_box=(2,140,6,142)`) oraz Kwatermistrza P2 `(4, 164)` (`build_quartermaster_chamber`, flagi `(4, 161)` i `(4, 167)`). Obie komnaty mają wnętrze `ROAD` `5×9`, szczelny obwód klifów `ROCK_CLIFF_ID` bez ani jednej luki, stałe `MAP_REVEALER` dla `P1–P4` oraz gęsty pas dębów `TREE_OAK_ID` na `x=8..13, y=128..176` i `x=1..13, y=144..158`.
+  * **2. Trójstopniowe skalowanie Kwatermistrza P2 (`10–20m`, `20–30m`, `30m+`) (`horde_quests.py`):**
+    * Zastąpiono pojedynczą parę `06d_P2_QM_Military_Drop`/`Eco_Drop` wspólnym fabrykatorem 3 progów czasowych: **T1 (`10:00–20:00`)** (`4x Conquistador + 1x Mangonel` na 5 polach lub `+125F/+125W/+100G` bez naprawy murów), **T2 (`20:00–30:00`, przełącznik `06d_Upgrade_Quartermaster_Tier2_20m` w `1200s`)** (`4x Conquistador + 2x Bombard Cannon` na 6 polach lub `+200F/W/G` + naprawa Twierdzy i Muru Q1 `+250 HP`) oraz **T3 (`30:00+`, przełącznik `06d_Upgrade_Quartermaster_Tier3_30m` w `1800s`)** (`6x Elite Conquistador + 2x Bombard Cannon + 2x Siege Ram` na 10 polach lub `+300F/W/G` + naprawa `+500 HP`). Każdy poziom korzysta z własnego pętlowego cooldownu `240s` (`looping=True` z autodezaktywacją), filtruje `UnitInfo.KING.ID` i wykonuje `teleport_object` + `stop_object`.
+  * **3. Naprawa zakładki `Objectives` w oknie dialogowym gry (`horde_quests.py`, `horde_config.py`):**
+    * Dodano w `setup_wave_countdown_timer` (po `09_Diff_*`, co zachowuje ich topologiczne ID `571..578`) 4 triggery `00_TLDR_Modal_1..4` (`timer=999999`, `display_as_objective=1`, `display_on_screen=0`, `description_order=210..207`), dzięki czemu skrót `TL;DR` wyświetla się na samej górze zakładki `Objectives` bez zaśmiecania stałego HUD-u podczas rozgrywki. Ten sam blok `TL;DR` umieszczono również na początku `hints` w `populate_ingame_scenario_descriptions()`.
+  * **4. Dokończenie opcjonalnych punktów `ROADMAP.md` (`horde_map.py`, `horde_quests.py`):**
+    * Dodano **PoI 3: Kamień Wędrowca i Zwiadowcy `(64, 88)`** (`OUTPOST` + 2 pochodnie, `06e_PoI3_Scout_P1..P4` -> `2x Light Cavalry` `(63/65, 88)`, `+150 Stone/+150 Gold` dla `P1–P4` i `MAP_REVEALER` na bród `(122, 62)`).
+    * Dodano **Tarczę Gwardii Słoni Chana** (`07b_Boss_Elephant_Guard_Heal`: `+120 HP` co `3s` dla `FINAL_BOSS_HERO_ID`, dopóki żyje `≥1` `ELITE_BATTLE_ELEPHANT_ID` `P8`; oraz `07b_Boss_Elephants_Slain_Disable_Heal`: po wybiciu Słoni wyłącza leczenie i ogłasza to na czacie).
+    * Dodano komunikat czatu z flarą `(28, 30)` w `Garrison_Spawn_Quest2_SniperCliff` ostrzegający o 2 Basztach Bombardowych `(24, 34)` i `(32, 34)`.
+  * **5. Rozbudowa testów w `test_horde_scenario.py` (29/29 testów OK):**
+    * Dodano test `test_v702_chamber_bfs_isolation_tldr_modal_and_r13_features` z **8-kierunkowym BFS (flood-fill)** weryfikującym szczelną izolację Królów P1 `(4, 138)` i P2 `(4, 164)` w komnatach `2..6 × (cy-4..cy+4)` (dokładnie `45` osiągalnych kafelków) i pełne zalesienie bufora `x=8..13, y=128..176` / `x=1..13, y=144..158`, a także pełne testy 3 progów Kwatermistrza P2, `00_TLDR_Modal_1..4`, `PoI 3` oraz regeneracji Bossa.
+* **Weryfikacja binarna:**
+  * `python -m ruff check .` -> `All checks passed!`.
+  * `python test_horde_scenario.py -v` -> `Ran 29 tests in 78.690s` (`OK`, `29/29` testów zaliczonych).
+  * Metryki binarnego `Kroniki_Rubiezy_Horda_Coop.aoe2scenario` w docelowym folderze gry: **`239 193` bajtów**, **`968` triggerów**, **`5321` obiektów startowych** (`P0=5113, P1=37, P2=18, P3=26, P4=39, P5=13, P6=12, P7=10, P8=53`), topologiczne `trigger_id` Sanktuarium `09_Diff_*` nienaruszone (`571..578`).

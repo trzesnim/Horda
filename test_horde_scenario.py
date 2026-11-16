@@ -1,10 +1,11 @@
 """
 test_horde_scenario.py - Kompleksowy zestaw testow jednostkowych, integracyjnych
-oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Horda (v7.0.1).
+oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Horda (v7.0.2).
 """
 
 import tempfile
 import unittest
+from collections import deque
 from pathlib import Path
 
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
@@ -55,6 +56,7 @@ from horde_config import (
     RELIC_ID,
     RES_FOOD,
     RES_GOLD,
+    RES_STONE,
     RES_WOOD,
     ROCK_CLIFF_ID,
     SIEGE_ONAGER_ID,
@@ -292,7 +294,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             self.assertEqual(tr.description_order, 109)
             self.assertEqual(tr.header, 1)
             self.assertEqual(tr.description, tr.short_description)
-            self.assertIn("Poziom Trudnosci (6,150):", tr.short_description)
+            self.assertIn("Poziom Trudnosci (4,138):", tr.short_description)
 
         self.assertNotIn("00_Obj_Balance_Info", self.t_map)
 
@@ -1304,7 +1306,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         self.assertEqual(dict(wave_map[13].g3_east)[ELITE_BATTLE_ELEPHANT_ID], 6)
 
     def test_v70_final_boss_two_stage_quests_p2_qm_and_pois(self):
-        """Weryfikuje funkcje v7.0 i R12 (v7.0.1): Boss Fight 07a->07b->07c->07d, 2-etapowe Q2 i Q4, Kwatermistrza P2, Map PoI 1-2 oraz opcjonalny output_path."""
+        """Weryfikuje funkcje v7.0 - v7.0.2: Boss Fight 07a->07b->07c->07d z tarcza sloni, 2-etapowe Q2 i Q4, 3-poziomowego Kwatermistrza P2, Map PoI 1-3 oraz opcjonalny output_path."""
         # 1. Statystyki Bossa (Subotai) w rejestrze oraz 01b
         spec_boss = ENEMY_UNIT_REGISTRY[FINAL_BOSS_HERO_ID]
         self.assertEqual(spec_boss.base_hp, 3500)
@@ -1339,11 +1341,15 @@ class TestScenarioBinaryStructure(unittest.TestCase):
 
         t_07a = self.t_map["07a_All_Settlements_Destroyed_Boss_Warning"]
         t_07b = self.t_map["07b_Spawn_Final_Boss_Wave"]
+        t_boss_heal = self.t_map["07b_Boss_Elephant_Guard_Heal"]
+        t_boss_heal_off = self.t_map["07b_Boss_Elephants_Slain_Disable_Heal"]
         t_07c = self.t_map["07c_Confirm_Boss_Spawned"]
         t_07d = self.t_map["07d_Victory_Final_Boss_Defeated"]
 
         self.assertEqual((t_07a.enabled, t_07a.looping), (1, 0))
         self.assertEqual((t_07b.enabled, t_07b.looping), (0, 0))
+        self.assertEqual((t_boss_heal.enabled, t_boss_heal.looping), (0, 1))
+        self.assertEqual((t_boss_heal_off.enabled, t_boss_heal_off.looping), (0, 0))
         self.assertEqual((t_07c.enabled, t_07c.looping), (0, 0))
         self.assertEqual((t_07d.enabled, t_07d.looping), (0, 0))
         self.assertEqual(t_07d.description_order, 99)
@@ -1393,8 +1399,39 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         self.assertEqual([e.object_list_unit_id for e in p7_creates_07b].count(IMAM_UNIT_ID), 2)
         self.assertEqual(
             {e.trigger_id for e in t_07b.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER},
-            {t_07c.trigger_id},
+            {t_07c.trigger_id, t_boss_heal.trigger_id, t_boss_heal_off.trigger_id},
         )
+
+        # Tarcza Gwardii Sloni Wielkiego Chana (+120 HP/3s dopoki zyje >=1 Zelazny Slon P8)
+        self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 3 for c in t_boss_heal.conditions))
+        self.assertTrue(any(
+            c.condition_type == ConditionId.OBJECTS_IN_AREA
+            and c.source_player == PlayerId.EIGHT.value
+            and c.object_list == ELITE_BATTLE_ELEPHANT_ID
+            and c.object_state == ObjectState.ALIVE.value
+            and c.inverted in (0, None)
+            and c.quantity == 1
+            for c in t_boss_heal.conditions
+        ))
+        self.assertTrue(any(
+            e.effect_type == EffectId.HEAL_OBJECT
+            and e.source_player == PlayerId.EIGHT.value
+            and e.object_list_unit_id == FINAL_BOSS_HERO_ID
+            and e.quantity == 120
+            for e in t_boss_heal.effects
+        ))
+        self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 10 for c in t_boss_heal_off.conditions))
+        self.assertTrue(any(
+            c.condition_type == ConditionId.OBJECTS_IN_AREA
+            and c.source_player == PlayerId.EIGHT.value
+            and c.object_list == ELITE_BATTLE_ELEPHANT_ID
+            and c.object_state == ObjectState.ALIVE.value
+            and c.inverted == 1
+            and c.quantity == 1
+            for c in t_boss_heal_off.conditions
+        ))
+        self.assertIn(t_boss_heal.trigger_id, {e.trigger_id for e in t_boss_heal_off.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER})
+        self.assertTrue(any(e.effect_type == EffectId.SEND_CHAT for e in t_boss_heal_off.effects))
 
         self.assertTrue(any(
             c.condition_type == ConditionId.OBJECTS_IN_AREA
@@ -1430,6 +1467,9 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         t_q2_garr = self.t_map["Garrison_Spawn_Quest2_SniperCliff"]
         q2_onagers = [e for e in t_q2_garr.effects if e.effect_type == EffectId.CREATE_OBJECT and e.object_list_unit_id == SIEGE_ONAGER_ID]
         self.assertEqual(len(q2_onagers), 1)
+        q2_garr_chats = [e for e in t_q2_garr.effects if e.effect_type == EffectId.SEND_CHAT]
+        self.assertEqual({e.source_player for e in q2_garr_chats}, {1, 2, 3, 4})
+        self.assertTrue(all("24,34" in e.message and "32,34" in e.message for e in q2_garr_chats))
 
         t_q2_shield = self.t_map["06_Quest2_Shield_Loop"]
         self.assertEqual((t_q2_shield.enabled, t_q2_shield.looping), (0, 1))
@@ -1511,85 +1551,164 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         self.assertIn((56, 150), gaia_torches)
         self.assertIn((60, 154), gaia_torches)
 
-        # 5. Kwatermistrz P2 (20, 162) + bramka 10:00
-        self.assertTrue(any(u.unit_const == FLAG_A_ID and (int(u.x), int(u.y)) == (20, 158) for u in gaia_units))
-        self.assertTrue(any(u.unit_const == FLAG_B_ID and (int(u.x), int(u.y)) == (20, 166) for u in gaia_units))
+        # 5. Kwatermistrz P2 w odizolowanej komnacie (4, 164) + 3-poziomowe skalowanie (10-20m, 20-30m, 30m+) + cooldown 240s
+        self.assertTrue(any(u.unit_const == FLAG_A_ID and (int(u.x), int(u.y)) == (4, 161) for u in gaia_units))
+        self.assertTrue(any(u.unit_const == FLAG_B_ID and (int(u.x), int(u.y)) == (4, 167) for u in gaia_units))
 
         p2_kings = [u for u in self.scenario.unit_manager.units[PlayerId.TWO.value] if u.unit_const == UnitInfo.KING.ID]
         self.assertEqual(len(p2_kings), 1)
-        self.assertEqual((int(p2_kings[0].x), int(p2_kings[0].y)), (17, 162))
+        self.assertEqual((int(p2_kings[0].x), int(p2_kings[0].y)), (4, 164))
 
         t_qm_ready = self.t_map["State_P2_QM_Ready"]
-        t_qm_cd = self.t_map["06d_P2_QM_Cooldown_240s"]
-        t_qm_mil = self.t_map["06d_P2_QM_Military_Drop"]
-        t_qm_eco = self.t_map["06d_P2_QM_Eco_Drop"]
         t_qm_unlock = self.t_map["06d_Unlock_Quartermaster_And_PoI1_10m"]
+        t_qm_up2 = self.t_map["06d_Upgrade_Quartermaster_Tier2_20m"]
+        t_qm_up3 = self.t_map["06d_Upgrade_Quartermaster_Tier3_30m"]
 
-        self.assertEqual((t_qm_ready.enabled, t_qm_cd.enabled, t_qm_mil.enabled, t_qm_eco.enabled), (1, 0, 0, 0))
-        self.assertEqual((t_qm_cd.looping, t_qm_mil.looping, t_qm_eco.looping), (1, 1, 1))
+        self.assertEqual((t_qm_ready.enabled, t_qm_ready.looping), (1, 0))
         self.assertEqual((t_qm_unlock.enabled, t_qm_unlock.looping), (1, 0))
+        self.assertEqual((t_qm_up2.enabled, t_qm_up2.looping), (1, 0))
+        self.assertEqual((t_qm_up3.enabled, t_qm_up3.looping), (1, 0))
         self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 600 for c in t_qm_unlock.conditions))
+        self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 1200 for c in t_qm_up2.conditions))
+        self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 1800 for c in t_qm_up3.conditions))
 
-        self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 240 for c in t_qm_cd.conditions))
-        self.assertEqual(
-            {e.trigger_id for e in t_qm_cd.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER},
-            {t_qm_ready.trigger_id, t_qm_mil.trigger_id, t_qm_eco.trigger_id},
-        )
-        self.assertEqual(
-            {e.trigger_id for e in t_qm_cd.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER},
-            {t_qm_cd.trigger_id},
-        )
-
-        for qm_tr in (t_qm_mil, t_qm_eco):
-            oia = [c for c in qm_tr.conditions if c.condition_type == ConditionId.OBJECTS_IN_AREA]
-            self.assertEqual(len(oia), 1)
-            self.assertEqual(oia[0].object_list, UnitInfo.KING.ID)
-            teles = [e for e in qm_tr.effects if e.effect_type == EffectId.TELEPORT_OBJECT]
-            self.assertEqual(len(teles), 1)
-            self.assertEqual(teles[0].object_list_unit_id, UnitInfo.KING.ID)
-
-        mil_conq = {
-            (e.location_x, e.location_y)
-            for e in t_qm_mil.effects
-            if e.effect_type == EffectId.CREATE_OBJECT and e.source_player == PlayerId.TWO.value and e.object_list_unit_id == UnitInfo.ELITE_CONQUISTADOR.ID
+        tier_specs = {
+            "T1": (
+                {UnitInfo.CONQUISTADOR.ID: {(52, 149), (53, 149), (55, 149), (56, 149)}, UnitInfo.MANGONEL.ID: {(54, 150)}},
+                5,
+                (125, 125, 100),
+                0,
+            ),
+            "T2": (
+                {UnitInfo.CONQUISTADOR.ID: {(52, 149), (53, 149), (55, 149), (56, 149)}, UnitInfo.BOMBARD_CANNON.ID: {(53, 150), (55, 150)}},
+                6,
+                (200, 200, 200),
+                250,
+            ),
+            "T3": (
+                {
+                    UnitInfo.ELITE_CONQUISTADOR.ID: {(51, 149), (52, 149), (53, 149), (55, 149), (56, 149), (57, 149)},
+                    UnitInfo.BOMBARD_CANNON.ID: {(53, 150), (55, 150)},
+                    UnitInfo.SIEGE_RAM.ID: {(52, 150), (56, 150)},
+                },
+                10,
+                (300, 300, 300),
+                500,
+            ),
         }
-        mil_bc = {
-            (e.location_x, e.location_y)
-            for e in t_qm_mil.effects
-            if e.effect_type == EffectId.CREATE_OBJECT and e.source_player == PlayerId.TWO.value and e.object_list_unit_id == UnitInfo.BOMBARD_CANNON.ID
-        }
-        self.assertEqual(mil_conq, {(52, 149), (53, 149), (55, 149), (56, 149)})
-        self.assertEqual(mil_bc, {(53, 150), (55, 150)})
 
-        eco_res = [e for e in t_qm_eco.effects if e.effect_type == EffectId.MODIFY_RESOURCE and e.tribute_list in (RES_FOOD, RES_WOOD, RES_GOLD)]
-        self.assertEqual(len(eco_res), 12)
-        self.assertTrue(all(e.quantity == 300 for e in eco_res))
-        heal_effs = [e for e in t_qm_eco.effects if e.effect_type == EffectId.HEAL_OBJECT and e.quantity == 500]
-        self.assertEqual(len(heal_effs), 5)
+        for tier_tag, (exp_units, exp_total_units, (exp_f, exp_w, exp_g), exp_heal) in tier_specs.items():
+            t_cd = self.t_map[f"06d_P2_QM_Cooldown_{tier_tag}_240s"]
+            t_mil = self.t_map[f"06d_P2_QM_Mil_{tier_tag}"]
+            t_eco = self.t_map[f"06d_P2_QM_Eco_{tier_tag}"]
+
+            self.assertEqual((t_cd.enabled, t_mil.enabled, t_eco.enabled), (0, 0, 0))
+            self.assertEqual((t_cd.looping, t_mil.looping, t_eco.looping), (1, 1, 1))
+            self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 240 for c in t_cd.conditions))
+            self.assertEqual(
+                {e.trigger_id for e in t_cd.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER},
+                {t_qm_ready.trigger_id, t_mil.trigger_id, t_eco.trigger_id},
+            )
+            self.assertEqual(
+                {e.trigger_id for e in t_cd.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER},
+                {t_cd.trigger_id},
+            )
+
+            for qm_tr, exp_box in ((t_mil, (2, 159, 6, 163)), (t_eco, (2, 165, 6, 169))):
+                oia = [c for c in qm_tr.conditions if c.condition_type == ConditionId.OBJECTS_IN_AREA]
+                self.assertEqual(len(oia), 1)
+                self.assertEqual(oia[0].source_player, PlayerId.TWO.value)
+                self.assertEqual(oia[0].object_list, UnitInfo.KING.ID)
+                self.assertEqual((oia[0].area_x1, oia[0].area_y1, oia[0].area_x2, oia[0].area_y2), exp_box)
+
+                teles = [e for e in qm_tr.effects if e.effect_type == EffectId.TELEPORT_OBJECT]
+                self.assertEqual(len(teles), 1)
+                self.assertEqual(teles[0].object_list_unit_id, UnitInfo.KING.ID)
+                self.assertEqual((teles[0].location_x, teles[0].location_y), (4, 164))
+
+                stops = [e for e in qm_tr.effects if e.effect_type == EffectId.STOP_OBJECT]
+                self.assertEqual(len(stops), 1)
+                self.assertEqual(stops[0].object_list_unit_id, UnitInfo.KING.ID)
+                self.assertEqual((stops[0].area_x1, stops[0].area_y1, stops[0].area_x2, stops[0].area_y2), (2, 160, 6, 168))
+
+                self.assertEqual(
+                    {e.trigger_id for e in qm_tr.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER},
+                    {t_qm_ready.trigger_id, t_mil.trigger_id, t_eco.trigger_id},
+                )
+                self.assertEqual(
+                    {e.trigger_id for e in qm_tr.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER},
+                    {t_cd.trigger_id},
+                )
+
+            mil_creates = [
+                e for e in t_mil.effects
+                if e.effect_type == EffectId.CREATE_OBJECT
+                and e.source_player == PlayerId.TWO.value
+                and e.object_list_unit_id != FLARE_UNIT_ID
+            ]
+            self.assertEqual(len(mil_creates), exp_total_units)
+            for u_id, exp_coords in exp_units.items():
+                actual_coords = {(e.location_x, e.location_y) for e in mil_creates if e.object_list_unit_id == u_id}
+                self.assertEqual(actual_coords, exp_coords, f"{t_mil.name} zle wspolrzedne dla unit={u_id}!")
+
+            eco_food = [e.quantity for e in t_eco.effects if e.effect_type == EffectId.MODIFY_RESOURCE and e.tribute_list == RES_FOOD]
+            eco_wood = [e.quantity for e in t_eco.effects if e.effect_type == EffectId.MODIFY_RESOURCE and e.tribute_list == RES_WOOD]
+            eco_gold = [e.quantity for e in t_eco.effects if e.effect_type == EffectId.MODIFY_RESOURCE and e.tribute_list == RES_GOLD]
+            self.assertEqual(eco_food, [exp_f] * 4)
+            self.assertEqual(eco_wood, [exp_w] * 4)
+            self.assertEqual(eco_gold, [exp_g] * 4)
+
+            heal_effs = [e for e in t_eco.effects if e.effect_type == EffectId.HEAL_OBJECT]
+            if exp_heal == 0:
+                self.assertEqual(len(heal_effs), 0, "Eco_T1 nie powinien naprawiac budynkow!")
+            else:
+                self.assertEqual(len(heal_effs), 5)
+                self.assertTrue(all(e.quantity == exp_heal for e in heal_effs))
+                self.assertEqual(
+                    {(e.source_player, e.area_x1, e.area_y1, e.area_x2, e.area_y2) for e in heal_effs},
+                    {
+                        (1, 0, 95, 110, 199),
+                        (2, 0, 95, 110, 199),
+                        (3, 0, 95, 110, 199),
+                        (4, 0, 95, 110, 199),
+                        (4, 105, 183, 199, 187),
+                    },
+                )
+
         self.assertEqual(
-            {(e.source_player, e.area_x1, e.area_y1, e.area_x2, e.area_y2) for e in heal_effs},
-            {
-                (1, 0, 95, 110, 199),
-                (2, 0, 95, 110, 199),
-                (3, 0, 95, 110, 199),
-                (4, 0, 95, 110, 199),
-                (4, 105, 183, 199, 187),
-            },
+            {e.trigger_id for e in t_qm_up2.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER},
+            {self.t_map["06d_P2_QM_Mil_T1"].trigger_id, self.t_map["06d_P2_QM_Eco_T1"].trigger_id, self.t_map["06d_P2_QM_Cooldown_T1_240s"].trigger_id},
+        )
+        self.assertEqual(
+            {e.trigger_id for e in t_qm_up2.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER},
+            {t_qm_ready.trigger_id, self.t_map["06d_P2_QM_Mil_T2"].trigger_id, self.t_map["06d_P2_QM_Eco_T2"].trigger_id},
+        )
+        self.assertEqual(
+            {e.trigger_id for e in t_qm_up3.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER},
+            {self.t_map["06d_P2_QM_Mil_T2"].trigger_id, self.t_map["06d_P2_QM_Eco_T2"].trigger_id, self.t_map["06d_P2_QM_Cooldown_T2_240s"].trigger_id},
+        )
+        self.assertEqual(
+            {e.trigger_id for e in t_qm_up3.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER},
+            {t_qm_ready.trigger_id, self.t_map["06d_P2_QM_Mil_T3"].trigger_id, self.t_map["06d_P2_QM_Eco_T3"].trigger_id},
         )
 
-        # 6. Map PoI 1 (30, 76) i PoI 2 (128, 174)
+        # 6. Map PoI 1 (30, 76), PoI 2 (128, 174) oraz PoI 3 (64, 88)
         self.assertTrue(any(u.unit_const == BuildingInfo.OUTPOST.ID and (int(u.x), int(u.y)) == (30, 75) for u in gaia_units))
         self.assertIn((28, 76), gaia_torches)
         self.assertIn((32, 76), gaia_torches)
         self.assertTrue(any(u.unit_const == OtherInfo.GOLD_MINE.ID and (int(u.x), int(u.y)) == (128, 174) for u in gaia_units))
         self.assertIn((127, 174), gaia_torches)
         self.assertIn((129, 174), gaia_torches)
+        self.assertTrue(any(u.unit_const == BuildingInfo.OUTPOST.ID and (int(u.x), int(u.y)) == (64, 87) for u in gaia_units))
+        self.assertIn((62, 88), gaia_torches)
+        self.assertIn((66, 88), gaia_torches)
 
         poi1_ids = {self.t_map[f"06e_PoI1_Engineers_P{p}"].trigger_id for p in range(1, 5)}
         poi2_ids = {self.t_map[f"06e_PoI2_Caravan_P{p}"].trigger_id for p in range(1, 5)}
+        poi3_ids = {self.t_map[f"06e_PoI3_Scout_P{p}"].trigger_id for p in range(1, 5)}
         self.assertEqual(
             {e.trigger_id for e in t_qm_unlock.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER},
-            {t_qm_mil.trigger_id, t_qm_eco.trigger_id, *poi1_ids},
+            {self.t_map["06d_P2_QM_Mil_T1"].trigger_id, self.t_map["06d_P2_QM_Eco_T1"].trigger_id, *poi1_ids},
         )
         for p in range(1, 5):
             tp1 = self.t_map[f"06e_PoI1_Engineers_P{p}"]
@@ -1608,10 +1727,26 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             rev_q1 = [e for e in tp2.effects if e.effect_type == EffectId.CREATE_OBJECT and e.object_list_unit_id == MAP_REVEALER_ID and (e.location_x, e.location_y) == (154, 190)]
             self.assertEqual(len(rev_q1), 4)
 
+            tp3 = self.t_map[f"06e_PoI3_Scout_P{p}"]
+            self.assertEqual(tp3.enabled, 1)
+            self.assertEqual((tp3.conditions[0].area_x1, tp3.conditions[0].area_y1, tp3.conditions[0].area_x2, tp3.conditions[0].area_y2), (60, 84, 68, 92))
+            self.assertEqual({e.trigger_id for e in tp3.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER}, poi3_ids)
+            scouts = {(e.location_x, e.location_y) for e in tp3.effects if e.effect_type == EffectId.CREATE_OBJECT and e.source_player == p and e.object_list_unit_id == UnitInfo.LIGHT_CAVALRY.ID}
+            self.assertEqual(scouts, {(63, 88), (65, 88)})
+            p3_stone = [e.quantity for e in tp3.effects if e.effect_type == EffectId.MODIFY_RESOURCE and e.tribute_list == RES_STONE]
+            p3_gold = [e.quantity for e in tp3.effects if e.effect_type == EffectId.MODIFY_RESOURCE and e.tribute_list == RES_GOLD]
+            self.assertEqual(p3_stone, [150] * 4)
+            self.assertEqual(p3_gold, [150] * 4)
+            rev_ford = [e for e in tp3.effects if e.effect_type == EffectId.CREATE_OBJECT and e.object_list_unit_id == MAP_REVEALER_ID and (e.location_x, e.location_y) == (122, 62)]
+            self.assertEqual(len(rev_ford), 4)
+
         # 7. Unikalnosc wspolrzednych CREATE_OBJECT w triggerach nagrodowych i Boss Fighcie
         unique_spawn_triggers = [
-            "06d_P2_QM_Military_Drop",
+            "06d_P2_QM_Mil_T1",
+            "06d_P2_QM_Mil_T2",
+            "06d_P2_QM_Mil_T3",
             *[f"06e_PoI1_Engineers_P{p}" for p in range(1, 5)],
+            *[f"06e_PoI3_Scout_P{p}" for p in range(1, 5)],
             "06_Quest2_Sniper_Cliff_Buff",
             "06_Quest4_Stage2_Ritual_Complete",
             "07b_Spawn_Final_Boss_Wave",
@@ -1628,7 +1763,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
 
         # 8. Opcjonalny output_path w build_horde_scenario + weryfikacja round-trip z TemporaryDirectory
         with tempfile.TemporaryDirectory() as tmp_dir:
-            custom_path = Path(tmp_dir) / "test_custom_horda_v701.aoe2scenario"
+            custom_path = Path(tmp_dir) / "test_custom_horda_v702.aoe2scenario"
             returned_path = build_horde_scenario(output_path=custom_path)
             self.assertEqual(returned_path, custom_path)
             self.assertTrue(custom_path.exists())
@@ -1640,6 +1775,148 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                 [len(u_list) for u_list in reloaded.unit_manager.units],
                 [len(u_list) for u_list in self.scenario.unit_manager.units],
             )
+
+    def test_v702_chamber_bfs_isolation_tldr_modal_and_r13_features(self):
+        """Weryfikuje izolacje 8-kierunkowym BFS komnat (4, 138) i (4, 164), gesty las buforowy, Objectives TL;DR oraz komunikaty Sanktuarium."""
+        um = self.scenario.unit_manager
+        gaia_units = um.units[PlayerId.GAIA.value]
+
+        # 1. Wspolrzedne Krola P1 (4, 138) i Krola P2 (4, 164) + stale MAP_REVEALER dla P1-P4
+        p1_kings = [u for u in um.units[PlayerId.ONE.value] if u.unit_const == UnitInfo.KING.ID]
+        self.assertEqual(len(p1_kings), 1)
+        self.assertEqual((int(p1_kings[0].x), int(p1_kings[0].y)), (4, 138))
+
+        for p_idx in range(1, 5):
+            rev_coords = {
+                (int(u.x), int(u.y))
+                for u in um.units[p_idx]
+                if u.unit_const == MAP_REVEALER_ID
+            }
+            self.assertIn((4, 138), rev_coords, f"Brak stalego MAP_REVEALER dla P{p_idx} nad Sanktuarium (4, 138)!")
+            self.assertIn((4, 164), rev_coords, f"Brak stalego MAP_REVEALER dla P{p_idx} nad Kwatermistrzem (4, 164)!")
+
+        # Pady Sanktuarium P1 i komunikaty czatu do P1-P4
+        self.assertTrue(any(u.unit_const == FLAG_A_ID and (int(u.x), int(u.y)) == (4, 135) for u in gaia_units))
+        self.assertTrue(any(u.unit_const == FLAG_B_ID and (int(u.x), int(u.y)) == (4, 141) for u in gaia_units))
+        for diff_name in [
+            "09_Diff_Up_0_to_P1", "09_Diff_Up_P1_to_P2", "09_Diff_Down_P2_to_P1", "09_Diff_Down_P1_to_0",
+            "09_Diff_Down_0_to_M1", "09_Diff_Down_M1_to_M2", "09_Diff_Up_M2_to_M1", "09_Diff_Up_M1_to_0",
+        ]:
+            tr = self.t_map[diff_name]
+            cond = tr.conditions[0]
+            exp_box = (2, 134, 6, 136) if "_Up_" in diff_name else (2, 140, 6, 142)
+            self.assertEqual((cond.area_x1, cond.area_y1, cond.area_x2, cond.area_y2), exp_box)
+            tele = next(e for e in tr.effects if e.effect_type == EffectId.TELEPORT_OBJECT)
+            self.assertEqual((tele.location_x, tele.location_y), (4, 138))
+            chats = {e.source_player for e in tr.effects if e.effect_type == EffectId.SEND_CHAT}
+            self.assertEqual(chats, {1, 2, 3, 4}, f"{diff_name} nie wysyla komunikatu czatu do wszystkich graczy P1-P4!")
+
+        # 2. Obwody z klifow ROCK_CLIFF_ID oraz 8-kierunkowy BFS (flood-fill)
+        blocking_single_ids = {
+            ROCK_CLIFF_ID,
+            TREE_OAK_ID,
+            TREE_PINE_ID,
+            BuildingInfo.FORTIFIED_WALL.ID,
+            FORTIFIED_PALISADE_ID,
+            BuildingInfo.OUTPOST.ID,
+        }
+        blocking_box_sizes = {
+            FEITORIA_ID: 5,
+            BuildingInfo.TOWN_CENTER.ID: 4,
+            BuildingInfo.MARKET.ID: 4,
+            BuildingInfo.CASTLE.ID: 4,
+            BuildingInfo.UNIVERSITY.ID: 4,
+            KREPOST_ID: 4,
+            BuildingInfo.BARRACKS.ID: 3,
+            BuildingInfo.STABLE.ID: 3,
+            BuildingInfo.ARCHERY_RANGE.ID: 3,
+            BuildingInfo.SIEGE_WORKSHOP.ID: 3,
+            BuildingInfo.MONASTERY.ID: 3,
+            BuildingInfo.HOUSE.ID: 2,
+            BuildingInfo.GUARD_TOWER.ID: 2,
+            BuildingInfo.KEEP.ID: 2,
+            BuildingInfo.BOMBARD_TOWER.ID: 2,
+        }
+        blocked_tiles: set[tuple[int, int]] = set()
+        for p_idx in range(9):
+            for u in um.units[p_idx]:
+                if u.unit_const in blocking_single_ids:
+                    blocked_tiles.add((int(u.x), int(u.y)))
+                elif u.unit_const in blocking_box_sizes:
+                    sz = blocking_box_sizes[u.unit_const]
+                    half = sz // 2
+                    cx, cy = int(u.x), int(u.y)
+                    if sz % 2 == 0:
+                        for bx in range(cx - half, cx + half):
+                            for by in range(cy - half, cy + half):
+                                blocked_tiles.add((bx, by))
+                    else:
+                        for bx in range(cx - half, cx + half + 1):
+                            for by in range(cy - half, cy + half + 1):
+                                blocked_tiles.add((bx, by))
+
+        cliff_tiles = {(int(u.x), int(u.y)) for u in gaia_units if u.unit_const == ROCK_CLIFF_ID}
+        tree_tiles = {(int(u.x), int(u.y)) for u in gaia_units if u.unit_const in (TREE_OAK_ID, TREE_PINE_ID)}
+
+        def bfs_8way(start: tuple[int, int]) -> set[tuple[int, int]]:
+            self.assertNotIn(start, blocked_tiles)
+            visited = {start}
+            q = deque([start])
+            while q:
+                x, y = q.popleft()
+                for dx in (-1, 0, 1):
+                    for dy in (-1, 0, 1):
+                        if dx == 0 and dy == 0:
+                            continue
+                        nx, ny = x + dx, y + dy
+                        if 0 <= nx < MAP_SIZE and 0 <= ny < MAP_SIZE and (nx, ny) not in blocked_tiles and (nx, ny) not in visited:
+                            visited.add((nx, ny))
+                            q.append((nx, ny))
+                            self.assertLessEqual(len(visited), 200, f"Przeciek BFS z komnaty {start} na ({nx}, {ny})!")
+            return visited
+
+        for center_pos, cy in (((4, 138), 138), ((4, 164), 164)):
+            expected_interior = {(x, y) for x in range(2, 7) for y in range(cy - 4, cy + 5)}
+            expected_perimeter = {
+                (x, y)
+                for x in range(1, 8)
+                for y in range(cy - 5, cy + 6)
+                if x in (1, 7) or y in (cy - 5, cy + 5)
+            }
+            self.assertTrue(expected_perimeter.issubset(cliff_tiles), f"Luka w obwodzie klifow dla komnaty {center_pos}!")
+            reachable = bfs_8way(center_pos)
+            self.assertEqual(reachable, expected_interior, f"Nieprawidlowy obszar osiagalny BFS z {center_pos}: {reachable ^ expected_interior}")
+
+        # Gesty pas lesny izolujacy komnaty od bazy
+        for x in range(8, 14):
+            for y in range(128, 177):
+                self.assertIn((x, y), tree_tiles, f"Brak drzewa w pasie buforowym na ({x}, {y})!")
+        for x in range(1, 14):
+            for y in range(144, 159):
+                self.assertIn((x, y), tree_tiles, f"Brak drzewa miedzy komnatami na ({x}, {y})!")
+
+        # 3. Cztery triggery TL;DR w zakladce Objectives (display_as_objective=1, display_on_screen=0, order >= 207) + Hints TL;DR
+        tldr_names = [
+            ("00_TLDR_Modal_1_Cel", 210, 1),
+            ("00_TLDR_Modal_2_Role", 209, 0),
+            ("00_TLDR_Modal_3_Wyprawy", 208, 0),
+            ("00_TLDR_Modal_4_Wrogowie", 207, 0),
+        ]
+        for t_name, exp_order, exp_header in tldr_names:
+            self.assertIn(t_name, self.t_map)
+            tr = self.t_map[t_name]
+            self.assertEqual(tr.enabled, 1)
+            self.assertEqual(tr.looping, 0)
+            self.assertEqual(tr.display_as_objective, 1)
+            self.assertEqual(tr.display_on_screen, 0)
+            self.assertEqual(tr.description_order, exp_order)
+            self.assertGreaterEqual(tr.description_order, 207)
+            self.assertEqual(tr.header, exp_header)
+            self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 999999 for c in tr.conditions))
+
+        mm_msg = self.scenario.message_manager
+        self.assertTrue(mm_msg.hints.startswith("TL;DR (NAJWAZNIEJSZE ZASADY W 30 SEKUND):"))
+        self.assertIn("TL;DR (NAJWAZNIEJSZE ZASADY W 30 SEKUND):", mm_msg.instructions)
 
 
 if __name__ == "__main__":

@@ -255,16 +255,18 @@ def build_fortified_pass_defenses(um, grid: SafeMapGrid, owner: PlayerId, gx: in
         grid.place_building(um, owner, BuildingInfo.GUARD_TOWER.ID, gx - 4, gy + 4, size_tiles=2, no_tree_margin=1)
 
 
-def build_balance_sanctuary(mm, um, grid: SafeMapGrid, cx: int = 6, cy: int = 150):
+def build_balance_sanctuary(mm, um, grid: SafeMapGrid, cx: int = 4, cy: int = 138):
     """
-    Sanktuarium Balansu na poprzedniej pozycji w zachodnim lesie `(6, 150)`:
-    - Środek `(6, 150)`: nieśmiertelny Inżynier Balansu (Król Gracza 1).
-    - Góra `(6, 146)`: flaga ZWIĘKSZENIA trudności (+1 stopień).
-    - Dół `(6, 154)`: flaga ZMNIEJSZENIA trudności (-1 stopień).
+    Odizolowana komnata Sanktuarium Balansu na zachodniej krawedzi mapy `(4, 138)`:
+    - Wnetrze: plaski teren `ROAD` o wymiarach `x = 2..6, y = 134..142`.
+    - Obwod z klifow `ROCK_CLIFF_ID (GAIA)` na ramce `x in {1, 7}` dla `y = 133..143` oraz `y in {133, 143}` dla `x = 1..7`.
+    - Srodek `(4, 138)`: niesmiertelny Inzynier Balansu (Krol Gracza 1).
+    - Gora `(4, 135)`: flaga `FLAG_A_ID` ZWIEKSZENIA trudnosci (+1 stopien).
+    - Dol `(4, 141)`: flaga `FLAG_B_ID` ZMNIEJSZENIA trudnosci (-1 stopien).
     """
     x_min, x_max = cx - 3, cx + 3
     y_min, y_max = cy - 5, cy + 5
-    grid.mark_no_trees_box(x_min - 1, y_min - 1, x_max + 1, y_max + 1)
+    grid.mark_no_trees(cx, cy, radius=6)
 
     for x in range(x_min, x_max + 1):
         for y in range(y_min, y_max + 1):
@@ -272,20 +274,58 @@ def build_balance_sanctuary(mm, um, grid: SafeMapGrid, cx: int = 6, cy: int = 15
             if x in (x_min, x_max) or y in (y_min, y_max):
                 mm.get_tile(x, y).terrain_id = TerrainId.DIRT_3
                 grid.place_wall_tile(um, PlayerId.GAIA, ROCK_CLIFF_ID, x, y, clear_trees_around=False)
-            elif y <= cy - 3:
-                mm.get_tile(x, y).terrain_id = TerrainId.DIRT_2
-            elif y >= cy + 3:
-                mm.get_tile(x, y).terrain_id = TerrainId.GRASS_2
             else:
                 mm.get_tile(x, y).terrain_id = TerrainId.ROAD
 
-    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, cx - 1, cy - 4, no_tree_margin=0)
-    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, cx + 1, cy - 4, no_tree_margin=0)
-    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, cx - 1, cy + 4, no_tree_margin=0)
-    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, cx + 1, cy + 4, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, FLAG_A_ID, cx, cy - 3, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, cx - 1, cy - 3, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, cx + 1, cy - 3, no_tree_margin=0)
+
+    grid.place_unit(um, PlayerId.GAIA, FLAG_B_ID, cx, cy + 3, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, cx - 1, cy + 3, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, cx + 1, cy + 3, no_tree_margin=0)
 
     king_u = um.add_unit(player=PlayerId.ONE, unit_const=UnitInfo.KING.ID, x=cx + 0.5, y=cy + 0.5)
     grid.occupied_tiles.add((cx, cy))
+    for h_p in [PlayerId.ONE, PlayerId.TWO, PlayerId.THREE, PlayerId.FOUR]:
+        um.add_unit(player=h_p, unit_const=MAP_REVEALER_ID, x=cx + 0.5, y=cy + 0.5)
+    return king_u
+
+
+def build_quartermaster_chamber(mm, um, grid: SafeMapGrid, cx: int = 4, cy: int = 164):
+    """
+    Odizolowana komnata Posterunku Kwatermistrza P2 na zachodniej krawedzi mapy `(4, 164)`:
+    - Wnetrze: plaski teren `ROAD` o wymiarach `x = 2..6, y = 160..168`.
+    - Obwod z klifow `ROCK_CLIFF_ID (GAIA)` na ramce `x in {1, 7}` dla `y = 159..169` oraz `y in {159, 169}` dla `x = 1..7`.
+    - Srodek `(4, 164)`: Kwatermistrz (Krol Gracza 2).
+    - Polnoc `(4, 161)`: Flaga Militarna (`FLAG_A_ID`).
+    - Poludnie `(4, 167)`: Flaga Zaopatrzeniowa (`FLAG_B_ID`).
+    """
+    x_min, x_max = cx - 3, cx + 3
+    y_min, y_max = cy - 5, cy + 5
+    grid.mark_no_trees(cx, cy, radius=6)
+
+    for x in range(x_min, x_max + 1):
+        for y in range(y_min, y_max + 1):
+            grid.elev[x][y] = 0
+            if x in (x_min, x_max) or y in (y_min, y_max):
+                mm.get_tile(x, y).terrain_id = TerrainId.DIRT_3
+                grid.place_wall_tile(um, PlayerId.GAIA, ROCK_CLIFF_ID, x, y, clear_trees_around=False)
+            else:
+                mm.get_tile(x, y).terrain_id = TerrainId.ROAD
+
+    grid.place_unit(um, PlayerId.GAIA, FLAG_A_ID, cx, cy - 3, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, cx - 1, cy - 3, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, cx + 1, cy - 3, no_tree_margin=0)
+
+    grid.place_unit(um, PlayerId.GAIA, FLAG_B_ID, cx, cy + 3, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, cx - 1, cy + 3, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, cx + 1, cy + 3, no_tree_margin=0)
+
+    king_u = um.add_unit(player=PlayerId.TWO, unit_const=UnitInfo.KING.ID, x=cx + 0.5, y=cy + 0.5)
+    grid.occupied_tiles.add((cx, cy))
+    for h_p in [PlayerId.ONE, PlayerId.TWO, PlayerId.THREE, PlayerId.FOUR]:
+        um.add_unit(player=h_p, unit_const=MAP_REVEALER_ID, x=cx + 0.5, y=cy + 0.5)
     return king_u
 
 
@@ -491,9 +531,22 @@ def build_map_and_entities(scenario) -> dict:
     build_rocky_cliff_ridge(mm, um, grid, 16, 48, 44, 48, height=3)
     build_rocky_cliff_ridge(mm, um, grid, 124, 134, 158, 134, height=2)
 
-    # Sanktuarium Balansu na poprzedniej pozycji w zachodnim lesie na (6, 150)
-    sanctuary_cx, sanctuary_cy = 6, 150
+    # Odizolowane komnaty Sanktuarium Balansu P1 (4, 138) i Kwatermistrza P2 (4, 164)
+    sanctuary_cx, sanctuary_cy = 4, 138
     balance_king = build_balance_sanctuary(mm, um, grid, cx=sanctuary_cx, cy=sanctuary_cy)
+    sanctuary_pads = {
+        "center": (sanctuary_cx, sanctuary_cy),
+        "up_pad": (sanctuary_cx, sanctuary_cy - 3),
+        "down_pad": (sanctuary_cx, sanctuary_cy + 3),
+    }
+
+    qm_cx, qm_cy = 4, 164
+    p2_qm_king = build_quartermaster_chamber(mm, um, grid, cx=qm_cx, cy=qm_cy)
+    p2_qm_pads = {
+        "center": (qm_cx, qm_cy),
+        "mil_pad": (qm_cx, qm_cy - 3),
+        "eco_pad": (qm_cx, qm_cy + 3),
+    }
 
     grid.apply_smooth_elevation(mm)
 
@@ -587,9 +640,11 @@ def build_map_and_entities(scenario) -> dict:
         grid.place_unit(um, PlayerId.GAIA, RELIC_ID, rx, ry, no_tree_margin=2)
         spawn_resource_cluster(um, grid, rx + 3, ry + 3, OtherInfo.GOLD_MINE.ID, count=6)
 
-    # Puszcza Zaplecza (omija Sanktuarium Balansu na 6, 150, Plac Targowy w lewym rogu oraz 10-kratkowy korytarz na y=189..199)
-    set_box_terrain(mm, 0, 106, 12, 143, TerrainId.FOREST_OAK)
-    set_box_terrain(mm, 0, 157, 12, 174, TerrainId.FOREST_OAK)
+    # Puszcza Zaplecza (gesty pas izolujacy komnaty P1 (4, 138) i P2 (4, 164), omija Plac Targowy SW i pas y=189..199)
+    set_box_terrain(mm, 0, 106, 13, 132, TerrainId.FOREST_OAK)
+    set_box_terrain(mm, 8, 128, 13, 176, TerrainId.FOREST_OAK)
+    set_box_terrain(mm, 1, 144, 13, 158, TerrainId.FOREST_OAK)
+    set_box_terrain(mm, 0, 170, 13, 175, TerrainId.FOREST_OAK)
     set_box_terrain(mm, 26, 180, 98, 188, TerrainId.FOREST_PINE)
 
     for fx, fy, r, t_id, seed in [
@@ -609,16 +664,14 @@ def build_map_and_entities(scenario) -> dict:
     ]:
         paint_organic_forest(mm, fx, fy, radius=r, terrain_id=t_id, seed=seed)
 
-    # Posterunek Kwatermistrza Twierdzy P2 wokół (20, 162)
-    grid.mark_no_trees(20, 162, radius=6)
-    set_box_terrain(mm, 16, 157, 22, 167, TerrainId.DIRT_1)
-    p2_qm_king = um.add_unit(player=PlayerId.TWO, unit_const=UnitInfo.KING.ID, x=17.5, y=162.5)
-    grid.occupied_tiles.add((17, 162))
-    grid.place_unit(um, PlayerId.GAIA, FLAG_A_ID, 20, 158, no_tree_margin=0)
-    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 19, 158, no_tree_margin=0)
-    grid.place_unit(um, PlayerId.GAIA, FLAG_B_ID, 20, 166, no_tree_margin=0)
-    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 19, 166, no_tree_margin=0)
-    p2_qm_pads = {"center": (17, 162), "mil_pad": (20, 158), "eco_pad": (20, 166)}
+    for x in range(8, 14):
+        for y in range(128, 177):
+            mm.get_tile(x, y).terrain_id = TerrainId.FOREST_OAK
+            grid.no_tree_zones.discard((x, y))
+    for x in range(1, 14):
+        for y in range(144, 159):
+            mm.get_tile(x, y).terrain_id = TerrainId.FOREST_OAK
+            grid.no_tree_zones.discard((x, y))
 
     # PoI 1: Opuszczony Obóz Inżynierów na (30, 76)
     grid.mark_no_trees(30, 76, radius=4)
@@ -633,6 +686,13 @@ def build_map_and_entities(scenario) -> dict:
     grid.place_unit(um, PlayerId.GAIA, GOLD_MINE_ID, 128, 174, no_tree_margin=0)
     grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 127, 174, no_tree_margin=0)
     grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 129, 174, no_tree_margin=0)
+
+    # PoI 3: Kamień Wędrowca i Zwiadowcy na (64, 88)
+    grid.mark_no_trees(64, 88, radius=4)
+    set_circle_terrain(mm, 64, 88, radius=3, terrain_id=TerrainId.DIRT_2)
+    grid.place_building(um, PlayerId.GAIA, BuildingInfo.OUTPOST.ID, 64, 87, size_tiles=1, no_tree_margin=1)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 62, 88, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 66, 88, no_tree_margin=0)
 
     north_breach_box = (75, 95, 80, 105)
     east_breach_box = (99, 137, 109, 142)
@@ -677,5 +737,6 @@ def build_map_and_entities(scenario) -> dict:
         "s_g3_north": s_g3_north,
         "sanctuary_cx": sanctuary_cx,
         "sanctuary_cy": sanctuary_cy,
+        "sanctuary_pads": sanctuary_pads,
         "tm": tm,
     }

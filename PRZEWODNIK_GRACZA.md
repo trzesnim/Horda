@@ -1,4 +1,4 @@
-# Przewodnik Gracza — Kroniki Rubieży: Horda i Ekspedycje (v7.0.1)
+# Przewodnik Gracza — Kroniki Rubieży: Horda i Ekspedycje (v7.0.2)
 
 Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, podział ról na mapie i przegląd zmian od ostatniej gry.
 
@@ -6,14 +6,14 @@ Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, 
 
 ## TL;DR — Najważniejsze zasady w 30 sekund
 
-- **Cel gry:** Broń **Cytadeli (Feitorii P2)** w sercu bazy `(54, 146)` (jej utrata = natychmiastowa porażka wszystkich). Wyjdź za mury, zniszcz **6 Twierdz Hordy (`G1–G3`)**, a po `45s` na powrót armii zgładź **Wielkiego Chana Subotaia (3500 HP)** przed Bramą Centralną.
-- **Ustawienia i Fale:** Gracze `P1–P4` (ludzie, P2 najlepiej Hiszpanie) vs `P5–P8` (AI **Extreme**). 14 fal od `8:30` do `78:30` (potem Endless) — zegar do kolejnej fali i poziom trudności są zawsze na górze **Objectives**.
+- **Cel gry:** Broń **Cytadeli (Feitorii P2)** w sercu bazy `(54, 146)` (jej utrata = natychmiastowa porażka wszystkich). Wyjdź za mury, zniszcz **6 Twierdz Hordy (`G1–G3`)**, a po `45s` na powrót armii zgładź **Wielkiego Chana Subotaia (3500 HP)** przed Bramą Centralną (dopóki żyją jego Żelazne Słonie, Chan regeneruje `+120 HP/3s`).
+- **Ustawienia i Fale:** Gracze `P1–P4` (ludzie, P2 najlepiej Hiszpanie) vs `P5–P8` (AI **Extreme**). 14 fal od `8:30` do `78:30` (potem Endless) — zegar do kolejnej fali i poziom trudności są zawsze na górze **Objectives**, a skrót tych zasad (`TL;DR`) znajduje się na górze zakładki **Objectives** po kliknięciu ikony w górnym pasku gry oraz w **Hints**.
 - **Role (`P1–P4`):**
-  * **P1 (Niebieski):** Brama Centralna + Król w Sanktuarium `(6, 150)` (wejście na flagę zmienia trudność `-2..+2`).
-  * **P2 (Czerwony):** Handel, obrona chłopów przed **Szakalami** + Król-Kwatermistrz `(20, 162)` (od `10:00` co 4 min wejście Królem na Północną lub Południową Flagę daje najemników lub `+300` surowców dla każdego i naprawę murów).
+  * **P1 (Niebieski):** Brama Centralna + Król w odizolowanym **Sanktuarium `(4, 138)`** na zachodniej krawędzi mapy (wejście na flagę zmienia trudność `-2..+2`).
+  * **P2 (Czerwony):** Handel, obrona chłopów przed **Szakalami** + Król-Kwatermistrz w odizolowanej komnacie **`(4, 164)`** (od `10:00` co 4 min wejście Królem na Północną lub Południową Flagę daje rosnące wsparcie: `10–20m` Małe, `20–30m` Średnie, `30m+` Duże).
   * **P3 (Zielony):** Brama Północna (uwaga: w `51:00` saperzy wyrąbią wyłom w północnym lesie!).
   * **P4 (Żółty):** Brama Wschodnia (w `67:30` wyłom we wschodnim lesie) + korytarz handlowy na południu.
-- **Wyprawy (Settlementy i Questy):** Zburzenie każdego **Settlementu (`G1–G3`)** daje surowce i **na stałe wyłącza jego fale oraz jednostki specjalne** (wywołując jeden kontratak i lekką *Furię*). **Questy (`Q1–Q4`)** dają potężne perki całej drużynie (`Q1`: mur i handel; `Q2`: rozbij 2 Baszty Bombardowe by zdjąć tarczę Uniwersytetu -> bonus strzelców/jazdy; `Q3`: stały dochód co 1 min; `Q4`: przetrwaj 30s odwetu -> `+30%` HP/pancerz i Wielki Klasztor).
+- **Wyprawy (Settlementy, Questy i Map PoI):** Zburzenie każdego **Settlementu (`G1–G3`)** daje surowce i **na stałe wyłącza jego fale oraz jednostki specjalne** (wywołując jeden kontratak i lekką *Furię*). **Questy (`Q1–Q4`)** dają potężne perki całej drużynie (`Q1`: mur i handel; `Q2`: rozbij 2 Baszty Bombardowe by zdjąć tarczę Uniwersytetu -> bonus strzelców/jazdy; `Q3`: stały dochód co 1 min; `Q4`: przetrwaj 30s odwetu -> `+30%` HP/pancerz i Wielki Klasztor). Dodatkowo na mapie ukryto **3 punkty eksploracyjne (`PoI 1–3`)**.
 - **3 złote zasady w walce:** (1) W pierwszej kolejności zabijaj **Arcymaga (Imama)** przed Bramą Centralną (daje całej Hordzie tarczę `+30` pancerza!), (2) Chroń wieśniaków pod TC przed szybkimi **Szakalami**, (3) Nie buduj na polanach spawnu Hordy przed bramami (fala niszczy budynki w miejscu swojego pojawienia się).
 
 ---
@@ -42,14 +42,15 @@ Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, 
 
 * **Gracz 1 (Niebieski — Brama Centralna i Sanktuarium Balansu):**
   * Broni głównej **Bramy Centralnej** na wschodniej ścianie centrum bazy (pierwsze podjazdy ruszają tam już od `13:00`, a od `23:30` nadciągają ciężkie fale z Arcymagami i później Słoniami).
-  * Posiada nieśmiertelnego Króla w **Sanktuarium Balansu** na zachodnim skraju bazy (`6, 150`). Wejście Królem na **górną** lub **dolną flagę** pozwala w dowolnej chwili meczu zwiększyć (`+1`, `+2`) lub zmniejszyć (`-1`, `-2`) poziom trudności Hordy.
+  * Posiada nieśmiertelnego Króla w szczelnie odizolowanym klifami i lasem **Sanktuarium Balansu** na zachodniej krawędzi mapy `(4, 138)` (komnata jest zawsze widoczna dla całej drużyny). Wejście Królem na **górną `(4, 135)`** lub **dolną flagę `(4, 141)`** pozwala w dowolnej chwili meczu zwiększyć (`+1`, `+2`) lub zmniejszyć (`-1`, `-2`) poziom trudności Hordy.
 
 * **Gracz 2 (Czerwony — Cytadela, Handel i Kwatermistrz Twierdzy):**
   * Startuje w bezpiecznym sercu bazy obok **Cytadeli (Feitorii)**, ze zwiększonym na starcie limitem populacji (`220`) i sześcioma gotowymi domkami.
   * Odpowiada za gospodarkę, handel wozami (Plac Targowy jest w lewym dolnym rogu mapy) oraz za mobilne odwody w głębi bazy — szczególnie przeciwko wrogim **Szakalom**, które omijają walkę na bramach i wpadają prosto między naszych chłopów pod Town Center!
-  * Obsługuje **Posterunek Kwatermistrza Twierdzy** (`20, 162`, na zachód od swojego TC — odblokowywany o **`10:00`** po Fali 1). Wchodząc **wyłącznie swoim Królem** na jedną z dwóch wyraźnie różnych flag, może raz na **4 minuty** (wspólne resetowalne odnowienie dla obu opcji) wezwać wybrane wsparcie:
-    * **Flaga Północna (`20, 158`) — Zrzut Gwardii Najemnej:** pod Cytadelą (na 6 sąsiednich polach wokół `(54, 149)`) pojawia się darmowy oddział **`4x Elitarny Konkwistador + 2x Kolubryna`**.
-    * **Flaga Południowa (`20, 166`) — Konwój Zaopatrzeniowy:** każdy z 4 graczy dostaje po **`+300` Żywności, Drewna i Złota**, a mury, bramy i budynki w Twierdzy oraz Mur Handlowy z `Q1` zostają naprawione o **`+500 HP`**.
+  * Obsługuje szczelnie odizolowany **Posterunek Kwatermistrza Twierdzy** (`4, 164` na zachodniej krawędzi mapy — odblokowywany o **`10:00`** po Fali 1). Wchodząc **wyłącznie swoim Królem** na jedną z dwóch flag, może raz na **4 minuty** wezwać wsparcie rosnące wraz z czasem meczu:
+    * **Poziom 1 (`10:00–20:00` — Mały Bonus):** Flaga Północna `(4, 161)` daje **`4x Konkwistador + 1x Mangonel`** wokół `(54, 149)`; Flaga Południowa `(4, 167)` daje **`+125 Żywności/Drewna i +100 Złota`** każdemu graczowi *(bez naprawy murów)*.
+    * **Poziom 2 (`20:00–30:00` — Średni Bonus):** Flaga Północna `(4, 161)` daje **`4x Konkwistador + 2x Kolubryna`**; Flaga Południowa `(4, 167)` daje **`+200 Żywności/Drewna/Złota`** każdemu graczowi oraz naprawia Twierdzę i Mur `Q1` o **`+250 HP`**.
+    * **Poziom 3 (`od 30:00+` — Duży Bonus):** Flaga Północna `(4, 161)` daje **`6x Elitarny Konkwistador + 2x Kolubryna + 2x Taran Oblężniczy`**; Flaga Południowa `(4, 167)` daje **`+300 Żywności/Drewna/Złota`** każdemu graczowi oraz naprawia Twierdzę i Mur `Q1` o **`+500 HP`**.
 
 * **Gracz 3 (Zielony — Brama Północna i Klif Artylerii):**
   * Broni **Bramy Północnej** (pierwsze uderzenie już o **`8:30`**!). Uwaga: w **51. minucie** wrodzy saperzy wyrąbią dodatkowy wyłom w północnym lesie na prawo od bramy.
@@ -61,7 +62,7 @@ Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, 
 
 ---
 
-## 4. Wyprawy poza Mury: 6 Settlementów, 4 Questy i 2 Obozy Zwiadowcze
+## 4. Wyprawy poza Mury: 6 Settlementów, 4 Questy i 3 Punkty Eksploracyjne
 
 Wszystkie 6 Twierdz Hordy i 4 Questy mają nad sobą stałe odsłonięcie pod Mgłą Wojny — w każdej chwili możecie na nie kliknąć, żeby sprawdzić opis i nagrody.
 
@@ -84,7 +85,7 @@ Każdy ukończony Quest daje stałe, potężne wzmocnienie całej drużynie (i l
 * **`Q4` Krwawy Ołtarz (daleka północ — dwuetapowy):** Po zburzeniu Klasztoru wroga zabudowa obozu zapada się, w ruinach pojawia się Relikt, a z południa rusza odsiecz Zakonu (m.in. Elitarni Jeźdźcy Stepowi, Mamelucy i Wielbłądy) — trzeba **przetrwać 30 sekund Krwawego Odwetu**. Nagroda: **`+30% HP` i `+2/+2` pancerza** dla całej piechoty, jazdy i strzelców, **`+40%` szybsza produkcja wojska**, osłabienie wrogich Arcymagów do 120 HP oraz budowa **Wielkiego Klasztoru z `2` Mnichami** dla Niebieskiego na wyznaczonym placu `(58, 152)` (oznaczonym dwiema pochodniami — nie budujcie tam własnych budynków!).
 
 ### Warto zwiedzać mapę zwiadowcą!
-Poza głównymi obozami na rubieżach ukryte są także mniejsze punkty eksploracyjne — **Opuszczony Obóz Inżynierów `(30, 76)`** przed północno-zachodnim lasem (odblokowywany w `10:00`) i **Zaginiona Karawana `(128, 174)`** na wschodzie. Pierwszy gracz, który wyśle tam zwiadowcę lub oddział, zgarnie darmowe machiny oblężnicze oraz zastrzyk surowców dla całej drużyny.
+Poza głównymi obozami na rubieżach ukryte są także trzy punkty eksploracyjne: **Opuszczony Obóz Inżynierów `(30, 76)`** przed północno-zachodnim lasem (odblokowywany w `10:00`), **Zaginiona Karawana `(128, 174)`** na wschodzie oraz **Kamień Wędrowca i Zwiadowcy `(64, 88)`** na północ od bazy (`2x Lekka Kawaleria`, `+150 Kamienia/+150 Złota` dla każdego oraz odsłonięcie brodu rzecznego `(122, 62)`). Pierwszy gracz, który wyśle tam zwiadowcę lub oddział, zgarnia bonus dla całej drużyny.
 
 ---
 
@@ -100,7 +101,7 @@ Poza głównymi obozami na rubieżach ukryte są także mniejsze punkty eksplora
 ## 6. Co zmieniło się od naszej ostatniej próby (kiedy zmiana trudności odpaliła 14. falę)?
 
 1. **Naprawione Sanktuarium Balansu:** Przesunięcie Króla na flagę trudności działa teraz płynnie w dowolnej sekundzie gry, nie ma sztucznych blokad czasowych i **nigdy więcej nie uruchamia finałowej fali ze słoniami w 1. minucie meczu**. Aktualny poziom trudności widać cały czas na górze panelu Celów.
-2. **Zegar Fali na ekranie:** Na samej górze listy zadań w prawym górnym rogu ekranu działa czytelny licznik odliczający czas do następnej fali co 30 sekund, wspierany ostrzeżeniami na czacie minutę przed każdym atakiem.
+2. **Zegar Fali i `TL;DR` w zakładce Objectives:** Na samej górze listy zadań w prawym górnym rogu ekranu działa czytelny licznik odliczający czas do następnej fali co 30 sekund, wspierany ostrzeżeniami na czacie minutę przed każdym atakiem, a kliknięcie ikony **Objectives** na górnym pasku pokazuje 4-punktowy skrót zasad (`TL;DR`) bez zaśmiecania ekranu podczas gry.
 3. **Płynny start bez blokady populacji:** Każdy z nas zaczyna od razu z gotowymi domkami przy swoim Town Center, a Cytadela Czerwonego (P2) ma zrekompensowane miejsce w populacji, więc od pierwszej sekundy można swobodnie szkolić wieśniaków.
-4. **Aktywna gra na wszystkich frontach:** Niebieski (P1) w centrum dostaje pierwsze uderzenia już w 13. minucie, Czerwony (P2) zyskał Posterunek Kwatermistrza ze wsparciem militarnym i ekonomicznym co 4 minuty, a Żelazne Słonie dzielą się teraz po równo między centrum i wschód oraz maszerują szybciej razem z armią.
-5. **Fale Specjalne, zawalanie obozów i Finałowy Boss:** Wybrane fale mają własny, unikalny motyw (np. *Pancerna Szarża*, *Noc Szakali*, *Nawałnica Artylerii i Snajperów*), po zburzeniu głównej budowli obozu wszystkie jego wieże i zamki efektownie zawalają się naraz, a po rozbiciu 6 Twierdz Hordy czeka nas wielki finał przeciwko **Wielkiemu Chanowi Subotaiowi**.
+4. **Aktywna gra na wszystkich frontach i izolacja komnat:** Komnaty Sanktuarium `(4, 138)` i Kwatermistrza P2 `(4, 164)` zostały przeniesione na zachodnią krawędź mapy za gęstą ścianę lasu, a wsparcie Kwatermistrza skaluje się w czasie (`10–20m`, `20–30m`, `30m+`); Niebieski (P1) w centrum dostaje pierwsze uderzenia już w 13. minucie, a Żelazne Słonie maszerują szybciej razem z armią.
+5. **Fale Specjalne, zawalanie obozów i Finałowy Boss:** Wybrane fale mają własny, unikalny motyw (np. *Pancerna Szarża*, *Noc Szakali*, *Nawałnica Artylerii i Snajperów*), po zburzeniu głównej budowli obozu wszystkie jego wieże i zamki efektownie zawalają się naraz, a po rozbiciu 6 Twierdz Hordy czeka nas wielki finał przeciwko **Wielkiemu Chanowi Subotaiowi** (którego gwardia Żelaznych Słoni regeneruje go o `+120 HP/3s`, dopóki żyje przynajmniej 1 Słoń).

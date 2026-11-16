@@ -1,4 +1,4 @@
-# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v7.0.1)
+# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v7.0.2)
 
 ## 0. Protokół Wykonawczy dla Agenta IDE (Antigravity / VS Code)
 1. **Atomowość etapów:** Realizuj podetapy ściśle po kolei (`Etap 0` -> `1A` -> `1B` -> `2` -> `3A` -> `3B` -> `3C` -> `4` -> `5` -> `6A` -> `6B` -> `6C` -> `7` -> `8`). **Zabrania się łączenia kilku podetapów (szczególnie 3A, 3B i 3C) w jedną edycję.**
@@ -491,4 +491,21 @@ Zaktualizuj `horda.md` oraz teksty w `populate_ingame_scenario_descriptions()` (
 
 8. **`[ŚREDNI]` Rozszerzenie walidatora w `test_horde_scenario.py`:**
    - Dodanie weryfikacji unikalności współrzędnych `CREATE_OBJECT` w obrębie każdego triggera, sprawdzenie pełnego footprintu `3×3` Klasztoru `Q4` na `(58, 152)` oraz ponowne wczytanie pliku wygenerowanego do `TemporaryDirectory` przez `AoE2DEScenario.from_file()`.
+
+---
+
+## Plan Wdrożeniowy v7.0.2 (Etap R13 — Pełna izolacja komnat, 3-poziomowy Kwatermistrz P2, Objectives TL;DR, PoI 3 i Tarcza Gwardii Bossa) [DONE / WDROŻONE]
+
+1. **Pełna izolacja Sanktuarium Balansu P1 `(4, 138)` i Kwatermistrza P2 `(4, 164)` + pas leśny (`horde_map.py`, `horde_waves.py`, `horde_quests.py`):**
+   - Przeniesienie obu komnat na samą zachodnią krawędź mapy (`x=1..7`): wnętrza `ROAD` (`2..6 × 134..142` oraz `2..6 × 160..168`), szczelne obwody z klifów `ROCK_CLIFF_ID` bez luk, stałe `MAP_REVEALER` dla `P1–P4` oraz nieprzebrana ściana dębów `TREE_OAK_ID` na `x=8..13, y=128..176` i `x=1..13, y=144..158`.
+2. **Trójstopniowe skalowanie Kwatermistrza P2 (`10–20m`, `20–30m`, `30m+`) (`horde_quests.py`):**
+   - Progi `T1` (`4x Conquistador + 1x Mangonel` lub `+125F/+125W/+100G` bez naprawy murów), `T2` w `1200s` (`4x Conquistador + 2x Bombard Cannon` lub `+200 F/W/G + 250 HP`) i `T3` w `1800s` (`6x Elite Conquistador + 2x Bombard Cannon + 2x Siege Ram` lub `+300 F/W/G + 500 HP`) ze wspólnym pętlowym cooldownem `240s` (`looping=True` z autodezaktywacją), filtrem `UnitInfo.KING.ID` i `teleport_object` + `stop_object`.
+3. **Naprawa zakładki `Objectives` w oknie dialogowym gry (`horde_quests.py`, `horde_config.py`):**
+   - Utworzenie 4 triggerów `00_TLDR_Modal_1..4` (`timer=999999`, `display_as_objective=1`, `display_on_screen=0`, `order=210..207`) widocznych na górze zakładki `Objectives` po otwarciu okna dialogowego bez zaśmiecania stałego HUD-u, oraz umieszczenie bloku `TL;DR` również na początku `hints`.
+4. **Domknięcie opcjonalnych usprawnień z backlogu (`horde_map.py`, `horde_quests.py`):**
+   - `PoI 3: Kamień Wędrowca i Zwiadowcy` na `(64, 88)` (`06e_PoI3_Scout_P1..P4` -> `2x Light Cavalry`, `+150S/+150G` dla `P1–P4`, `MAP_REVEALER` na bród `(122, 62)`).
+   - `07b_Boss_Elephant_Guard_Heal` (`+120 HP/3s` dopóki żyje `≥1` `ELITE_BATTLE_ELEPHANT_ID` `P8`) i `07b_Boss_Elephants_Slain_Disable_Heal`.
+   - Komunikat czatu z flarą `(28, 30)` w `Garrison_Spawn_Quest2_SniperCliff` oraz czat Sanktuarium `09_Diff_*` dla wszystkich 4 graczy.
+5. **Weryfikacja 8-kierunkowego BFS izolacji komnat w `test_horde_scenario.py` (`29/29 testów OK`):**
+   - Walidacja szczelności obu komnat flood-fillem `8-way BFS` (dokładnie `45` osiągalnych pól wewnątrz każdej z nich), obsadzenia pasa leśnego, wszystkich progów Kwatermistrza P2, `00_TLDR_Modal_1..4`, `PoI 3` oraz regeneracji Bossa.
 
