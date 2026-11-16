@@ -1,6 +1,20 @@
-# Przewodnik Gracza — Kroniki Rubieży: Horda i Ekspedycje (v7.0)
+# Przewodnik Gracza — Kroniki Rubieży: Horda i Ekspedycje (v7.0.1)
 
 Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, podział ról na mapie i przegląd zmian od ostatniej gry.
+
+---
+
+## TL;DR — Najważniejsze zasady w 30 sekund
+
+- **Cel gry:** Broń **Cytadeli (Feitorii P2)** w sercu bazy `(54, 146)` (jej utrata = natychmiastowa porażka wszystkich). Wyjdź za mury, zniszcz **6 Twierdz Hordy (`G1–G3`)**, a po `45s` na powrót armii zgładź **Wielkiego Chana Subotaia (3500 HP)** przed Bramą Centralną.
+- **Ustawienia i Fale:** Gracze `P1–P4` (ludzie, P2 najlepiej Hiszpanie) vs `P5–P8` (AI **Extreme**). 14 fal od `8:30` do `78:30` (potem Endless) — zegar do kolejnej fali i poziom trudności są zawsze na górze **Objectives**.
+- **Role (`P1–P4`):**
+  * **P1 (Niebieski):** Brama Centralna + Król w Sanktuarium `(6, 150)` (wejście na flagę zmienia trudność `-2..+2`).
+  * **P2 (Czerwony):** Handel, obrona chłopów przed **Szakalami** + Król-Kwatermistrz `(20, 162)` (od `10:00` co 4 min wejście Królem na Północną lub Południową Flagę daje najemników lub `+300` surowców dla każdego i naprawę murów).
+  * **P3 (Zielony):** Brama Północna (uwaga: w `51:00` saperzy wyrąbią wyłom w północnym lesie!).
+  * **P4 (Żółty):** Brama Wschodnia (w `67:30` wyłom we wschodnim lesie) + korytarz handlowy na południu.
+- **Wyprawy (Settlementy i Questy):** Zburzenie każdego **Settlementu (`G1–G3`)** daje surowce i **na stałe wyłącza jego fale oraz jednostki specjalne** (wywołując jeden kontratak i lekką *Furię*). **Questy (`Q1–Q4`)** dają potężne perki całej drużynie (`Q1`: mur i handel; `Q2`: rozbij 2 Baszty Bombardowe by zdjąć tarczę Uniwersytetu -> bonus strzelców/jazdy; `Q3`: stały dochód co 1 min; `Q4`: przetrwaj 30s odwetu -> `+30%` HP/pancerz i Wielki Klasztor).
+- **3 złote zasady w walce:** (1) W pierwszej kolejności zabijaj **Arcymaga (Imama)** przed Bramą Centralną (daje całej Hordzie tarczę `+30` pancerza!), (2) Chroń wieśniaków pod TC przed szybkimi **Szakalami**, (3) Nie buduj na polanach spawnu Hordy przed bramami (fala niszczy budynki w miejscu swojego pojawienia się).
 
 ---
 
@@ -19,7 +33,7 @@ Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, 
 ## 2. Cel Gry i Zasady Przetrwania
 
 * **Obrona Twierdzy Sojuszu:** Startujemy razem w południowo-zachodniej części mapy (z gotowymi domkami i wspólną wizją z Kartografii). Horda uderza w **14 głównych falach**: pierwsza fala przychodzi o **`8:30`**, druga o **`13:00`**, trzecia o **`18:00`**, a kolejne co 5,5 minuty aż do finałowej 14. fali o **`78:30`** (od **`84:00`** włącza się Tryb Endless).
-* **Jak wygrać:** Nie wystarczy siedzieć za murami! Musimy wyjść w głąb mapy, zniszczyć wszystkie **6 Twierdz Hordy (Settlementów `G1–G3`)**, a następnie wrócić pod Bramę Centralną, odeprzeć **Ostatni Szturm Wielkiego Chana Subotaia (3500 HP)** i zgładzić samego Chana.
+* **Jak wygrać:** Nie wystarczy siedzieć za murami! Musimy wyjść w głąb mapy, zniszczyć wszystkie **6 Twierdz Hordy (Settlementów `G1–G3`)**, po czym dostajemy **45 sekund** na wycofanie armii pod Bramę Centralną `(104, 114)`, aby odeprzeć **Ostatni Szturm Wielkiego Chana Subotaia (3500 HP)** i zgładzić samego Chana.
 * **Jak przegrywamy:** Jeśli wrogowie zburzą centralną **Cytadelę (Feitorię Gracza 2)** w sercu naszej bazy, cała drużyna natychmiast przegrywa.
 
 ---
@@ -33,16 +47,16 @@ Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, 
 * **Gracz 2 (Czerwony — Cytadela, Handel i Kwatermistrz Twierdzy):**
   * Startuje w bezpiecznym sercu bazy obok **Cytadeli (Feitorii)**, ze zwiększonym na starcie limitem populacji (`220`) i sześcioma gotowymi domkami.
   * Odpowiada za gospodarkę, handel wozami (Plac Targowy jest w lewym dolnym rogu mapy) oraz za mobilne odwody w głębi bazy — szczególnie przeciwko wrogim **Szakalom**, które omijają walkę na bramach i wpadają prosto między naszych chłopów pod Town Center!
-  * Obsługuje **Posterunek Kwatermistrza Twierdzy** (`20, 162`, na zachód od swojego TC). Wchodząc swoim Królem na jedną z dwóch flag, może raz na **4 minuty** (wspólne odnowienie dla obu opcji) wezwać wybrane wsparcie:
-    * **Flaga Północna (`20, 158`) — Zrzut Gwardii Najemnej:** pod Cytadelą pojawia się darmowy oddział **`4x Elitarny Konkwistador + 2x Kolubryna`**.
-    * **Flaga Południowa (`20, 166`) — Konwój Zaopatrzeniowy:** każdy z 4 graczy dostaje po **`+300` Żywności, Drewna i Złota**, a wszystkie mury, bramy i budynki w Twierdzy zostają naprawione o **`+500 HP`**.
+  * Obsługuje **Posterunek Kwatermistrza Twierdzy** (`20, 162`, na zachód od swojego TC — odblokowywany o **`10:00`** po Fali 1). Wchodząc **wyłącznie swoim Królem** na jedną z dwóch wyraźnie różnych flag, może raz na **4 minuty** (wspólne resetowalne odnowienie dla obu opcji) wezwać wybrane wsparcie:
+    * **Flaga Północna (`20, 158`) — Zrzut Gwardii Najemnej:** pod Cytadelą (na 6 sąsiednich polach wokół `(54, 149)`) pojawia się darmowy oddział **`4x Elitarny Konkwistador + 2x Kolubryna`**.
+    * **Flaga Południowa (`20, 166`) — Konwój Zaopatrzeniowy:** każdy z 4 graczy dostaje po **`+300` Żywności, Drewna i Złota**, a mury, bramy i budynki w Twierdzy oraz Mur Handlowy z `Q1` zostają naprawione o **`+500 HP`**.
 
 * **Gracz 3 (Zielony — Brama Północna i Klif Artylerii):**
   * Broni **Bramy Północnej** (pierwsze uderzenie już o **`8:30`**!). Uwaga: w **51. minucie** wrodzy saperzy wyrąbią dodatkowy wyłom w północnym lesie na prawo od bramy.
   * Ma najbliżej do pierwszego obozu wroga (**`G1 Północ`**) oraz zadania **`Q2 (Klif Artylerii)`** w północno-zachodnim narożniku mapy.
 
 * **Gracz 4 (Żółty — Brama Wschodnia i Szlak Handlowy):**
-  * Broni **Bramy Wschodniej** (pierwszy atak już o **`8:30`**) oraz południowej **Bramy Handlowej**. Uwaga: od **45. minuty** co druga fala wysyła dodatkowy atak od południa wprost na Szlak Handlowy, a w **67. minucie** saperzy wycinają przejście we wschodnim lesie!
+  * Broni **Bramy Wschodniej** (pierwszy atak już o **`8:30`**) oraz południowej **Bramy Handlowej**. Uwaga: od **45. minuty** co druga fala wysyła dodatkowy atak od południa wprost na Szlak Handlowy, a w **`67:30`** saperzy wycinają przejście we wschodnim lesie!
   * Ma najbliżej do zadania **`Q1 (Karawanseraj)`**, którego zburzenie buduje długi Kamienny Mur Handlowy z 6 basztami i otwiera bezpieczny szlak dla wozów handlowych przez całą mapę.
 
 ---
@@ -65,12 +79,12 @@ Zniszczenie głównego budynku obozu daje każdemu graczowi duży zastrzyk Żywn
 ### 4 Questy Poboczne (`Q1–Q4`)
 Każdy ukończony Quest daje stałe, potężne wzmocnienie całej drużynie (i lekko wzmacnia Hordę):
 * **`Q1` Karawanseraj (południowy wschód):** Stawia długi Kamienny Mur Handlowy z 6 basztami i bramami wypadowymi oraz sojusznicze Targowisko w prawym dolnym rogu mapy. Daje **`+30` limitu populacji**, **+20% szybszą pracę wieśniaków**, +25% szybsze wozy handlowe, 4 darmowe wozy i +500 Złota dla każdego.
-* **`Q2` Klif Artylerii (północny zachód — dwuetapowy):** Najpierw trzeba zniszczyć **2 wysunięte Baszty Bombardowe**, które utrzymują tarczę regenerującą Uniwersytet (`+400 HP` co 2s), a potem sam Uniwersytet. Nagroda: darmowa Balistyka, Chemia, Inżynierowie Oblężniczy i Thumb Ring, **`+2` zasięgu i `+4` ataku** dla wszystkich strzelców, **`+12%` prędkości i `+4` ataku** dla kawalerii, **`+12%` prędkości** dla konnych strzelców, **`2 Kolubryny`** dla Zielonego oraz podgląd na obóz `G2 Akademia`.
+* **`Q2` Klif Artylerii (północny zachód — dwuetapowy):** Po obudzeniu garnizonu `Q2` włącza się tarcza regenerująca Uniwersytet (`+400 HP` co 2s), którą utrzymują **2 wysunięte Baszty Bombardowe** — zniszczcie je w pierwszej kolejności, a potem sam Uniwersytet. Nagroda: darmowa Balistyka, Chemia, Inżynierowie Oblężniczy i Thumb Ring, **`+2` zasięgu i `+4` ataku** dla wszystkich strzelców, **`+12%` prędkości i `+4` ataku** dla kawalerii, **`+12%` prędkości** dla konnych strzelców, **`2 Kolubryny`** dla Zielonego (`(27, 36)` i `(29, 36)`) oraz podgląd na obóz `G2 Akademia`.
 * **`Q3` Skarbiec (wschód):** Daje **`+20` limitu populacji**, jednorazowo +600 Złota / +300 Kamienia oraz **stały dochód co minutę dla każdego gracza**: **`+250 Żywności, +250 Drewna, +200 Złota i +40 Kamienia`**.
-* **`Q4` Krwawy Ołtarz (daleka północ — dwuetapowy):** Po zburzeniu Klasztoru wroga zabudowa obozu zapada się, w ruinach pojawia się Relikt, a z południa rusza odsiecz Zakonu — trzeba **przetrwać 30 sekund Krwawego Odwetu**. Nagroda: **`+30% HP` i `+2/+2` pancerza** dla całej piechoty, jazdy i strzelców, **`+40%` szybsza produkcja wojska**, osłabienie wrogich Arcymagów do 120 HP oraz budowa **Wielkiego Klasztoru z `2` Mnichami** dla Niebieskiego wewnątrz naszej bazy.
+* **`Q4` Krwawy Ołtarz (daleka północ — dwuetapowy):** Po zburzeniu Klasztoru wroga zabudowa obozu zapada się, w ruinach pojawia się Relikt, a z południa rusza odsiecz Zakonu (m.in. Elitarni Jeźdźcy Stepowi, Mamelucy i Wielbłądy) — trzeba **przetrwać 30 sekund Krwawego Odwetu**. Nagroda: **`+30% HP` i `+2/+2` pancerza** dla całej piechoty, jazdy i strzelców, **`+40%` szybsza produkcja wojska**, osłabienie wrogich Arcymagów do 120 HP oraz budowa **Wielkiego Klasztoru z `2` Mnichami** dla Niebieskiego na wyznaczonym placu `(58, 152)` (oznaczonym dwiema pochodniami — nie budujcie tam własnych budynków!).
 
 ### Warto zwiedzać mapę zwiadowcą!
-Poza głównymi obozami na rubieżach ukryte są także mniejsze punkty eksploracyjne — **Opuszczony Obóz Inżynierów** na północnym zachodzie i **Zaginiona Karawana** na wschodzie. Pierwszy gracz, który wyśle tam zwiadowcę lub oddział, zgarnie darmowe machiny oblężnicze oraz zastrzyk surowców dla całej drużyny.
+Poza głównymi obozami na rubieżach ukryte są także mniejsze punkty eksploracyjne — **Opuszczony Obóz Inżynierów `(30, 76)`** przed północno-zachodnim lasem (odblokowywany w `10:00`) i **Zaginiona Karawana `(128, 174)`** na wschodzie. Pierwszy gracz, który wyśle tam zwiadowcę lub oddział, zgarnie darmowe machiny oblężnicze oraz zastrzyk surowców dla całej drużyny.
 
 ---
 

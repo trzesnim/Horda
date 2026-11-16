@@ -1,4 +1,4 @@
-# DEBUG_LOG.md — Dokumentacja Architektury, Stanu Bazowego i Błędów (`Kroniki Rubieży: Horda i Ekspedycje` v6.3 -> v7.0)
+# DEBUG_LOG.md — Dokumentacja Architektury, Stanu Bazowego i Błędów (`Kroniki Rubieży: Horda i Ekspedycje` v6.3 -> v7.0.1)
 
 ## 0. Identyfikacja stanu bazowego i zasady dla Agenta IDE (Antigravity / VS Code)
 - **Repozytorium bazowe:** `https://github.com/trzesnim/AoE_Scenarios/tree/main` (stan odpowiadający wersji `v6.3 -> v6.4` po audycie kodu i testów).
@@ -461,3 +461,25 @@ Dzięki temu przejście `0 -> -1` odejmuje dokładnie `hp_delta_down` (ok. 15% b
   * `python -m ruff check .` -> `All checks passed!`.
   * `python test_horde_scenario.py -v` -> `Ran 28 tests in 57.448s` (`OK`, `28/28` testów z nową pełną walidacją `test_v70_final_boss_two_stage_quests_p2_qm_and_pois`).
   * Metryki binarnego `Kroniki_Rubiezy_Horda_Coop.aoe2scenario`: **`231 679` bajtów**, **`947` triggerów**, **`5159` obiektów startowych** (`P0=4959, P1=35, P2=16, P3=24, P4=37, P5=13, P6=12, P7=10, P8=53`), topologiczne `trigger_id` Sanktuarium `09_Diff_*` nienaruszone (`571..578`).
+
+### Wdrożenie 13: Etap R12 — Aktualizacja v7.0.1 (Finałowy Boss Fight 45s, Kwatermistrz P2, Geometria PoI, Q2/Q4 oraz TL;DR) [STATUS: OK]
+* **Zmodyfikowane pliki:** `horde_config.py`, `horde_map.py`, `horde_waves.py`, `horde_quests.py`, `test_horde_scenario.py`, `horda.md`, `PRZEWODNIK_GRACZA.md`, `SCENARIO_DOSSIER.md`, `DEBUG_LOG.md`, `ROADMAP.md`, `GEMINI.md`.
+* **Opis wdrożonych zmian:**
+  * **1. Czterofazowy Finałowy Boss Fight `07a -> 07b -> 07c -> 07d` (`horde_config.py`, `horde_map.py`, `horde_quests.py`):**
+    * Zmniejszono `BALANCE["final_boss_speed"]` z `1.35` na **`0.85`**, dzięki czemu Wielki Chan Subotai maszeruje w szyku ze swoimi Żelaznymi Słoniami (`0.72`).
+    * Rozbito finał na: `07a_All_Settlements_Destroyed_Boss_Warning` (dezaktywuje eskalację i Endless, czyści `kill_object` budynki `P1–P4` na `(110..124, 108..128)`, odsłania `(104, 114)`/`(116, 114)`, wysyła 45-sekundowy alarm na powrót armii) -> `07b_Spawn_Final_Boss_Wave` (`timer=45`: spawnuje gwardię `P8` na `(116, 114)` i osobno `2x Imam` `P7` na wolnej polanie `(118, 122)`) -> `07c_Confirm_Boss_Spawned` (warunek `objects_in_area` dla `FINAL_BOSS_HERO_ID` `P8` `Alive` bez inwersji potwierdzający obecność Bossa na mapie) -> `07d_Victory_Final_Boss_Defeated` (`timer=5` + `inverted=True` -> `declare_victory` dla `P1–P4`).
+  * **2. Naprawa Kwatermistrza `P2` (`horde_config.py`, `horde_map.py`, `horde_quests.py`):**
+    * Odróżniono wizualnie flagi na mapie: `FLAG_A_ID` (`600`) na `(20, 158)` i `FLAG_B_ID` (`601`) na `(20, 166)`.
+    * Ustawiono `06d_P2_QM_Cooldown_240s` na `looping=True` z efektem autodezaktywacji, gwarantującym pełny reset zegara `240s` przy każdym użyciu.
+    * Dodano filtr `UnitInfo.KING.ID` w warunkach `objects_in_area` i `teleport_object` dla obu flag oraz bramkę `06d_Unlock_Quartermaster_And_PoI1_10m` (`timer=600`), która w `10:00` odblokowuje Posterunek Kwatermistrza `P2` i `PoI 1`.
+    * Rozsunięto zrzut militarny na 6 osobnych kafelków wokół `(54, 149)` (`4x Elite Conquistador` `(52..53/55..56, 149)` + `2x Bombard Cannon` `(53/55, 150)`) oraz dodano w `06d_P2_QM_Eco_Drop` naprawę Muru Handlowego `Q1` (`P4` w `105..199, 183..187`, `+500 HP`).
+  * **3. Geometria `PoI 1`/`PoI 2` i poprawki `Q2`/`Q4` (`horde_config.py`, `horde_map.py`, `horde_quests.py`):**
+    * Przeniesiono `PoI 1` na otwarty teren przed lasem NW `(30, 76)` (`OUTPOST` na `(30, 75)`, detekcja `26..34, 72..80`, spawny na `(29/31, 76..77)`) oraz `PoI 2` na `(128, 174)` (detekcja `124..132, 170..178`).
+    * W `Q2`: pętla `06_Quest2_Shield_Loop` startuje wyłączona i jest włączana przez `Garrison_Spawn_Quest2_SniperCliff`, zaktualizowano etykietę Objectives (`"Q2: Klif Artylerii (28,30) - zniszcz 2 Baszty Bombardowe, by zdjac tarcze Uniwersytetu"`) i rozsunięto `2x Bombard Cannon` `P3` na `(27, 36)` i `(29, 36)`.
+    * W `Q4`: dodano `UnitInfo.ELITE_STEPPE_LANCER.ID` (`1372`) do `ENEMY_UNIT_REGISTRY` (`30` jednostek) i zastąpiono nim `4x HUSSAR_ID` w kontrataku `Stage 1`; oznaczono plac `(58, 152)` w `grid.mark_footprint(size_tiles=3, no_tree_margin=1)` oraz pochodniami `(56, 150)` i `(60, 154)`, dodano `kill_object` (`P1–P4`, `56..60, 150..154`) przed budową Klasztoru i rozsunięto `2x Monk` `P1` na `(57, 155)` i `(59, 155)`.
+  * **4. Sekcja `TL;DR` i aktualizacja przewodnika (`horde_config.py`, `PRZEWODNIK_GRACZA.md`, `GEMINI.md`):**
+    * Dodano zwięzłą sekcję `TL;DR` na początek `PRZEWODNIK_GRACZA.md` oraz pola `instructions` w `populate_ingame_scenario_descriptions()`.
+* **Weryfikacja binarna:**
+  * `python -m ruff check .` -> `All checks passed!`.
+  * `python test_horde_scenario.py -v` -> `Ran 28 tests in 78.407s` (`OK`, `28/28` testów, w tym pełna walidacja R12, unikalność współrzędnych `CREATE_OBJECT`, footprint `3×3` Klasztoru `Q4` i odczyt round-trip z `TemporaryDirectory`).
+  * Metryki binarnego `Kroniki_Rubiezy_Horda_Coop.aoe2scenario`: **`234 812` bajtów**, **`950` triggerów**, **`5183` obiektów startowych** (`P0=4983, P1=35, P2=16, P3=24, P4=37, P5=13, P6=12, P7=10, P8=53`), topologiczne `trigger_id` Sanktuarium `09_Diff_*` nienaruszone (`571..578`).

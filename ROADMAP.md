@@ -1,4 +1,4 @@
-# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v7.0)
+# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v7.0.1)
 
 ## 0. Protokół Wykonawczy dla Agenta IDE (Antigravity / VS Code)
 1. **Atomowość etapów:** Realizuj podetapy ściśle po kolei (`Etap 0` -> `1A` -> `1B` -> `2` -> `3A` -> `3B` -> `3C` -> `4` -> `5` -> `6A` -> `6B` -> `6C` -> `7` -> `8`). **Zabrania się łączenia kilku podetapów (szczególnie 3A, 3B i 3C) w jedną edycję.**
@@ -459,7 +459,7 @@ Zaktualizuj `horda.md` oraz teksty w `populate_ingame_scenario_descriptions()` (
 
 ---
 
-## Plan Wdrożeniowy v7.0.1 (Etap R12 — Poprawki po potrójnym audycie Opus / Sonnet / GPT Sol) [TODO]
+## Plan Wdrożeniowy v7.0.1 (Etap R12 — Poprawki po potrójnym audycie Opus / Sonnet / GPT Sol) [DONE / WDROŻONE]
 
 1. **`[KRYTYCZNY]` Separacja spawnu Finałowego Bossa (`07a`), 45-sekundowe ostrzeżenie na powrót armii i dwustopniowe potwierdzenie spawnu (`07b -> 07c`):**
    - Rozbicie `07a` na `07a_All_Settlements_Destroyed_Boss_Warning` (ogłasza alarm, wyłącza eskalację/Endless, czyści `kill_object` budynki graczy w `116±6, 114±6` i uruchamia 45-sekundowy timer, dając armii graczy czas na powrót zza rzeki oraz pozwalając wygasnąć ostatniemu kontratakowi Settlementu) -> `07b_Spawn_Final_Boss_Wave` (`timer=45`: spawnuje Chana `P8` i jego gwardię na `(116, 114)` oraz 2 Arcymagów `P7` na osobnych współrzędnych `(118, 122)` bez kolizji `idx=0`).

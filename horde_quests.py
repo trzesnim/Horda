@@ -16,7 +16,6 @@ from horde_config import (
     ENEMY_UNIT_REGISTRY,
     FINAL_BOSS_HERO_ID,
     FLARE_UNIT_ID,
-    HUSSAR_ID,
     IMAM_UNIT_ID,
     MAP_REVEALER_ID,
     MAP_SIZE,
@@ -442,7 +441,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     )
 
     # QUEST 2: Klif Artylerii (Dwuetapowy: Baszty Artyleryjskie -> Uniwersytet)
-    t_q2_shield = tm.add_trigger("06_Quest2_Shield_Loop", enabled=True, looping=True)
+    t_q2_shield = tm.add_trigger("06_Quest2_Shield_Loop", enabled=False, looping=True)
     safe_call(t_q2_shield.new_condition.timer, timer=2)
     safe_call(
         t_q2_shield.new_effect.heal_object,
@@ -454,6 +453,8 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         area_y2=34,
         quantity=400,
     )
+    t_q2_garr_spawn = camp_leash_handles["Quest2_SniperCliff"][0]
+    safe_call(t_q2_garr_spawn.new_effect.activate_trigger, trigger_id=t_q2_shield.trigger_id)
 
     t_q2_batteries = tm.add_trigger("06_Quest2_Batteries_Down", enabled=True, looping=False)
     for bt in q2_bombard_towers:
@@ -468,7 +469,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     )
 
     t_q2 = tm.add_trigger("06_Quest2_Sniper_Cliff_Buff", enabled=True, looping=False)
-    set_as_objective(t_q2, "Q2 - Klif Artylerii (+2 Zasiegu, +4 Ataku, 2x Kolubryna)", order=98)
+    set_as_objective(t_q2, "Q2: Klif Artylerii (28,30) - zniszcz 2 Baszty Bombardowe, by zdjac tarcze Uniwersytetu", order=98)
     safe_call(t_q2.new_condition.destroy_object, unit_object=q2_bldg.reference_id)
     safe_call(t_q2.new_effect.deactivate_trigger, trigger_id=t_q2_shield.trigger_id)
     safe_call(t_q2.new_effect.deactivate_trigger, trigger_id=t_q2_batteries.trigger_id)
@@ -493,12 +494,12 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
             location_y=s_coords["G2_Snipers"][1],
         )
 
-    for _ in range(2):
+    for bc_x in (27, 29):
         safe_call(
             t_q2.new_effect.create_object,
             source_player=PlayerId.THREE,
             object_list_unit_id=UnitInfo.BOMBARD_CANNON.ID,
-            location_x=28,
+            location_x=bc_x,
             location_y=36,
         )
 
@@ -507,7 +508,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
 
     send_highlight_chat(
         t_q2, "<GREEN>",
-        "=== [Q2 UKONCZONY!] === Wszyscy otrzymuja Balistyke, Chemie, Siege Engineers, +2 Zasiegu i +4 Ataku strzelcow, +12% szybkosci i +4 Ataku jazdy, 2x Kolubryne dla Zielonego na (28, 36) oraz wywiad nad Obozem Snajperow! [Adaptacja Hordy: +8 HP, +1 Atak]",
+        "=== [Q2 UKONCZONY!] === Wszyscy otrzymuja Balistyke, Chemie, Siege Engineers, +2 Zasiegu i +4 Ataku strzelcow, +12% szybkosci i +4 Ataku jazdy, 2x Kolubryne dla Zielonego na (27, 36) i (29, 36) oraz wywiad nad Obozem Snajperow! [Adaptacja Hordy: +8 HP, +1 Atak]",
         flare_x=q2_pos[0], flare_y=q2_pos[1],
     )
 
@@ -568,7 +569,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         [
             (UnitInfo.HEAVY_CAMEL_RIDER.ID, 6),
             (UnitInfo.ELITE_MAMELUKE.ID, 6),
-            (HUSSAR_ID, 4),
+            (UnitInfo.ELITE_STEPPE_LANCER.ID, 4),
         ],
         spawn_x=105,
         spawn_y=34,
@@ -591,6 +592,16 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
             safe_modify_attribute(t_q4_s2, h_p, b_id, ATTR_WORK_RATE, Operation.MULTIPLY, 1.40)
 
     add_enemy_combat_buff(t_q4_s2, ai_players, hp_add=10, atk_add=1)
+    for h_p in human_players:
+        safe_call(
+            t_q4_s2.new_effect.kill_object,
+            source_player=h_p,
+            object_type=ObjectType.BUILDING,
+            area_x1=56,
+            area_y1=150,
+            area_x2=60,
+            area_y2=154,
+        )
     safe_call(
         t_q4_s2.new_effect.create_object,
         source_player=PlayerId.ONE,
@@ -598,18 +609,18 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         location_x=58,
         location_y=152,
     )
-    for _ in range(2):
+    for monk_x in (57, 59):
         safe_call(
             t_q4_s2.new_effect.create_object,
             source_player=PlayerId.ONE,
             object_list_unit_id=UnitInfo.MONK.ID,
-            location_x=58,
+            location_x=monk_x,
             location_y=155,
         )
 
     send_highlight_chat(
         t_q4_s2, "<GREEN>",
-        "=== [Q4 UKONCZONY!] === Armie graczy otrzymuja +30% Max HP, +2/+2 Pancerza i +40% szybsza produkcje, HP Arcymaga spada do 120, a na placu Twierdzy (58, 152) powstaje Klasztor P1 z 2 Mnichami! [Adaptacja Hordy: +10 HP, +1 Atak]",
+        "=== [Q4 UKONCZONY!] === Armie graczy otrzymuja +30% Max HP, +2/+2 Pancerza i +40% szybsza produkcje, HP Arcymaga spada do 120, a na placu Twierdzy (58, 152) powstaje Klasztor P1 z 2 Mnichami na (57, 155) i (59, 155)! [Adaptacja Hordy: +10 HP, +1 Atak]",
         flare_x=58, flare_y=152,
     )
 
@@ -623,9 +634,9 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     t_qm_ready = tm.add_trigger("State_P2_QM_Ready", enabled=True, looping=False)
     safe_call(t_qm_ready.new_condition.timer, timer=999999)
 
-    t_qm_cooldown = tm.add_trigger("06d_P2_QM_Cooldown_240s", enabled=False, looping=False)
-    t_qm_mil = tm.add_trigger("06d_P2_QM_Military_Drop", enabled=True, looping=True)
-    t_qm_eco = tm.add_trigger("06d_P2_QM_Eco_Drop", enabled=True, looping=True)
+    t_qm_cooldown = tm.add_trigger("06d_P2_QM_Cooldown_240s", enabled=False, looping=True)
+    t_qm_mil = tm.add_trigger("06d_P2_QM_Military_Drop", enabled=False, looping=True)
+    t_qm_eco = tm.add_trigger("06d_P2_QM_Eco_Drop", enabled=False, looping=True)
 
     safe_call(t_qm_cooldown.new_condition.timer, timer=240)
     safe_call(t_qm_cooldown.new_effect.activate_trigger, trigger_id=t_qm_ready.trigger_id)
@@ -638,10 +649,12 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         flare_x=20,
         flare_y=162,
     )
+    safe_call(t_qm_cooldown.new_effect.deactivate_trigger, trigger_id=t_qm_cooldown.trigger_id)
 
     safe_call(
         t_qm_mil.new_condition.objects_in_area,
         source_player=PlayerId.TWO,
+        object_list=UnitInfo.KING.ID,
         area_x1=mil_x - 2,
         area_y1=mil_y - 2,
         area_x2=mil_x + 2,
@@ -651,6 +664,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     safe_call(
         t_qm_mil.new_effect.teleport_object,
         source_player=PlayerId.TWO,
+        object_list_unit_id=UnitInfo.KING.ID,
         area_x1=mil_x - 2,
         area_y1=mil_y - 2,
         area_x2=mil_x + 2,
@@ -658,26 +672,26 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         location_x=qm_cx,
         location_y=qm_cy,
     )
-    for _ in range(4):
+    for conq_x, conq_y in [(52, 149), (53, 149), (55, 149), (56, 149)]:
         safe_call(
             t_qm_mil.new_effect.create_object,
             source_player=PlayerId.TWO,
             object_list_unit_id=UnitInfo.ELITE_CONQUISTADOR.ID,
-            location_x=54,
-            location_y=149,
+            location_x=conq_x,
+            location_y=conq_y,
         )
-    for _ in range(2):
+    for bc_x, bc_y in [(53, 150), (55, 150)]:
         safe_call(
             t_qm_mil.new_effect.create_object,
             source_player=PlayerId.TWO,
             object_list_unit_id=UnitInfo.BOMBARD_CANNON.ID,
-            location_x=54,
-            location_y=149,
+            location_x=bc_x,
+            location_y=bc_y,
         )
     send_highlight_chat(
         t_qm_mil,
         "<RED>",
-        "[KWATERMISTRZ P2] Czerwony wezwał Gwardię Najemną (4x Elitarny Konkwistador + 2x Kolubryna) na dziedziniec (54, 149)! Odnowienie: 4 min.",
+        "[KWATERMISTRZ P2] Czerwony wezwał Gwardię Najemną (4x Elitarny Konkwistador + 2x Kolubryna) na dziedziniec wokół (54, 149)! Odnowienie: 4 min.",
         flare_x=54,
         flare_y=149,
     )
@@ -689,6 +703,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     safe_call(
         t_qm_eco.new_condition.objects_in_area,
         source_player=PlayerId.TWO,
+        object_list=UnitInfo.KING.ID,
         area_x1=eco_x - 2,
         area_y1=eco_y - 2,
         area_x2=eco_x + 2,
@@ -698,6 +713,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     safe_call(
         t_qm_eco.new_effect.teleport_object,
         source_player=PlayerId.TWO,
+        object_list_unit_id=UnitInfo.KING.ID,
         area_x1=eco_x - 2,
         area_y1=eco_y - 2,
         area_x2=eco_x + 2,
@@ -719,10 +735,20 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
             area_y2=199,
             quantity=500,
         )
+    safe_call(
+        t_qm_eco.new_effect.heal_object,
+        source_player=PlayerId.FOUR,
+        object_type=ObjectType.BUILDING,
+        area_x1=105,
+        area_y1=183,
+        area_x2=199,
+        area_y2=187,
+        quantity=500,
+    )
     send_highlight_chat(
         t_qm_eco,
         "<YELLOW>",
-        "[KWATERMISTRZ P2] Czerwony wysłał Konwój Zaopatrzeniowy (+300 Żywności/Drewna/Złota dla każdego i naprawa murów)! Odnowienie: 4 min.",
+        "[KWATERMISTRZ P2] Czerwony wysłał Konwój Zaopatrzeniowy (+300 Żywności/Drewna/Złota dla każdego i naprawa murów Twierdzy oraz Q1)! Odnowienie: 4 min.",
         flare_x=54,
         flare_y=149,
     )
@@ -732,38 +758,39 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     safe_call(t_qm_eco.new_effect.activate_trigger, trigger_id=t_qm_cooldown.trigger_id)
 
     # ==============================================================================
-    # 10c. ZDARZENIA EKSPLORACYJNE NA MAPIE (MAP PoI)
+    # 10c. ZDARZENIA EKSPLORACYJNE NA MAPIE (MAP PoI) I BRAMKA 10:00
     # ==============================================================================
     poi1_triggers = [
-        tm.add_trigger(f"06e_PoI1_Engineers_P{p_idx}", enabled=True, looping=False)
+        tm.add_trigger(f"06e_PoI1_Engineers_P{p_idx}", enabled=False, looping=False)
         for p_idx in range(1, 5)
     ]
     for h_p, t_poi in zip(human_players, poi1_triggers):
         safe_call(
             t_poi.new_condition.objects_in_area,
             source_player=h_p,
-            area_x1=18,
-            area_y1=70,
-            area_x2=26,
-            area_y2=78,
+            area_x1=26,
+            area_y1=72,
+            area_x2=34,
+            area_y2=80,
             quantity=1,
         )
         for other_t in poi1_triggers:
             safe_call(t_poi.new_effect.deactivate_trigger, trigger_id=other_t.trigger_id)
-        for _ in range(2):
+        for ram_x, ram_y in [(29, 76), (31, 76)]:
             safe_call(
                 t_poi.new_effect.create_object,
                 source_player=h_p,
                 object_list_unit_id=UnitInfo.CAPPED_RAM.ID,
-                location_x=22,
-                location_y=74,
+                location_x=ram_x,
+                location_y=ram_y,
             )
+        for pet_x, pet_y in [(29, 77), (31, 77)]:
             safe_call(
                 t_poi.new_effect.create_object,
                 source_player=h_p,
                 object_list_unit_id=UnitInfo.PETARD.ID,
-                location_x=22,
-                location_y=74,
+                location_x=pet_x,
+                location_y=pet_y,
             )
         for ally_p in human_players:
             add_player_resource(t_poi, ally_p, RES_WOOD, 200)
@@ -771,10 +798,24 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         send_highlight_chat(
             t_poi,
             "<GREEN>",
-            f"[EKSPLORACJA - OBÓZ INŻYNIERÓW (22, 74)] Gracz P{h_p.value} przejął sprzęt oblężniczy (2x Taran + 2x Petarda) oraz +200 Drewna i +200 Złota dla całego Sojuszu!",
-            flare_x=22,
-            flare_y=74,
+            f"[EKSPLORACJA - OBÓZ INŻYNIERÓW (30, 76)] Gracz P{h_p.value} przejął sprzęt oblężniczy (2x Taran + 2x Petarda) oraz +200 Drewna i +200 Złota dla całego Sojuszu!",
+            flare_x=30,
+            flare_y=76,
         )
+
+    t_unlock_qm_poi1 = tm.add_trigger("06d_Unlock_Quartermaster_And_PoI1_10m", enabled=True, looping=False)
+    safe_call(t_unlock_qm_poi1.new_condition.timer, timer=600)
+    safe_call(t_unlock_qm_poi1.new_effect.activate_trigger, trigger_id=t_qm_mil.trigger_id)
+    safe_call(t_unlock_qm_poi1.new_effect.activate_trigger, trigger_id=t_qm_eco.trigger_id)
+    for t_poi1 in poi1_triggers:
+        safe_call(t_unlock_qm_poi1.new_effect.activate_trigger, trigger_id=t_poi1.trigger_id)
+    send_highlight_chat(
+        t_unlock_qm_poi1,
+        "<AQUA>",
+        "[KWATERMISTRZ P2] Posterunek Kwatermistrza (20, 162) oraz Obóz Inżynierów (30, 76) są już dostępne!",
+        flare_x=20,
+        flare_y=162,
+    )
 
     poi2_triggers = [
         tm.add_trigger(f"06e_PoI2_Caravan_P{p_idx}", enabled=True, looping=False)
@@ -784,9 +825,9 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         safe_call(
             t_poi.new_condition.objects_in_area,
             source_player=h_p,
-            area_x1=134,
+            area_x1=124,
             area_y1=170,
-            area_x2=142,
+            area_x2=132,
             area_y2=178,
             quantity=1,
         )
@@ -805,8 +846,8 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         send_highlight_chat(
             t_poi,
             "<YELLOW>",
-            f"[EKSPLORACJA - ZAGINIONA KARAWANA (138, 174)] Gracz P{h_p.value} odnalazł wozy z łupem (+350 Żywności i +350 Złota dla każdego) oraz mapy ujawniające Obóz Karawany Q1 (154, 190)!",
-            flare_x=138,
+            f"[EKSPLORACJA - ZAGINIONA KARAWANA (128, 174)] Gracz P{h_p.value} odnalazł wozy z łupem (+350 Żywności i +350 Złota dla każdego) oraz mapy ujawniające Obóz Karawany Q1 (154, 190)!",
+            flare_x=128,
             flare_y=174,
         )
 
@@ -867,47 +908,64 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
             flare_x=sx, flare_y=sy,
         )
 
-    # 12. Warunki Zwycięstwa (Dwufazowy Finałowy Boss) i Porażki
-    t_phase_boss = tm.add_trigger("07a_All_Settlements_Destroyed_Spawn_Final_Boss", enabled=True, looping=False)
-    t_win = tm.add_trigger("07b_Victory_Final_Boss_Defeated", enabled=False, looping=False)
+    # 12. Warunki Zwycięstwa (Czterofazowy Finałowy Boss) i Porażki
+    t_boss_warn = tm.add_trigger("07a_All_Settlements_Destroyed_Boss_Warning", enabled=True, looping=False)
+    t_boss_spawn = tm.add_trigger("07b_Spawn_Final_Boss_Wave", enabled=False, looping=False)
+    t_boss_confirm = tm.add_trigger("07c_Confirm_Boss_Spawned", enabled=False, looping=False)
+    t_win = tm.add_trigger("07d_Victory_Final_Boss_Defeated", enabled=False, looping=False)
 
     for s_def in settlement_defs:
         core_unit = s_def[2]
-        safe_call(t_phase_boss.new_condition.destroy_object, unit_object=core_unit.reference_id)
+        safe_call(t_boss_warn.new_condition.destroy_object, unit_object=core_unit.reference_id)
 
     for esc_t in escalation_triggers:
-        safe_call(t_phase_boss.new_effect.deactivate_trigger, trigger_id=esc_t.trigger_id)
+        safe_call(t_boss_warn.new_effect.deactivate_trigger, trigger_id=esc_t.trigger_id)
     for end_t in endless_triggers:
-        safe_call(t_phase_boss.new_effect.deactivate_trigger, trigger_id=end_t.trigger_id)
+        safe_call(t_boss_warn.new_effect.deactivate_trigger, trigger_id=end_t.trigger_id)
 
-    send_highlight_chat(
-        t_phase_boss,
-        "<RED>",
-        "[FINAŁOWY BOSS] Wszystkie 6 Twierdz Hordy runęło! Wielki Chan Subotai (3500 HP) osobiście prowadzi Ostatni Szturm na Bramę Centralną — zgładźcie Chana, by odnieść Zwycięstwo!",
-        flare_x=116,
-        flare_y=114,
-    )
     for h_p in human_players:
         safe_call(
-            t_phase_boss.new_effect.play_sound,
+            t_boss_warn.new_effect.kill_object,
             source_player=h_p,
-            location_x=116,
-            location_y=114,
-            global_sound=1,
-            sound_name="Play_Tribute_Received",
+            object_type=ObjectType.BUILDING,
+            area_x1=110,
+            area_y1=108,
+            area_x2=124,
+            area_y2=128,
         )
+
     for rx, ry in [(104, 114), (116, 114)]:
         for h_p in human_players:
             safe_call(
-                t_phase_boss.new_effect.create_object,
+                t_boss_warn.new_effect.create_object,
                 source_player=h_p,
                 object_list_unit_id=MAP_REVEALER_ID,
                 location_x=rx,
                 location_y=ry,
             )
 
+    for h_p in human_players:
+        safe_call(
+            t_boss_warn.new_effect.play_sound,
+            source_player=h_p,
+            location_x=116,
+            location_y=114,
+            global_sound=1,
+            sound_name="Play_Tribute_Received",
+        )
+
+    send_highlight_chat(
+        t_boss_warn,
+        "<RED>",
+        "[FINAŁOWY ALARM] Wszystkie 6 Twierdz Hordy runęło! Macie 45 sekund na wycofanie armii pod Bramę Centralną (104, 114) — nadciąga Wielki Chan Subotai (3500 HP)!",
+        flare_x=116,
+        flare_y=114,
+    )
+    safe_call(t_boss_warn.new_effect.activate_trigger, trigger_id=t_boss_spawn.trigger_id)
+
+    safe_call(t_boss_spawn.new_condition.timer, timer=45)
     add_spawn_and_attack_effect(
-        t_phase_boss,
+        t_boss_spawn,
         PlayerId.EIGHT,
         [
             (FINAL_BOSS_HERO_ID, 1),
@@ -921,18 +979,38 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         target_y=146,
     )
     add_spawn_and_attack_effect(
-        t_phase_boss,
+        t_boss_spawn,
         PlayerId.SEVEN,
         [(IMAM_UNIT_ID, 2)],
-        spawn_x=116,
-        spawn_y=114,
+        spawn_x=118,
+        spawn_y=122,
         target_x=54,
         target_y=146,
     )
-    safe_call(t_phase_boss.new_effect.activate_trigger, trigger_id=t_win.trigger_id)
+    send_highlight_chat(
+        t_boss_spawn,
+        "<RED>",
+        "[OSTATNI SZTURM] Wielki Chan Subotai (3500 HP) z gwardią na (116, 114) i Arcymagami na (118, 122) rusza na Bramę Centralną! Zgładźcie Chana, aby zwyciężyć!",
+        flare_x=116,
+        flare_y=114,
+    )
+    safe_call(t_boss_spawn.new_effect.activate_trigger, trigger_id=t_boss_confirm.trigger_id)
+
+    safe_call(
+        t_boss_confirm.new_condition.objects_in_area,
+        area_x1=0,
+        area_y1=0,
+        area_x2=MAP_SIZE - 1,
+        area_y2=MAP_SIZE - 1,
+        source_player=PlayerId.EIGHT,
+        object_list=FINAL_BOSS_HERO_ID,
+        object_state=ObjectState.ALIVE,
+        quantity=1,
+    )
+    safe_call(t_boss_confirm.new_effect.activate_trigger, trigger_id=t_win.trigger_id)
 
     set_as_objective(t_win, "FINAL: Zgladz Wielkiego Chana Subotaia (3500 HP) przed Brama Centralna!", order=99)
-    safe_call(t_win.new_condition.timer, timer=10)
+    safe_call(t_win.new_condition.timer, timer=5)
     safe_call(
         t_win.new_condition.objects_in_area,
         area_x1=0,

@@ -11,6 +11,7 @@ from horde_config import (
     BALANCE,
     FEITORIA_ID,
     FLAG_A_ID,
+    FLAG_B_ID,
     FORTIFIED_PALISADE_ID,
     GOLD_MINE_ID,
     KREPOST_ID,
@@ -537,13 +538,16 @@ def build_map_and_entities(scenario) -> dict:
 
     for sx, sy in [
         (48, 86), (52, 86), (68, 60), (78, 87), (105, 34), (106, 72),
-        (116, 114), (116, 162), (117, 140), (117, 178), (156, 152), (162, 180),
+        (116, 114), (118, 122), (116, 162), (117, 140), (117, 178), (156, 152), (162, 180),
         (68, 48), (76, 84), (120, 152), (120, 162), (128, 36), (134, 78), (160, 62),
     ]:
         grid.mark_no_trees(sx, sy, radius=7)
 
-    # Plac pod Klasztor nagrody Q4 na (58, 152)
+    # Plac pod Klasztor nagrody Q4 na (58, 152) (rezerwacja 3x3 + 2 pochodnie narozne)
     grid.mark_no_trees(58, 152, radius=4)
+    grid.mark_footprint(58, 152, size_tiles=3, no_tree_margin=1)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 56, 150, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 60, 154, no_tree_margin=0)
 
     reveal_building_center_permanent(um, *q1_pos)
     grid.mark_no_trees(*q1_pos, radius=9)
@@ -612,23 +616,23 @@ def build_map_and_entities(scenario) -> dict:
     grid.occupied_tiles.add((17, 162))
     grid.place_unit(um, PlayerId.GAIA, FLAG_A_ID, 20, 158, no_tree_margin=0)
     grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 19, 158, no_tree_margin=0)
-    grid.place_unit(um, PlayerId.GAIA, FLAG_A_ID, 20, 166, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, FLAG_B_ID, 20, 166, no_tree_margin=0)
     grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 19, 166, no_tree_margin=0)
     p2_qm_pads = {"center": (17, 162), "mil_pad": (20, 158), "eco_pad": (20, 166)}
 
-    # PoI 1: Opuszczony Obóz Inżynierów na (22, 74)
-    grid.mark_no_trees(22, 74, radius=4)
-    set_circle_terrain(mm, 22, 74, radius=3, terrain_id=TerrainId.DIRT_2)
-    grid.place_building(um, PlayerId.GAIA, BuildingInfo.OUTPOST.ID, 22, 73, size_tiles=1, no_tree_margin=1)
-    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 21, 74, no_tree_margin=0)
-    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 23, 74, no_tree_margin=0)
+    # PoI 1: Opuszczony Obóz Inżynierów na (30, 76)
+    grid.mark_no_trees(30, 76, radius=4)
+    set_circle_terrain(mm, 30, 76, radius=3, terrain_id=TerrainId.DIRT_2)
+    grid.place_building(um, PlayerId.GAIA, BuildingInfo.OUTPOST.ID, 30, 75, size_tiles=1, no_tree_margin=1)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 28, 76, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 32, 76, no_tree_margin=0)
 
-    # PoI 2: Zaginiona Karawana na (138, 174)
-    grid.mark_no_trees(138, 174, radius=4)
-    set_circle_terrain(mm, 138, 174, radius=3, terrain_id=TerrainId.DIRT_1)
-    grid.place_unit(um, PlayerId.GAIA, GOLD_MINE_ID, 138, 174, no_tree_margin=0)
-    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 137, 174, no_tree_margin=0)
-    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 139, 174, no_tree_margin=0)
+    # PoI 2: Zaginiona Karawana na (128, 174)
+    grid.mark_no_trees(128, 174, radius=4)
+    set_circle_terrain(mm, 128, 174, radius=3, terrain_id=TerrainId.DIRT_1)
+    grid.place_unit(um, PlayerId.GAIA, GOLD_MINE_ID, 128, 174, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 127, 174, no_tree_margin=0)
+    grid.place_unit(um, PlayerId.GAIA, TORCH_ID, 129, 174, no_tree_margin=0)
 
     north_breach_box = (75, 95, 80, 105)
     east_breach_box = (99, 137, 109, 142)

@@ -584,7 +584,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     send_highlight_chat(
         t_init, "<YELLOW>",
-        "=== KRONIKI RUBIEZY v7.0 === Inzynier Balansu P1 czeka na (6, 150), a Kwatermistrz P2 na (20, 162)! W panelu Celow (Objectives) dziala ZEGAR FALI!",
+        "=== KRONIKI RUBIEZY v7.0.1 === Inzynier Balansu P1 czeka na (6, 150), a Kwatermistrz P2 na (20, 162) [od 10:00]! W panelu Celow (Objectives) dziala ZEGAR FALI!",
     )
 
     t_mutate = tm.add_trigger("01b_Apply_Specialized_Unit_Archetypes", enabled=True, looping=False)
