@@ -1,4 +1,4 @@
-# BALANCE_DOSSIER.md — Kroniki Rubieży: Horda i Ekspedycje (`v7.0.2`)
+# BALANCE_DOSSIER.md — Kroniki Rubieży: Horda i Ekspedycje (`v7.0.3`)
 
 Zestawienie surowych danych liczbowych, współrzędnych i mechanik wyeksportowanych bezpośrednio z modułów `horde_config.py`, `horde_map.py`, `horde_waves.py` oraz `horde_quests.py`.
 
@@ -19,21 +19,21 @@ Zestawienie surowych danych liczbowych, współrzędnych i mechanik wyeksportowa
 | **P7 (Szary)** | AI / `SARACENS` | `True` | `0 / 0 / 0 / 0` | — | `0` | `0` | `1x Castle`, `1x Archery Range`, `2x Monastery` (`G2_M`, `Q4`), `4x Guard Tower`, `2x Keep` | `+0` |
 | **P8 (Pomarańczowy)** | AI / `PERSIANS` | `True` | `0 / 0 / 0 / 0` | — | `0` | `0` | `6x Castle`, `2x Stable`, `2x Siege Workshop`, `12x Keep`, `1x Krepost` (`Q3`), `30x Fortified Wall` (`Q3`) | `+0` |
 
-- **Dyplomacja (`01_Init`):** `P1–P4` `ALLY`, `P5–P8` `ALLY`, `P1–P4` vs `P5–P8` `ENEMY`; `TECH_CARTOGRAPHY (19)` dla `P1–P4`; `MAP_REVEALER_ID (837)` ma `ATTR_LINE_OF_SIGHT = 4`; `FORTIFIED_PALISADE_ID (119)` dla `P1–P4` otrzymuje `+400 HP`; `UnitInfo.KING.ID` dla `P1` i `P2` ma `HP = 9999` i `Regeneration = 5000/min` (`83.33 HP/s`).
-- **Łączna liczba obiektów startowych (`5321`):** `P0 (Gaia) = 5113`, `P1 = 37`, `P2 = 18`, `P3 = 26`, `P4 = 39`, `P5 = 13`, `P6 = 12`, `P7 = 10`, `P8 = 53`.
+- **Dyplomacja (`01_Init`):** `P1–P4` `ALLY`, `P5–P8` `ALLY`, `P1–P4` vs `P5–P8` `ENEMY`; `TECH_CARTOGRAPHY (19)` dla `P1–P4`; `MAP_REVEALER_ID (837)` ma `ATTR_LINE_OF_SIGHT = 4`; `FORTIFIED_PALISADE_ID (119)` oraz wszystkie bramy palisadowe (`789, 792, 793, 797, 801`) dla `P1–P4` otrzymują **`+600 HP`**; `UnitInfo.KING.ID` dla `P1` i `P2` ma `HP = 9999` i `Regeneration = 5000/min` (`83.33 HP/s`).
+- **Łączna liczba obiektów startowych (`5350`):** `P0 (Gaia) = 5142`, `P1 = 37`, `P2 = 18`, `P3 = 26`, `P4 = 39`, `P5 = 13`, `P6 = 12`, `P7 = 10`, `P8 = 53`.
 
-### 1.2. Złoża surowców i obiekty `GAIA` (`P0 = 5113`)
+### 1.2. Złoża surowców i obiekty `GAIA` (`P0 = 5142`)
 
 | Obiekt (`ID`) | Łącznie na mapie | Rozkład wewnątrz Twierdzy (na bazę `P1–P4`, offsety od TC `(cx, cy)`) | Rozkład poza Twierdzą (`GAIA`) |
 | :--- | :--- | :--- | :--- |
-| **Gold Mine (`66`)** | `81` | `14` na gracza (`56` łącznie): klaster `8` na `(+7, -6)` oraz klaster `6` na `(+7, +5)` | `24` przy Reliktach (`4×6` na `(rx+3, ry+3)`) + `1` na `PoI 2 (128, 174)` |
+| **Gold Mine (`66`)** | `81` | `14` na gracza (`56` łącznie): klaster `8` na `(+7, -6)` oraz klaster `6` na `(+7, +5)` | `24` przy Reliktach (`4×6` na `(rx+3, ry+3)`) + `1` na `PoI 2 (124, 178)` |
 | **Stone Mine (`102`)** | `24` | `6` na gracza (`24` łącznie): klaster `6` na `(-8, +5)` | `0` |
 | **Forage Bush (`59`)** | `24` | `6` na gracza (`24` łącznie): klaster `6` na `(-8, -4)` | `0` |
 | **Sheep (`594`)** | `24` | `6` na gracza: `(-3..0, +2)` i `(-3..-2, +3)` | `0` |
 | **Wild Boar (`48`)** | `8` | `2` na gracza: `(-9, -1)` i `(+1, +9)` | `0` |
 | **Deer (`65`)** | `16` | `4` na gracza: `(-7..-8, -7..-8)` | `0` |
 | **Relic (`285`)** | `4` | `0` (dodatkowy `1` spawnuje `Q4` po zburzeniu) | `4`: `(54, 62)`, `(116, 88)`, `(168, 128)`, `(92, 44)` |
-| **Drzewa (`349` Oak / `350` Pine)** | `4805` (`1569` + `3236`) | `6` dębów przy TC + 2 zagajniki (`r=4.8` na `(-14,0)` i `(0,+14)`), lasy obwodowe `y=95..105` i `x=99..109`, puszcza zaplecza `x=0..13` i `x=26..98, y=180..188`, zagajniki `(54,122)` i `(54,172)` | `11` organicznych lasów (`r=5.0..7.5`), wyłom północny `(75..80, 95..105)` (`66` drzew), wyłom wschodni `(99..109, 137..142)` (`66` drzew) |
+| **Drzewa (`349` Oak / `350` Pine)** | `4834` (`1598` + `3236`) | `6` dębów przy TC + 2 zagajniki (`r=4.8` na `(-14,0)` i `(0,+14)`), lasy obwodowe `y=95..105` i `x=99..109`, puszcza zaplecza `x=0..13` i `x=26..98, y=180..188`, zagajniki `(54,122)` i `(54,172)` | `11` organicznych lasów (`r=5.0..7.5`), wyłom północny `(75..80, 95..105)` (`66` drzew), wyłom wschodni `(99..109, 137..142)` (`66` drzew) |
 | **Klify / Flagi / Pochodnie / Outpost** | `97` / `4` / `24` / `2` | Komnaty `(4, 138)` i `(4, 164)`: obwody `ROCK_CLIFF_ID`, `2× FLAG_A`, `2× FLAG_B`, `8× TORCH` | Grzbiety `(16,48)->(44,48)` i `(124,134)->(158,134)`; krąg `8× TORCH` (`r=10` wokół `116,114`); `PoI 1/2/3`: `2× OUTPOST`, `6× TORCH` |
 
 ### 1.3. Geometria Twierdzy Sojuszu, bram i przeszkód terenowych
@@ -67,8 +67,8 @@ Zestawienie surowych danych liczbowych, współrzędnych i mechanik wyeksportowa
 | **Q3 `(142,118)`** | `66.3` | `119.2` | `110.1` | `82.8` | `92.3` | `95.7` | `38.2` | `58.1` | `84.1` |
 | **Q4 `(105,20)`** | `108.0` | `161.4` | `125.4` | `150.8` | `135.9` | `98.2` | `94.0` | `142.0` | `173.0` |
 | **PoI 1 `(30,76)`** | `66.5` | `88.0` | `46.0` | `102.9` | `74.0` | `30.0` | `83.2` | `113.5` | `138.4` |
-| **PoI 2 `(128,174)`** | `72.1` | `96.5` | `109.2` | `52.3` | `79.1` | `109.0` | `64.6` | `26.8` | `30.6` |
-| **PoI 3 `(64,88)`** | `37.9` | `82.5` | `46.7` | `80.9` | `58.9` | `20.0` | `47.7` | `84.1` | `112.4` |
+| **PoI 2 `(124,178)`** | `72.2` | `93.1` | `107.7` | `49.0` | `77.0` | `108.9` | `67.1` | `25.6` | `25.0` |
+| **PoI 3 `(50,90)`** | `42.8` | `76.2` | `36.7` | `82.2` | `56.1` | `10.2` | `59.1` | `90.0` | `116.3` |
 | **Bród 1 `(84,30)`** | `94.3` | `143.7` | `105.7` | `138.2` | `119.8` | `78.7` | `86.3` | `133.5` | `164.2` |
 | **Bród 2 `(122,62)`** | `77.2` | `136.0` | `108.2` | `115.6` | `108.1` | `83.2` | `55.0` | `101.6` | `132.2` |
 | **Bród 3 `(154,92)`** | `84.3` | `141.7` | `125.6` | `108.9` | `113.6` | `106.3` | `54.6` | `86.0` | `112.7` |
@@ -112,8 +112,8 @@ Zestawienie surowych danych liczbowych, współrzędnych i mechanik wyeksportowa
 | `557` | Snajper Imperialny | `P6` | `90` | `True` | `14` | baz. + `+85` (`cl=3`) | baz. + Kuźnia | baz. + Squires | `0 / 19` (Cap; `21/21`) | `6.5s` | `1` | `False` | `True` |
 | `280` | Mangonel | `P5` | `50` | `True` | `8` | baz. (`cl=4`) | bazowy | bazowy | baz. + SE | bazowy | `0` | `False` | `True` |
 | `588` | Moździerz Oblężniczy | `P6, P8` | `350` | `True` | `53` | baz. + `+75` (`cl=4`) | bazowy | `0.58` (Cap) | `6 / 21` (Cap; `23/23`) | `10.0s` / `W=2.6, Lvl=2` | `1` | `False` | `True` |
-| `1134` | Żelazny Słoń-Tank | `P8` | `1450` | `True` | `218` | `3` (`cl=4`, Cap) + `+220` (`cl=11,21`) (`None`) | `10 / 12` (Cap) | `0.72` (Cap) | `0 / 0` (melee) | bazowy | `1` | `False` | `True` |
-| `441` | Szakal Dywersyjny | `P7` | `95` | `True` | `14` | `2` (`cl=4`, Cap) (`None`) | `0 / 6` (Cap) | `1.62` (Cap) | `0 / 0` (melee) | bazowy | `0` | `False` | `False` |
+| `1134` | Żelazny Słoń-Tank | `P8` | `1450` | `True` | `218` | `3` (`cl=4`, Cap) + `+140` (`cl=11,21`) (`None`) | `10 / 12` (Cap) | `0.72` (Cap) | `0 / 0` (melee) | bazowy | `1` | `False` | `True` |
+| `441` | Szakal Dywersyjny | `P7` | `95` | `True` | `14` | `7` (`cl=4`, Cap) (`None`) | `0 / 6` (Cap) | `1.62` (Cap) | `0 / 0` (melee) | bazowy | `0` | `False` | `False` |
 | `842` | Arcymag Tarczy | `P7` | `240` (`Q4:120`) | `False` | `0` | `0` (`range=0, work_rate=0`) (`None`) | `3 / 4` (`01b`) | `0.78` (Cap) | `0 / 0` | `regen 300/min` (`5/s`) | `1` | `False` | `True` |
 | `440` | Fanatyk Kamikaze (Petard) | `P5` | `115` | `False` | `0` | baz. + `+95` (`None`) | baz. M / `0` P (Cap) | `1.50` (Cap) | `0 / 0` | `W=2.4` | `0` | `False` | `True` |
 | `1263` | Płonący Wielbłąd | `P5` | `115` | `False` | `0` | baz. + `+95` (`None`) | baz. M / `0` P (Cap) | `1.50` (Cap) | `0 / 0` | `W=2.4` | `0` | `False` | `True` |
@@ -121,8 +121,8 @@ Zestawienie surowych danych liczbowych, współrzędnych i mechanik wyeksportowa
 | `422` | Capped Ram | `P5, P7` | `200` | `False` | `0` | bazowy (`None`) | bazowy | bazowy | `0 / 0` | bazowy | `0` | `True` | `True` |
 | `548` | Siege Ram | `P5, P7, P8` | `270` | `False` | `0` | bazowy (`None`) | bazowy | bazowy | `0 / 0` | bazowy | `0` | `True` | `True` |
 | `330` | Heavy Camel Rider | `P7` (`Q4`) | `140` | `True` | `21` | baz. + Kuźnia (`cl=4`) | baz. + Kuźnia | baz. + Husbandry | `0 / 0` (melee) | bazowy | `0` | `True` | `False` |
-| `556` | Elite Mameluke | `P7` (`Q4`) | `80` | `True` | `20` | baz. + Kuźnia (`cl=4`) | baz. + Kuźnia | baz. + Husbandry | bazowy | bazowy | `0` | `True` | `False` |
-| `698` | Wielki Chan Subotai | `P8` | `3500` | `False` | `0` | `45` (`cl=3`) (`None`) | `8 / 10` (`01b`) | `0.85` (`01b`) | bazowy | bazowy | `1` | `False` | `True` |
+| `556` | Elite Mameluke | `P7` (`Q4`) | `100` | `True` | `15` | baz. + Kuźnia (`cl=4`) | baz. + Kuźnia | baz. + Husbandry | bazowy | bazowy | `0` | `True` | `False` |
+| `698` | Wielki Chan Subotai | `P8` | `4500` | `False` | `0` | `45` (`cl=3`) (`None`) | `8 / 10` (`01b`) | `0.85` (`01b`) | bazowy | bazowy | `1` | `False` | `True` |
 
 - **Uwaga do `01d` (`510s`):** po zbadaniu `TECH_BLOODLINES (435)` dla `P5–P8`, `HUSSAR_ID (441)` i `ELITE_BATTLE_ELEPHANT_ID (1134)` otrzymują `ATTR_HIT_POINTS SUBTRACT 20` (neutralizacja `+20 HP` z Bloodlines).
 - **Listy jednostek graczy w `horde_config.py`:** `PLAYER_RANGED_UNITS` = `43` ID, `PLAYER_MOUNTED_RANGED_UNITS` = `19` ID, `PLAYER_CAVALRY_UNITS` = `41` ID, `PLAYER_INFANTRY_UNITS` = `44` ID, `PLAYER_PROD_BUILDINGS` = `7` ID (`Barracks, Stable, Archery Range, Castle, Siege Workshop, Krepost, Donjon`).
@@ -140,8 +140,8 @@ Zestawienie surowych danych liczbowych, współrzędnych i mechanik wyeksportowa
   - `34:30` (`2070s`, `01f`): `Blast Furnace (75)`, `Plate Mail (77)`, `Plate Barding (80)`, `Bracer (201)`, `Chemistry (47)`, `Siege Engineers (377)` + `enforce_specialized_unit_caps`.
 - **Eskalacja Czasowa (pierwszy tick natychmiastowy w czasie startowym, następnie co `300s`, dotyczy jednostek z `scales_hp=True` / `attack_class != None`):**
   - **Bieg 1 (`04a`/`04b`, start `1200s` = `20:00`):** `+5 HP`, `+1 Atk` co `300s`.
-  - **Bieg 2 (`04c`/`04d`, start `2700s` = `45:00`):** dodatkowo `+9 HP`, `+1 Atk` co `300s` (suma z Biegiem 1: `+14 HP`, `+2 Atk` co `300s`).
-  - **Bieg 3 (`04e`/`04f`, start `3300s` = `55:00`):** dodatkowo `+6 HP`, `+1 Atk` co `300s` (suma z Biegami 1–2: `+20 HP`, `+3 Atk` co `300s`).
+  - **Bieg 2 (`04c`/`04d`, start `2700s` = `45:00`):** dodatkowo `+9 HP`, `+0 Atk` co `300s` (suma z Biegiem 1: `+14 HP`, `+1 Atk` co `300s`).
+  - **Bieg 3 (`04e`/`04f`, start `3300s` = `55:00`):** dodatkowo `+6 HP`, `+1 Atk` co `300s` (suma z Biegami 1–2: `+20 HP`, `+2 Atk` co `300s`).
 - **Mnożniki Sanktuarium Balansu (`scale_comp_for_level`):**
   - Poziom `-2`: `60%` liczebności (`HALF_UP`), `-2 × hp_delta_down` HP, `+0` Atk.
   - Poziom `-1`: `80%` liczebności (`HALF_UP`), `-1 × hp_delta_down` HP, `+0` Atk.
@@ -161,14 +161,14 @@ Zestawienie surowych danych liczbowych, współrzędnych i mechanik wyeksportowa
 | **F5** | `29:00` (`1740`) | `330` | `+10 / +2` | `01e` | `16` Pike, `4` Bers, `2` Pet, `2` C.Ram | `12` Husk, `2` F.Cam, `2` C.Ram | `14` Xbow, `3` Jan, `1` S.Onag | `1` Imam, `12` Kni | `8` Kni, `10` Pike | — | `7` `(52,86)->(76,120)` | — |
 | **F6** | `34:30` (`2070`) | `330` | `+15 / +3` | `01f` | `18` Pike, `5` Bers, `2` C.Ram | `14` Husk, `3` F.Cam, `2` C.Ram | `16` Xbow, `3` Jan, `1` S.Onag | `1` Imam, `12` Cav, `2` C.Ram | `1` Ele, `10` Kni, `12` Pike | `14` Xbow, `8` Kni | `8` `(116,162)->(32,168)` | — |
 | **F7** | `40:00` (`2400`) | `330` | `+25 / +5` | `01f` | `20` Halb, `5` Bers, `3` Pet, `3` C.Ram | `16` Husk, `3` F.Cam, `2` C.Ram | `18` Arb, `4` Jan, `1` S.Onag | `1` Imam, `18` Cav | `2` Ele, `16` Cav, `12` Halb, `2` S.Ram | `1` Ele, `16` Arb | `9` `(52,86)->(76,172)` | — |
-| **F8** | `45:30` (`2730`) | `330` | `+39 / +7` | `01f` | `22` Halb, `6` Bers, `3` S.Ram | `18` Husk, `3` F.Cam, `3` S.Ram | `20` Arb, `4` Jan, `2` S.Onag | `2` Imam, `16` Cav, `3` S.Ram | `2` Ele, `14` Cav, `14` Halb | `2` Ele, `18` Arb, `1` S.Onag | `10` `(116,162)->(32,118)` | **Trade Raid:** `3` S.Ram, `10` Pal, `10` HCA |
-| **F9** | `51:00` (`3060`) | `330` | `+53 / +9` | `01f` | `25` Halb, `7` Bers, `3` Pet, `3` S.Ram | `20` Husk, `4` F.Cam, `3` S.Ram | `22` Arb, `4` Jan, `2` S.Onag | `2` Imam, `16` Pal, `3` S.Ram | `3` Ele, `15` Pal, `16` Halb | `2` Ele, `20` Arb, `2` S.Onag | `12` `(52,86)->(76,120)` | **Wyłom N (`6×11`):** `50:45` `2` S.Onag, `8` Halb; `51:00` `2` S.Onag, `14` Halb, `8` Jan |
-| **F10** | `56:30` (`3390`) | `330` | `+73 / +12` | `01f` | `28` Halb, `8` Bers, `3` Pet, `4` S.Ram | `23` Husk, `3` F.Cam, `4` S.Ram | `25` Arb, `4` Jan, `2` S.Onag | `2` Imam, `19` Pal, `4` S.Ram | `3` Ele, `19` Pal, `18` Halb | `3` Ele, `23` Arb, `2` S.Onag | `22` `(116,162)->(32,168)` | **Trade Raid:** `3` S.Ram, `14` Pal, `14` HCA |
-| **F11** | `62:00` (`3720`) | `330` | `+93 / +15` | `01f` | `31` Halb, `9` Bers, `4` Pet, `4` S.Ram | `26` Husk, `4` F.Cam, `4` S.Ram | `28` Arb, `8` Jan, `4` S.Onag | `2` Imam, `22` Pal, `4` S.Ram | `4` Ele, `22` Pal, `20` Halb | `4` Ele, `26` Arb, `4` S.Onag | `14` `(52,86)->(76,172)` | — |
-| **F12** | `67:30` (`4050`) | `330` | `+113 / +18` | `01f` | `34` Halb, `10` Bers, `4` Pet, `4` S.Ram | `29` Husk, `4` F.Cam, `4` S.Ram | `31` Arb, `5` Jan, `3` S.Onag | `3` Imam, `25` Pal, `4` S.Ram | `4` Ele, `25` Pal, `22` Halb | `4` Ele, `29` Arb, `3` S.Onag | `15` `(116,162)->(32,118)` | **Trade Raid:** `3` S.Ram, `18` Pal, `18` HCA; **Wyłom E (`11×6`):** `67:15` `2` S.Onag, `10` Halb; `67:30` `2` S.Onag, `16` Halb, `12` Arb |
-| **F13** | `73:00` (`4380`) | `330` | `+133 / +21` | `01f` | `37` Halb, `11` Bers, `5` Pet, `4` S.Ram | `32` Husk, `5` F.Cam, `4` S.Ram | `34` Arb, `6` Jan, `3` S.Onag | `3` Imam, `28` Pal, `4` S.Ram | `6` Ele, `28` Pal, `24` Halb | `6` Ele, `32` Arb, `3` S.Onag | `16` `(52,86)->(76,120)` | — |
-| **F14** | `78:30` (`4710`) | `330` | `+153 / +24` | `01f` | `40` Halb, `12` Bers, `5` Pet, `4` S.Ram | `35` Husk, `5` F.Cam, `4` S.Ram | `37` Arb, `6` Jan, `3` S.Onag | `3` Imam, `31` Pal, `4` S.Ram | `5` Ele, `31` Pal, `26` Halb | `5` Ele, `35` Arb, `3` S.Onag | `17` `(116,162)->(32,168)` | **Trade Raid:** `3` S.Ram, `22` Pal, `22` HCA |
-| **Endless** | `84:00+` (`5040+`) | `330` | `+173 / +27` (`84:00`) | `01f` | `40` Halb, `12` Bers, `5` Pet, `4` S.Ram | `35` Husk, `5` F.Cam, `4` S.Ram | `37` Arb, `6` Jan, `3` S.Onag | `3` Imam, `31` Pal, `4` S.Ram | `5` Ele, `31` Pal, `26` Halb | `5` Ele, `35` Arb, `3` S.Onag | `9` `(52,86)->(32,118)` + `8` `(116,162)->(76,172)` | **Trade Raid F14:** `3` S.Ram, `22` Pal, `22` HCA; **Wyłom N+E:** `2` S.Onag, `14` Halb, `8` Jan + `2` S.Onag, `14` Halb, `10` Arb |
+| **F8** | `45:30` (`2730`) | `330` | `+39 / +6` | `01f` | `22` Halb, `6` Bers, `3` S.Ram | `18` Husk, `3` F.Cam, `3` S.Ram | `20` Arb, `4` Jan, `2` S.Onag | `2` Imam, `16` Cav, `3` S.Ram | `2` Ele, `14` Cav, `14` Halb | `2` Ele, `18` Arb, `1` S.Onag | `10` `(116,162)->(32,118)` | **Trade Raid:** `3` S.Ram, `10` Pal, `10` HCA |
+| **F9** | `51:00` (`3060`) | `330` | `+53 / +7` | `01f` | `25` Halb, `7` Bers, `3` Pet, `3` S.Ram | `20` Husk, `4` F.Cam, `3` S.Ram | `22` Arb, `4` Jan, `2` S.Onag | `2` Imam, `16` Pal, `3` S.Ram | `3` Ele, `15` Pal, `16` Halb | `2` Ele, `20` Arb, `2` S.Onag | `12` `(52,86)->(76,120)` | **Wyłom N (`6×11`):** `50:15` `2` S.Onag, `8` Halb; `51:00` `2` S.Onag, `14` Halb, `8` Jan |
+| **F10** | `56:30` (`3390`) | `330` | `+73 / +9` | `01f` | `28` Halb, `8` Bers, `3` Pet, `4` S.Ram | `23` Husk, `3` F.Cam, `4` S.Ram | `25` Arb, `4` Jan, `2` S.Onag | `2` Imam, `19` Pal, `4` S.Ram | `3` Ele, `19` Pal, `18` Halb | `3` Ele, `23` Arb, `2` S.Onag | `22` `(116,162)->(32,168)` | **Trade Raid:** `3` S.Ram, `14` Pal, `14` HCA |
+| **F11** | `62:00` (`3720`) | `330` | `+93 / +11` | `01f` | `31` Halb, `9` Bers, `4` Pet, `4` S.Ram | `26` Husk, `4` F.Cam, `4` S.Ram | `28` Arb, `8` Jan, `4` S.Onag | `2` Imam, `22` Pal, `4` S.Ram | `4` Ele, `22` Pal, `20` Halb | `4` Ele, `26` Arb, `4` S.Onag | `14` `(52,86)->(76,172)` | — |
+| **F12** | `67:30` (`4050`) | `330` | `+113 / +13` | `01f` | `34` Halb, `10` Bers, `4` Pet, `4` S.Ram | `29` Husk, `4` F.Cam, `4` S.Ram | `31` Arb, `5` Jan, `3` S.Onag | `3` Imam, `25` Pal, `4` S.Ram | `4` Ele, `25` Pal, `22` Halb | `4` Ele, `29` Arb, `3` S.Onag | `15` `(116,162)->(32,118)` | **Trade Raid:** `3` S.Ram, `18` Pal, `18` HCA; **Wyłom E (`11×6`):** `66:45` `2` S.Onag, `10` Halb; `67:30` `2` S.Onag, `16` Halb, `12` Arb |
+| **F13** | `73:00` (`4380`) | `330` | `+133 / +15` | `01f` | `37` Halb, `11` Bers, `5` Pet, `4` S.Ram | `32` Husk, `5` F.Cam, `4` S.Ram | `34` Arb, `6` Jan, `3` S.Onag | `3` Imam, `28` Pal, `4` S.Ram | `6` Ele, `28` Pal, `24` Halb | `6` Ele, `32` Arb, `3` S.Onag | `16` `(52,86)->(76,120)` | — |
+| **F14** | `78:30` (`4710`) | `330` | `+153 / +17` | `01f` | `40` Halb, `12` Bers, `5` Pet, `4` S.Ram | `35` Husk, `5` F.Cam, `4` S.Ram | `37` Arb, `6` Jan, `3` S.Onag | `3` Imam, `31` Pal, `4` S.Ram | `5` Ele, `31` Pal, `26` Halb | `5` Ele, `35` Arb, `3` S.Onag | `17` `(116,162)->(32,168)` | **Trade Raid:** `3` S.Ram, `22` Pal, `22` HCA |
+| **Endless** | `84:00+` (`5040+`) | `330` | `+173 / +19` (`84:00`) | `01f` | `40` Halb, `12` Bers, `5` Pet, `4` S.Ram | `35` Husk, `5` F.Cam, `4` S.Ram | `37` Arb, `6` Jan, `3` S.Onag | `3` Imam, `31` Pal, `4` S.Ram | `5` Ele, `31` Pal, `26` Halb | `5` Ele, `35` Arb, `3` S.Onag | `9` `(52,86)->(32,118)` + `8` `(116,162)->(76,172)` | **Trade Raid F14:** `3` S.Ram, `22` Pal, `22` HCA; **Wyłom N+E:** `2` S.Onag, `14` Halb, `8` Jan + `2` S.Onag, `14` Halb, `10` Arb |
 
 ### 3.3. Liczebność sektorowa i sumy HP dla poziomów `-2`, `-1`, `0`, `+1`, `+2`
 
@@ -204,16 +204,16 @@ Zestawienie surowych danych liczbowych, współrzędnych i mechanik wyeksportowa
 
 ## 4. Pełna tabela systemów na mapie
 
-### 4.1. Sześć Settlementów (`G1–G3`) — detektor `±20` (`P1 >= 2`, `P2–P4 >= 1`), smycz `2s` (`ring 14..20`)
+### 4.1. Sześć Settlementów (`G1–G3`) — detektor `±20` (`ObjectType.MILITARY`, `quantity=1` dla `P1–P4`), smycz `2s` (`ring 14..20`)
 
 | Obóz | Pozycja `(cx, cy)` / Właściciel | Zabudowa (cel główny + poboczne) | Garnizon (`Garrison_Spawn_*`) | Kontratak (`P8`) + trasa | Nagroda (`P1–P4`) | *Furia Hordy* | Wyłączane fale i mechaniki |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`G1_North`** | `(76, 72)` / `P5` | `Guard Tower` (cel) + `2× Guard Tower`, `Barracks`, `Siege Workshop` | `14` Pike, `6` Berserk, `8` Xbow | `8` Cav, `10` Pike `(48,86)->(48,138)` | `+700 F`, `+700 G` | `+5 HP`, `+0 Atk` | Fale `G1_North` (Berserkerzy, Petardy) |
-| **`G1_East`** | `(132, 152)` / `P5` | `Guard Tower` (cel) + `2× Guard Tower`, `Barracks`, `Siege Workshop` | `12` Husk, `10` Pike, `3` Fl.Camel | `8` Cav, `10` Pike `(117,178)->(68,162)` | `+700 F`, `+700 G` | `+5 HP`, `+0 Atk` | Fale `G1_East` (Huskarle, Pł. Wielbłądy) |
-| **`G2_Snipers`** | `(68, 34)` / `P6` | `Castle` (cel) + `Archery Range`, `Monastery`, `4× Guard Tower` | `7` Jan, `2` S.Onag, `16` Halb | `10` Cav, `12` Halb `(48,86)->(48,138)` | `+1000 F`, `+1000 G` | `+10 HP`, `+1 Atk` | Fale `G2_Snipers` (Snajperzy, Moździerze) + Wyłomy Saperów (F9, F12, Endless) |
-| **`G2_Mages`** | `(148, 72)` / `P7` | `Castle` (cel) + `Archery Range`, `Monastery`, `4× Guard Tower` | `14` Cav, `8` Hussar, `1` Imam | `10` Cav, `12` Halb `(116,114)->(54,146)` | `+1000 F`, `+1000 G` | `+10 HP`, `+1 Atk` | Fale `G2_Mages` (Arcymagowie) + Rajdy Szakali |
-| **`G3_North`** | `(142, 24)` / `P8` | `Castle` (cel) + `2× Castle`, `Stable`, `Siege Workshop`, `4× Keep` | `3` Ele, `20` Halb, `12` Pal | `1` Ele, `12` Pal, `14` Halb `(116,114)->(54,146)` | `+1500 F`, `+1500 G` | `+15 HP`, `+2 Atk` | Fale `G3_North` (Żelazne Słonie Płn.) |
-| **`G3_East`** | `(176, 56)` / `P8` | `Castle` (cel) + `2× Castle`, `Stable`, `Siege Workshop`, `4× Keep` | `3` Ele, `20` Arb, `2` S.Onag | `1` Ele, `12` Pal, `14` Halb `(117,178)->(68,162)` | `+1500 F`, `+1500 G` | `+15 HP`, `+2 Atk` | Fale `G3_East` (Żelazne Słonie Wsch.) + `Trade_Line_Attack` |
+| **`G1_North`** | `(76, 72)` / `P5` | `Guard Tower` (cel) + `2× Guard Tower`, `Barracks`, `Siege Workshop` | `14` Pike, `6` Berserk, `8` Xbow | `8` Cav, `10` Pike `(48,86)->(48,138)` | `+700 F`, `+700 G` | `+8 HP`, `+1 Atk` | Fale `G1_North` (Berserkerzy, Petardy) |
+| **`G1_East`** | `(132, 152)` / `P5` | `Guard Tower` (cel) + `2× Guard Tower`, `Barracks`, `Siege Workshop` | `12` Husk, `10` Pike, `3` Fl.Camel | `8` Cav, `10` Pike `(117,178)->(68,162)` | `+700 F`, `+700 G` | `+8 HP`, `+1 Atk` | Fale `G1_East` (Huskarle, Pł. Wielbłądy) |
+| **`G2_Snipers`** | `(68, 34)` / `P6` | `Castle` (cel) + `Archery Range`, `Monastery`, `4× Guard Tower` | `7` Jan, `2` S.Onag, `16` Halb | `10` Cav, `12` Halb `(48,86)->(48,138)` | `+1000 F`, `+1000 G` | `+14 HP`, `+1 Atk` | Fale `G2_Snipers` (Snajperzy, Moździerze) + Wyłomy Saperów (F9, F12, Endless) |
+| **`G2_Mages`** | `(148, 72)` / `P7` | `Castle` (cel) + `Archery Range`, `Monastery`, `4× Guard Tower` | `14` Cav, `8` Hussar, `1` Imam | `10` Cav, `12` Halb `(116,114)->(54,146)` | `+1000 F`, `+1000 G` | `+14 HP`, `+1 Atk` | Fale `G2_Mages` (Arcymagowie) + Rajdy Szakali |
+| **`G3_North`** | `(142, 24)` / `P8` | `Castle` (cel) + `2× Castle`, `Stable`, `Siege Workshop`, `4× Keep` | `3` Ele, `20` Halb, `12` Pal | `1` Ele, `12` Pal, `14` Halb `(116,114)->(54,146)` | `+1500 F`, `+1500 G` | `+20 HP`, `+2 Atk` | Fale `G3_North` (Żelazne Słonie Płn.) |
+| **`G3_East`** | `(176, 56)` / `P8` | `Castle` (cel) + `2× Castle`, `Stable`, `Siege Workshop`, `4× Keep` | `3` Ele, `20` Arb, `2` S.Onag | `1` Ele, `12` Pal, `14` Halb `(117,178)->(68,162)` | `+1500 F`, `+1500 G` | `+20 HP`, `+2 Atk` | Fale `G3_East` (Żelazne Słonie Wsch.) + `Trade_Line_Attack` |
 
 - Po zburzeniu celu głównego `collapse_camp_buildings` wykonuje `kill_object` w `cx ± 14, cy ± 14` dla `10` typów budynków (`G1–G3`, `Q2–Q4`).
 
@@ -222,25 +222,25 @@ Zestawienie surowych danych liczbowych, współrzędnych i mechanik wyeksportowa
 | Quest | Pozycja `(cx, cy)` / Właściciel / Detektor | Zabudowa & Garnizon | Mechanika etapów / tarcz | Nagrody (`P1–P4`) | *Adaptacja Hordy* |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **`Q1` Karawanseraj** | `(154, 190)` / `P5` / `±14, y2<=191` (`140..168, 176..191`) | `Market` (cel) + `2× Guard Tower` `(149/159, 187)`; Garnizon: `12` Steppe Lancer, `10` Xbow, `4` Berserk | Jednoetapowy; po zburzeniu usuwa wieże `P5` w `(145..165, 182..195)` i teleportuje jednostki `P1–P5` z `(105..199, 183..187)` na `(154, 192)` | `+30` Pop Cap, `+500 G`, `Villager Work Rate ×1.20`, `Trade Cart Speed ×1.25`, `4× Trade Cart` na `(px+0..3, py+5)`, `Market` `P2` `(195, 194)`, `Fortified Wall` `P4` na `y=186` (`x=105..199`, luki `x=122..123, 170..171`), `6× Keep` `P4` na `y=184` (`x=115, 122, 145, 160, 170, 190`) | `+8 HP`, `+1 Atk` |
-| **`Q2` Klif Artylerii** | `(28, 32)` / `P6` / `±20` | `University` (cel) + `2× Keep` `(23/33, 37)` + `2× Bombard Tower` `(24,34),(32,34)`; Garnizon: `6` Jan, `1` S.Onag, `14` Halb | Dwuetapowy: `Garrison_Spawn` aktywuje `06_Quest2_Shield_Loop` (`heal_object` `+400 HP / 2s` na `26..30, 28..34`); zniszczenie obu `Bombard Tower` wyłącza tarczę | Techy: `Ballistics, Chemistry, Siege Engineers, Thumb Ring`; `PLAYER_RANGED`: `+2` Range/Search, `+4` Atk (`cl=3`); `PLAYER_MOUNTED_RANGED`: `Speed ×1.12`; `PLAYER_CAVALRY`: `Speed ×1.12, +4` Atk (`cl=4`); `2× Bombard Cannon` `P3` `(27/29, 36)`; `MAP_REVEALER` `P1–P4` na `G2_Snipers (68,34)` | `+8 HP`, `+1 Atk` |
-| **`Q3` Skarbiec** | `(142, 118)` / `P8` / `±20` | `Krepost` (cel) + `4× Keep` `(±5, ±5)` + `30× Fortified Wall` (`y=110, 126`); Garnizon: `18` Halb, `2` Ele, `14` Arb | Jednoetapowy | `+20` Pop Cap, `+600 G`, `+300 S`; pętla `60s` (`06b`): **`+250 F, +250 W, +200 G, +40 S` na minutę** dla każdego `P1–P4` (łącznie dla drużyny: `+1000 F, +1000 W, +800 G, +160 S / min`) | `+10 HP`, `+1 Atk` |
+| **`Q2` Klif Artylerii** | `(28, 32)` / `P6` / `±20` | `University` (cel) + `2× Keep` `(23/33, 37)` + `2× Bombard Tower` `(24,34),(32,34)`; Garnizon: `6` Jan, `1` S.Onag, `14` Halb | Dwuetapowy: `Garrison_Spawn` aktywuje `06_Quest2_Shield_Loop` (`heal_object` `+400 HP / 2s` z filtrem `UNIVERSITY` + `ObjectType.BUILDING` w `26..30, 28..34`); zniszczenie obu `Bombard Tower` wyłącza tarczę | Techy: `Ballistics, Chemistry, Siege Engineers, Thumb Ring`; `PLAYER_RANGED`: `+2` Range/Search, `+4` Atk (`cl=3`); `PLAYER_MOUNTED_RANGED`: `Speed ×1.12`; `PLAYER_CAVALRY`: `Speed ×1.12, +4` Atk (`cl=4`); `2× Bombard Cannon` `P3` `(27/29, 36)`; `MAP_REVEALER` `P1–P4` na `G2_Snipers (68,34)` | `+8 HP`, `+1 Atk` |
+| **`Q3` Skarbiec** | `(142, 118)` / `P8` / `±20` | `Krepost` (cel) + `4× Keep` `(±5, ±5)` + `30× Fortified Wall` (`y=110, 126`); Garnizon: `18` Halb, `2` Ele, `14` Arb | Jednoetapowy | `+20` Pop Cap, `+600 G`, `+300 S`; pętla `60s` (`06b`): **`+100 F, +100 W, +90 G, +20 S` na minutę** dla każdego `P1–P4` (`310/min` na gracza; łącznie dla drużyny: `+400 F, +400 W, +360 G, +80 S / min`) | `+10 HP`, `+1 Atk` |
 | **`Q4` Krwawy Ołtarz** | `(105, 20)` / `P7` / `±20` | `Monastery` (cel) + `2× Keep` `(100/110, 24)`; Garnizon: `14` Pal, `2` Ele, `12` Halb | Dwuetapowy: Stage 1 spawnuje `Relic` `(105,20)` i kontratak `P7` z `(105,34)->(105,20)`: `6` H.Camel, `6` E.Mameluke, `4` E.Steppe Lancer; Stage 2 po `timer=30s` | `IMAM (842)` `P7` HP `-> 120`; `PLAYER_RANGED+CAV+INF`: `HP ×1.30`, `+2/+2` Armor (`cl=4,3`); `PLAYER_PROD_BUILDINGS`: `Work Rate ×1.40`; czyści `(56..60, 150..154)` i buduje `Monastery` `P1` `(58, 152)` + `2× Monk` `P1` `(57/59, 155)` | `+10 HP`, `+1 Atk` |
 
 ### 4.3. Punkty Eksploracyjne (`Map PoI 1–3`), Kwatermistrz `P2`, Sanktuarium `P1`, Aura i Boss
 
-- **Map PoI (`P1–P4`, jednorazowe dla pierwszego odkrywcy):**
-  - `PoI 1 (30, 76)`: detekcja `26..34, 72..80`; odblokowanie w **`10:00` (`600s`)**; nagroda: `2× Capped Ram` `(29/31, 76)` + `2× Petard` `(29/31, 77)` dla odkrywcy, `+200 W`, `+200 G` dla `P1–P4`.
-  - `PoI 2 (128, 174)`: detekcja `124..132, 170..178`; aktywny od **`0:00`**; nagroda: `+350 F`, `+350 G` dla `P1–P4`, `MAP_REVEALER` `P1–P4` na `Q1 (154, 190)`.
-  - `PoI 3 (64, 88)`: detekcja `60..68, 84..92`; aktywny od **`0:00`**; nagroda: `2× Light Cavalry` `(63/65, 88)` dla odkrywcy, `+150 S`, `+150 G` dla `P1–P4`, `MAP_REVEALER` `P1–P4` na bród `(122, 62)`.
+- **Map PoI (`P1–P4`, jednorazowe dla pierwszego odkrywcy, detektory `r=3`):**
+  - `PoI 1 (30, 76)`: detekcja `27..33, 73..79`; odblokowanie w **`10:00` (`600s`)**; nagroda: `2× Capped Ram` `(29/31, 76)` + `2× Petard` `(29/31, 77)` dla odkrywcy, `+200 W`, `+200 G` dla `P1–P4`.
+  - `PoI 2 (124, 178)`: detekcja `121..127, 175..181`; aktywny od **`0:00`**; nagroda: `+350 F`, `+350 G` dla `P1–P4`, `MAP_REVEALER` `P1–P4` na `Q1 (154, 190)`.
+  - `PoI 3 (50, 90)`: detekcja `47..53, 87..93`; aktywny od **`0:00`**; nagroda: `2× Light Cavalry` `(49/51, 90)` dla odkrywcy, `+150 S`, `+150 G` dla `P1–P4`, `MAP_REVEALER` `P1–P4` na bród `(122, 62)`.
 - **Posterunek Kwatermistrza `P2` `(4, 164)` (komnata `x=2..6, y=160..168`, tylko `UnitInfo.KING.ID` `P2`, wspólny cooldown `240s`, flara `(54, 149)`):**
   - `Tier 1 (10:00–20:00)` (`timer=600s`): Flaga Płn. `(4, 161)` = `4× Conquistador` + `1× Mangonel`; Flaga Płd. `(4, 167)` = `+125 F, +125 W, +100 G` dla `P1–P4` (`0` naprawy; przy cyklu `240s`: `31.25 F / 31.25 W / 25.0 G` na min na gracza).
-  - `Tier 2 (20:00–30:00)` (`timer=1200s`): Flaga Płn. = `4× Conquistador` + `2× Bombard Cannon`; Flaga Płd. = `+200 F, +200 W, +200 G` dla `P1–P4` + naprawa budynków w `(0..110, 95..199)` (`P1–P4`) i `(105..199, 183..187)` (`P4`) o `+250 HP` (`50.0 F / 50.0 W / 50.0 G` na min na gracza).
-  - `Tier 3 (30:00+)` (`timer=1800s`): Flaga Płn. = `6× Elite Conquistador` + `2× Bombard Cannon` + `2× Siege Ram`; Flaga Płd. = `+300 F, +300 W, +300 G` dla `P1–P4` + naprawa o `+500 HP` (`75.0 F / 75.0 W / 75.0 G` na min na gracza; drużynowo `300 F / 300 W / 300 G` na min).
+  - `Tier 2 (20:00–30:00)` (`timer=1200s`): Flaga Płn. = `4× Conquistador` + `2× Bombard Cannon`; Flaga Płd. = `+200 F, +200 W, +200 G` dla `P1–P4` + naprawa budynków w `(0..110, 95..199)` (`P1–P4`) i `(111..199, 183..187)` (`P4`) o `+250 HP` (`50.0 F / 50.0 W / 50.0 G` na min na gracza).
+  - `Tier 3 (30:00+)` (`timer=1800s`): Flaga Płn. = `6× Elite Conquistador` + `2× Bombard Cannon` + `2× Siege Ram`; Flaga Płd. = `+300 F, +300 W, +300 G` dla `P1–P4` + naprawa w `(0..110, 95..199)` i `(111..199, 183..187)` o `+500 HP` (`75.0 F / 75.0 W / 75.0 G` na min na gracza; drużynowo `300 F / 300 W / 300 G` na min).
 - **Sanktuarium Balansu `P1` `(4, 138)`:** komnata `x=2..6, y=134..142`; pad górny `(2..6, 134..136)` (`FLAG_A` `(4,135)`), pad dolny `(2..6, 140..142)` (`FLAG_B` `(4,141)`); odwrócona kolejność topologiczna ID triggerów `09_Diff_*` (`ID(P1->P2) < ID(0->P1) < ID(M1->0) < ID(M2->M1)` i analogicznie pad dolny); natychmiastowy teleport na `(4, 138)` + `stop_object`, brak timerów blokujących.
-- **Globalna Aura Arcymaga (`02a–02d`):** warunek obecności `≥1` `IMAM (842)` `P7` w `(92..128, 96..132)` (`±18` wokół `(110, 114)`): nakłada globalnie `P5–P8` `+30/+30` pancerza (`cl=3, 4`) dla `20/30` jednostek z `receives_mage_shield=True`, leczy wszystkie obiekty `P5–P8` w tej strefie o `+15 HP / 3s` (`5.0 HP/s`), puszcza flarę `(114, 114)` co `20s`. Brak Imama w strefie zdejmuje `-30/-30` i reaktywuje czujnik.
+- **Globalna Aura Arcymaga (`02a–02d`):** warunek obecności `≥1` `IMAM (842)` `P7` w `(92..128, 96..132)` (`±18` wokół `(110, 114)`): nakłada globalnie `P5–P8` **`+8/+8` pancerza** (`cl=3, 4`) dla `20/30` jednostek z `receives_mage_shield=True`, leczy wszystkie obiekty `P5–P8` w tej strefie o `+15 HP / 3s` (`5.0 HP/s`), puszcza flarę `(114, 114)` co `20s`. Brak Imama w strefie zdejmuje **`-8/-8`** i reaktywuje czujnik.
 - **Finałowy Boss Fight (`07a -> 07b -> 07c -> 07d`) i Porażka (`08`):**
-  - `07a_All_Settlements_Destroyed_Boss_Warning`: po zburzeniu `6` Settlementów dezaktywuje eskalację `04a–04f` i triggery Endless, czyści budynki `P1–P4` w `(110..124, 108..128)`, stawia `MAP_REVEALER` na `(104, 114)` i `(116, 114)`, odtwarza dźwięk i uruchamia `timer=45s`.
-  - `07b_Spawn_Final_Boss_Wave` (`timer=45s`): spawnuje na `(116, 114) -> (54, 146)` jednostki `P8`: `1× Wielki Chan Subotai (698)` (`3500 HP`, `8/10` armor, `45` atk `cl=3`, speed `0.85`), `4× Żelazny Słoń (1134)`, `14× Paladin (569)`, `3× Siege Ram (548)` oraz na `(118, 122) -> (54, 146)` `2× Arcymag (842)` `P7`.
-  - `07b_Boss_Elephant_Guard_Heal` (`looping=True, timer=3s`): leczy `Subotaia (698)` o `+120 HP / 3s` (`+40.0 HP/s`), dopóki na mapie `0..199` żyje `≥1` `ELITE_BATTLE_ELEPHANT_ID (1134)` `P8` (wyłączane przez `07b_Boss_Elephants_Slain_Disable_Heal` z `timer=10s` po śmierci wszystkich Słoni `P8`).
-  - `07c_Confirm_Boss_Spawned` -> `07d_Victory_Final_Boss_Defeated` (`timer=5s` + brak żywego `698` `P8` na `0..199`): `declare_victory` dla `P1–P4`.
+  - `07a_All_Settlements_Destroyed_Boss_Warning`: po zburzeniu `6` Settlementów dezaktywuje eskalację `04a–04f`, triggery Endless oraz wszystkie `337` triggerów Zegara Fal (`00_Wave_Timer_UI_*` / `Tick_*`), aktywuje `00_Wave_Timer_Boss_Banner`, czyści budynki `P1–P4` w `(110..124, 108..128)`, stawia `MAP_REVEALER` na `(104, 114)` i `(116, 114)`, odtwarza dźwięk i uruchamia `timer=60s`.
+  - `07b_Spawn_Final_Boss_Wave` (`timer=60s`): uderza na **3 bramy**: Centralna `(116, 114) -> (54, 146)` `P8`: `1× Wielki Chan Subotai (698)` (`4500 HP`, `8/10` armor, `45` atk `cl=3`, speed `0.85`), `6× Żelazny Słoń (1134)`, `16× Paladin (569)`, `4× Siege Ram (548)` oraz `(118, 122) -> (54, 146)` `2× Arcymag (842)` `P7`; Północna `(68, 60) -> (48, 136)` `P8`: `10× Paladin`, `10× Heavy Cav Archer`, `2× Siege Ram`; Wschodnia `(116, 162) -> (68, 152)` `P8`: `10× Paladin`, `10× Heavy Cav Archer`, `2× Siege Ram`.
+  - `07b_Boss_Elephant_Guard_Heal` (`looping=True, timer=3s`): leczy `Subotaia (698)` o **`+180 HP / 3s` (`+60.0 HP/s`)**, dopóki w strefie bitwy **`(40, 90, 135, 175)`** żyje `≥1` `ELITE_BATTLE_ELEPHANT_ID (1134)` `P8` (wyłączane przez `07b_Boss_Elephants_Slain_Disable_Heal` z `timer=10s` po opuszczeniu strefy / śmierci Słoni `P8` w `(40..135, 90..175)`).
+  - `07c_Confirm_Boss_Spawned` -> `07d_Victory_Final_Boss_Defeated` (`timer=5s` + brak żywego `698` `P8` na `0..199`): wyłącza pętlę gwardii i `00_Wave_Timer_Boss_Banner`, ogłasza `declare_victory` dla `P1–P4`.
   - `08_Defeat_Citadel_Lost`: zniszczenie `Feitoria` `P2` `(54, 146)` -> `declare_victory` dla `P5–P8`.

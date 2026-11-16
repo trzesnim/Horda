@@ -1,5 +1,6 @@
 import inspect
 
+from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 from AoE2ScenarioParser.datasets.players import PlayerId
 from AoE2ScenarioParser.datasets.trigger_lists import (
     ActionType,
@@ -37,6 +38,8 @@ from horde_config import (
     IMAM_UNIT_ID,
     MAP_REVEALER_ID,
     MAP_SIZE,
+    PALISADE_GATE_NW_SE_ID,
+    PALISADE_GATE_SW_NE_ID,
     PETARD_ID,
     RES_BONUS_POP_CAP,
     SIEGE_ONAGER_ID,
@@ -289,13 +292,13 @@ def add_guarded_camp_with_leash(
 
     detect_triggers = []
     for h_p in [PlayerId.ONE, PlayerId.TWO, PlayerId.THREE, PlayerId.FOUR]:
-        req_qty = 2 if h_p == PlayerId.ONE else 1
         t_detect = tm.add_trigger(f"Garrison_Detect_{name}_P{h_p.value}", enabled=False, looping=False)
         safe_call(
             t_detect.new_condition.objects_in_area,
             source_player=h_p,
+            object_type=ObjectType.MILITARY,
             area_x1=x1, area_y1=y1, area_x2=x2, area_y2=y2,
-            quantity=req_qty,
+            quantity=1,
         )
         safe_call(t_detect.new_effect.activate_trigger, trigger_id=t_spawn.trigger_id)
         safe_call(enable_parent_trigger.new_effect.activate_trigger, trigger_id=t_detect.trigger_id)
@@ -497,8 +500,15 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_modify_attribute(t_init, PlayerId.TWO, FEITORIA_ID, ATTR_HIT_POINTS, Operation.ADD, 3000)
     add_player_resource(t_init, PlayerId.TWO, RES_BONUS_POP_CAP, 20)
 
+    palisade_gate_ids = sorted({
+        PALISADE_GATE_SW_NE_ID,
+        PALISADE_GATE_NW_SE_ID,
+        *(b.ID for k, b in BuildingInfo.__members__.items() if "PALISADE_GATE" in k),
+    })
     for h1 in human_players:
-        safe_modify_attribute(t_init, h1, FORTIFIED_PALISADE_ID, ATTR_HIT_POINTS, Operation.ADD, 400)
+        safe_modify_attribute(t_init, h1, FORTIFIED_PALISADE_ID, ATTR_HIT_POINTS, Operation.ADD, 600)
+        for pg_id in palisade_gate_ids:
+            safe_modify_attribute(t_init, h1, pg_id, ATTR_HIT_POINTS, Operation.ADD, 600)
         for h2 in human_players:
             if h1 != h2:
                 safe_call(t_init.new_effect.change_diplomacy, source_player=h1, target_player=h2, diplomacy=DiplomacyState.ALLY)
@@ -584,7 +594,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     send_highlight_chat(
         t_init, "<YELLOW>",
-        "=== KRONIKI RUBIEZY v7.0.2 === Inzynier Balansu P1 czeka w Sanktuarium (4, 138), a Kwatermistrz P2 w komnacie (4, 164) [od 10:00]! W panelu Celow (Objectives) dziala ZEGAR FALI oraz skrot zasad TL;DR!",
+        "=== KRONIKI RUBIEZY v7.0.3 === Inzynier Balansu P1 czeka w Sanktuarium (4, 138), a Kwatermistrz P2 w komnacie (4, 164) [od 10:00]! W panelu Celow (Objectives) dziala ZEGAR FALI oraz skrot zasad TL;DR!",
     )
 
     t_mutate = tm.add_trigger("01b_Apply_Specialized_Unit_Archetypes", enabled=True, looping=False)
@@ -753,7 +763,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_shield_on.new_effect.activate_trigger, trigger_id=t_shield_off.trigger_id)
     send_highlight_chat(
         t_shield_on, "<PURPLE>",
-        "[GLOBALNA AURA MAGA]: Arcymag na przedpolu Bramy Centralnej dal GLOBALNIE +30/+30 Pancerza calej Hordzie (P5-P8) oraz LOKALNIE leczy jednostki w tej strefie! Skupcie na nim ogien!",
+        "[GLOBALNA AURA MAGA]: Arcymag na przedpolu Bramy Centralnej dal GLOBALNIE +8/+8 Pancerza calej Hordzie (P5-P8) oraz LOKALNIE leczy jednostki w tej strefie! Skupcie na nim ogien!",
         flare_x=114, flare_y=114,
     )
 
@@ -783,7 +793,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     )
     send_highlight_chat(
         t_mage_beacon, "<PURPLE>",
-        "[FLARA - ARCYMAG TARCZY]: Arcymag (P7 - 240 HP, regen 5 HP/s) w kregu pochodni przed Brama Centralna leczy i utrzymuje +30 Pancerza na Hordzie!",
+        "[FLARA - ARCYMAG TARCZY]: Arcymag (P7 - 240 HP, regen 5 HP/s) w kregu pochodni przed Brama Centralna leczy i utrzymuje +8/+8 Pancerza na Hordzie!",
         flare_x=114, flare_y=114,
     )
 
@@ -805,7 +815,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_shield_off.new_effect.activate_trigger, trigger_id=t_shield_on.trigger_id)
     send_highlight_chat(
         t_shield_off, "<GREEN>",
-        "[BARIERA PRZELAMANA]: Arcymag zabity! Wszystkie armie Hordy (P5, P6, P7, P8) traca +30 Pancerza i leczenie!",
+        "[BARIERA PRZELAMANA]: Arcymag zabity! Wszystkie armie Hordy (P5, P6, P7, P8) traca +8/+8 Pancerza i leczenie!",
     )
 
     t_push_inside = tm.add_trigger("02e_Push_Gate_Units_Deep_Into_Base", enabled=True, looping=True)
@@ -861,11 +871,11 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_enable_esc2.new_condition.timer, timer=BALANCE["late_escalation_start_sec"])
     add_enemy_combat_buff(
         t_enable_esc2, ai_players,
-        hp_add=BALANCE["late_escalation_hp_add"], atk_add=1,
+        hp_add=BALANCE["late_escalation_hp_add"], atk_add=BALANCE["late_escalation_atk_add"],
     )
     send_highlight_chat(
         t_enable_esc2, "<RED>",
-        f"[FURIA LATE-GAME]: Horda wchodzi w faze pelnej mobilizacji (+{BALANCE['late_escalation_hp_add']} HP i +1 Ataku)!",
+        f"[FURIA LATE-GAME]: Horda wchodzi w faze pelnej mobilizacji (+{BALANCE['late_escalation_hp_add']} HP)!",
     )
 
     t_escalate2 = tm.add_trigger("04d_LateGame_Horde_Overdrive_Every_5m", enabled=False, looping=True)
@@ -873,22 +883,22 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_escalate2.new_condition.timer, timer=BALANCE["escalation_interval_sec"])
     add_enemy_combat_buff(
         t_escalate2, ai_players,
-        hp_add=BALANCE["late_escalation_hp_add"], atk_add=1,
+        hp_add=BALANCE["late_escalation_hp_add"], atk_add=BALANCE["late_escalation_atk_add"],
     )
     send_highlight_chat(
         t_escalate2, "<RED>",
-        f"[FURIA LATE-GAME]: Horda wchodzi w faze pelnej mobilizacji (+{BALANCE['late_escalation_hp_add']} HP i +1 Ataku)!",
+        f"[FURIA LATE-GAME]: Horda wchodzi w faze pelnej mobilizacji (+{BALANCE['late_escalation_hp_add']} HP)!",
     )
 
     t_enable_esc3 = tm.add_trigger("04e_Enable_Endgame_Escalation_At_55m", enabled=True, looping=False)
     safe_call(t_enable_esc3.new_condition.timer, timer=BALANCE["endgame_escalation_start_sec"])
     add_enemy_combat_buff(
         t_enable_esc3, ai_players,
-        hp_add=BALANCE["endgame_escalation_hp_add"], atk_add=1,
+        hp_add=BALANCE["endgame_escalation_hp_add"], atk_add=BALANCE["endgame_escalation_atk_add"],
     )
     send_highlight_chat(
         t_enable_esc3, "<RED>",
-        f"[ESKALACJA ENDGAME]: Elitarne dywizje Hordy zyskuja kolejne +{BALANCE['endgame_escalation_hp_add']} HP i +1 Ataku!",
+        f"[ESKALACJA ENDGAME]: Elitarne dywizje Hordy zyskuja kolejne +{BALANCE['endgame_escalation_hp_add']} HP i +{BALANCE['endgame_escalation_atk_add']} Ataku!",
     )
 
     t_escalate3 = tm.add_trigger("04f_Endgame_Horde_Escalation_Every_5m", enabled=False, looping=True)
@@ -896,11 +906,11 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_escalate3.new_condition.timer, timer=BALANCE["escalation_interval_sec"])
     add_enemy_combat_buff(
         t_escalate3, ai_players,
-        hp_add=BALANCE["endgame_escalation_hp_add"], atk_add=1,
+        hp_add=BALANCE["endgame_escalation_hp_add"], atk_add=BALANCE["endgame_escalation_atk_add"],
     )
     send_highlight_chat(
         t_escalate3, "<RED>",
-        f"[ESKALACJA ENDGAME]: Elitarne dywizje Hordy zyskuja kolejne +{BALANCE['endgame_escalation_hp_add']} HP i +1 Ataku!",
+        f"[ESKALACJA ENDGAME]: Elitarne dywizje Hordy zyskuja kolejne +{BALANCE['endgame_escalation_hp_add']} HP i +{BALANCE['endgame_escalation_atk_add']} Ataku!",
     )
 
     # ==============================================================================
@@ -1126,14 +1136,14 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
         if w_num == 9:
             t_warn_forest_n = tm.add_trigger("03_W09_Forest_Breach_North_Warn", enabled=True, looping=False)
-            safe_call(t_warn_forest_n.new_condition.timer, timer=w_time - 15)
+            safe_call(t_warn_forest_n.new_condition.timer, timer=w_time - 45)
             add_spawn_and_attack_effect(
                 t_warn_forest_n, PlayerId.SIX, [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 8)],
                 spawn_x=78, spawn_y=90, target_x=78, target_y=95,
             )
             send_highlight_chat(
                 t_warn_forest_n, "<ORANGE>",
-                "[ALARM SAPERSKI - POLNOCNY LAS]: Wrogie Onagery zaczynaja wyrabywac przesieke w lesie na (78, 100)! Za 15 sekund przebija sie do bazy!",
+                "[ALARM SAPERSKI] Za 45 sekund Saperzy Hordy wyrąbią wyłom w północnym lesie (78, 95)!",
                 flare_x=78, flare_y=98,
             )
             all_settlement_wave_triggers["G2_Snipers"].append(t_warn_forest_n)
@@ -1156,14 +1166,14 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
         if w_num == 12:
             t_warn_forest_e = tm.add_trigger("03_W12_Forest_Breach_East_Warn", enabled=True, looping=False)
-            safe_call(t_warn_forest_e.new_condition.timer, timer=w_time - 15)
+            safe_call(t_warn_forest_e.new_condition.timer, timer=w_time - 45)
             add_spawn_and_attack_effect(
                 t_warn_forest_e, PlayerId.SIX, [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 10)],
                 spawn_x=115, spawn_y=140, target_x=109, target_y=140,
             )
             send_highlight_chat(
                 t_warn_forest_e, "<ORANGE>",
-                "[ALARM SAPERSKI - WSCHODNI LAS]: Wrogie Onagery wyrabuja druga przesieke we wschodnim lesie na (104, 140)! Za 15s przebija sie do bazy!",
+                "[ALARM SAPERSKI] Za 45 sekund Saperzy Hordy wyrąbią wyłom we wschodnim lesie (109, 140)!",
                 flare_x=106, flare_y=140,
             )
             all_settlement_wave_triggers["G2_Snipers"].append(t_warn_forest_e)

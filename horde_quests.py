@@ -52,7 +52,7 @@ def format_mm_ss(sec: int) -> str:
     return f"{sec // 60}:{sec % 60:02d}"
 
 
-def setup_wave_countdown_timer(tm) -> None:
+def setup_wave_countdown_timer(tm, ctx: dict | None = None) -> tuple[list, object]:
     """
     Stabilny, odporny na crashe licznik czasu do następnej fali w panelu Celów (Objectives).
     Używa statycznych banerów UI z `timer=999999` (nigdy nie ulegają przekreśleniu ani wykonaniu)
@@ -98,25 +98,25 @@ def setup_wave_countdown_timer(tm) -> None:
             "00_TLDR_Modal_1_Cel",
             210,
             True,
-            "[TL;DR - ZASADY W 30 SEKUND] Bron Cytadeli P2 (54,146) - jej utrata to natychmiastowa porazka! Wyjdz za mury, zniszcz 6 Twierdz Hordy (G1-G3), a na koniec zgladz Wielkiego Chana Subotaia (3500 HP) przed Brama Centralna.",
+            "[TL;DR - ZASADY W 30 SEKUND] Bron Cytadeli P2 (54,146) - jej utrata to natychmiastowa porazka! Wyjdz za mury, zniszcz 6 Twierdz Hordy (G1-G3), a po 60s na koniec zgladz Wielkiego Chana Subotaia (4500 HP) przed Brama Centralna.",
         ),
         (
             "00_TLDR_Modal_2_Role",
             209,
             False,
-            "ROLE GRACZY: P1 (Niebieski) = Brama Centralna + Krol w Sanktuarium (4,138) zmieniajacy trudnosc (-2..+2). P2 (Czerwony) = Cytadela, handel, obrona chlopow przed Szakalami + Krol-Kwatermistrz (4,164) dajacy od 10:00 co 4 min rosnace wsparcie (10-20m Male, 20-30m Srednie, 30m+ Duze). P3 (Zielony) = Brama Polnocna (w 51:00 wylom w lesie!). P4 (Zolty) = Brama Wschodnia (w 67:30 wylom!) + szlak handlowy.",
+            "ROLE GRACZY: P1 (Niebieski) = Brama Centralna + Krol w Sanktuarium (4,138) zmieniajacy trudnosc (-2..+2). P2 (Czerwony) = Cytadela, handel, obrona chlopow przed Szakalami + Krol-Kwatermistrz (4,164) dajacy od 10:00 co 4 min rosnace wsparcie (10-20m Male, 20-30m Srednie, 30m+ Duze). P3 (Zielony) = Brama Polnocna (w 50:15 alarm, w 51:00 wylom w lesie!). P4 (Zolty) = Brama Wschodnia (w 66:45 alarm, w 67:30 wylom!) + szlak handlowy.",
         ),
         (
             "00_TLDR_Modal_3_Wyprawy",
             208,
             False,
-            "WYPRAWY (OBOZY I QUESTY): Zburzenie kazdego Settlementu (G1-G3) daje surowce i NA STALE wylacza jego fale oraz jednostki specjalne (wywolujac 1 kontratak i lekka Furie). Questy (Q1-Q4) daja stale bonusy calej druzynie (w Q2 zniszcz najpierw 2 Baszty Bombardowe, by wylaczyc tarcze leczaca Uniwersytet!).",
+            "WYPRAWY (OBOZY I QUESTY): Zburzenie kazdego Settlementu (G1-G3) daje surowce i NA STALE wylacza jego fale oraz jednostki specjalne (wywolujac 1 kontratak i Furie). Questy (Q1-Q4) daja stale bonusy calej druzynie (w Q2 zniszcz najpierw 2 Baszty Bombardowe, by wylaczyc tarcze leczaca Uniwersytet!).",
         ),
         (
             "00_TLDR_Modal_4_Wrogowie",
             207,
             False,
-            "PRIORYTETY W WALCE: (1) Zabijaj w pierwszej kolejnosci Arcymaga/Imama przed Brama Centralna - naklada na cala Horde tarcze +30 pancerza i leczy wrogow! (2) Chron wiesniakow pod TC przed szybkimi Szakalami! (3) Nie buduj na polanach spawnu Hordy przed bramami (fala niszczy tam budynki).",
+            "PRIORYTETY W WALCE: (1) Zabijaj w pierwszej kolejnosci Arcymaga/Imama przed Brama Centralna - naklada na cala Horde tarcze +8/+8 pancerza i leczy wrogow! (2) Chron wiesniakow pod TC przed szybkimi Szakalami (7 ataku)! (3) Nie buduj na polanach spawnu Hordy przed bramami (fala niszczy tam budynki).",
         ),
     ]
     for m_name, m_order, m_header, m_text in tldr_modal_defs:
@@ -137,6 +137,7 @@ def setup_wave_countdown_timer(tm) -> None:
         set_as_objective(t_ui, label, order=110, is_header=True)
         ui_banners.append(t_ui)
 
+    tick_triggers = []
     for idx in range(1, len(ui_steps)):
         t, _, chat_warn = ui_steps[idx]
         t_tick = tm.add_trigger(f"00_Wave_Timer_Tick_{idx:03d}_{t:04d}s", enabled=True, looping=False)
@@ -145,6 +146,17 @@ def setup_wave_countdown_timer(tm) -> None:
         safe_call(t_tick.new_effect.activate_trigger, trigger_id=ui_banners[idx].trigger_id)
         if chat_warn is not None:
             send_highlight_chat(t_tick, "<YELLOW>", chat_warn)
+        tick_triggers.append(t_tick)
+
+    t_boss_banner = tm.add_trigger("00_Wave_Timer_Boss_Banner", enabled=False, looping=False)
+    safe_call(t_boss_banner.new_condition.timer, timer=999999)
+    set_as_objective(t_boss_banner, "Zegar Fali: OSTATNI SZTURM WIELKIEGO CHANA!", order=110, is_header=True)
+
+    wave_timer_triggers = [*ui_banners, *tick_triggers]
+    if ctx is not None:
+        ctx["wave_timer_triggers"] = wave_timer_triggers
+        ctx["wave_timer_boss_banner"] = t_boss_banner
+    return wave_timer_triggers, t_boss_banner
 
 
 def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
@@ -488,6 +500,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         t_q2_shield.new_effect.heal_object,
         source_player=PlayerId.SIX,
         object_list_unit_id=BuildingInfo.UNIVERSITY.ID,
+        object_type=ObjectType.BUILDING,
         area_x1=26,
         area_y1=28,
         area_x2=30,
@@ -577,7 +590,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
 
     send_highlight_chat(
         t_q3_unlock, "<GREEN>",
-        "=== [Q3 UKONCZONY!] === Kazdy gracz zyskuje +20 POPU oraz staly dochod (+250F, +250W, +200G i +40S co minute)! [Adaptacja Hordy: +10 HP, +1 Atak]",
+        "=== [Q3 UKONCZONY!] === Kazdy gracz zyskuje +20 POPU oraz staly dochod (+100F, +100W, +90G i +20S co minute)! [Adaptacja Hordy: +10 HP, +1 Atak]",
         flare_x=q3_pos[0], flare_y=q3_pos[1],
     )
 
@@ -780,7 +793,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
                 t_eco.new_effect.heal_object,
                 source_player=PlayerId.FOUR,
                 object_type=ObjectType.BUILDING,
-                area_x1=105,
+                area_x1=111,
                 area_y1=183,
                 area_x2=199,
                 area_y2=187,
@@ -885,10 +898,10 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         safe_call(
             t_poi.new_condition.objects_in_area,
             source_player=h_p,
-            area_x1=26,
-            area_y1=72,
-            area_x2=34,
-            area_y2=80,
+            area_x1=27,
+            area_y1=73,
+            area_x2=33,
+            area_y2=79,
             quantity=1,
         )
         for other_t in poi1_triggers:
@@ -942,10 +955,10 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         safe_call(
             t_poi.new_condition.objects_in_area,
             source_player=h_p,
-            area_x1=124,
-            area_y1=170,
-            area_x2=132,
-            area_y2=178,
+            area_x1=121,
+            area_y1=175,
+            area_x2=127,
+            area_y2=181,
             quantity=1,
         )
         for other_t in poi2_triggers:
@@ -963,9 +976,9 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         send_highlight_chat(
             t_poi,
             "<YELLOW>",
-            f"[EKSPLORACJA - ZAGINIONA KARAWANA (128, 174)] Gracz P{h_p.value} odnalazł wozy z łupem (+350 Żywności i +350 Złota dla każdego) oraz mapy ujawniające Obóz Karawany Q1 (154, 190)!",
-            flare_x=128,
-            flare_y=174,
+            f"[EKSPLORACJA - ZAGINIONA KARAWANA (124, 178)] Gracz P{h_p.value} odnalazł wozy z łupem (+350 Żywności i +350 Złota dla każdego) oraz mapy ujawniające Obóz Karawany Q1 (154, 190)!",
+            flare_x=124,
+            flare_y=178,
         )
 
     poi3_triggers = [
@@ -976,15 +989,15 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         safe_call(
             t_poi.new_condition.objects_in_area,
             source_player=h_p,
-            area_x1=60,
-            area_y1=84,
-            area_x2=68,
-            area_y2=92,
+            area_x1=47,
+            area_y1=87,
+            area_x2=53,
+            area_y2=93,
             quantity=1,
         )
         for other_t in poi3_triggers:
             safe_call(t_poi.new_effect.deactivate_trigger, trigger_id=other_t.trigger_id)
-        for lc_x, lc_y in [(63, 88), (65, 88)]:
+        for lc_x, lc_y in [(49, 90), (51, 90)]:
             safe_call(
                 t_poi.new_effect.create_object,
                 source_player=h_p,
@@ -1005,9 +1018,9 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         send_highlight_chat(
             t_poi,
             "<GREEN>",
-            f"[EKSPLORACJA - KAMIEŃ WĘDROWCA (64, 88)] Gracz P{h_p.value} zwerbował Zwiadowców (2x Lekka Kawaleria), zdobył +150 Kamienia i +150 Złota dla każdego oraz odsłonił bród rzeczny (122, 62)!",
-            flare_x=64,
-            flare_y=88,
+            f"[EKSPLORACJA - KAMIEŃ WĘDROWCA (50, 90)] Gracz P{h_p.value} zwerbował Zwiadowców (2x Lekka Kawaleria), zdobył +150 Kamienia i +150 Złota dla każdego oraz odsłonił bród rzeczny (122, 62)!",
+            flare_x=50,
+            flare_y=90,
         )
 
     # ==============================================================================
@@ -1018,22 +1031,22 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     set_as_objective(t_obj_header_s, "-- SETTLEMENTY HORDY --", order=90, is_header=True)
 
     settlement_defs = [
-        ("G1_North", PlayerId.FIVE, s_g1_north, "G1 - Polnocny (usuwa Berserkerow i Petardy)", 89, 1, 700, 5, 0,
+        ("G1_North", PlayerId.FIVE, s_g1_north, "G1 - Polnocny (usuwa Berserkerow i Petardy)", 89, 1, 700, BALANCE["fury_g1_hp"], BALANCE["fury_g1_atk"],
          [(UnitInfo.CAVALIER.ID, 8), (UnitInfo.PIKEMAN.ID, 10)], *s_coords["G1_North"],
          48, 86, *deep_target_north),
-        ("G1_East",  PlayerId.FIVE, s_g1_east,  "G1 - Wschodni (usuwa Huskarlow i Wielblady)", 88, 1, 700, 5, 0,
+        ("G1_East",  PlayerId.FIVE, s_g1_east,  "G1 - Wschodni (usuwa Huskarlow i Wielblady)", 88, 1, 700, BALANCE["fury_g1_hp"], BALANCE["fury_g1_atk"],
          [(UnitInfo.CAVALIER.ID, 8), (UnitInfo.PIKEMAN.ID, 10)], *s_coords["G1_East"],
          117, 178, *deep_target_east),
-        ("G2_Snipers", PlayerId.SIX, s_g2_snipers, "G2 - Akademia (usuwa Snajperow, Mozdzierze i Saperow)", 87, 2, 1000, 10, 1,
+        ("G2_Snipers", PlayerId.SIX, s_g2_snipers, "G2 - Akademia (usuwa Snajperow, Mozdzierze i Saperow)", 87, 2, 1000, BALANCE["fury_g2_hp"], BALANCE["fury_g2_atk"],
          [(UnitInfo.CAVALIER.ID, 10), (UnitInfo.HALBERDIER.ID, 12)], *s_coords["G2_Snipers"],
          48, 86, *deep_target_north),
-        ("G2_Mages",   PlayerId.SEVEN, s_g2_mages,   "G2 - Klasztor (usuwa Magow i Szakale)", 86, 2, 1000, 10, 1,
+        ("G2_Mages",   PlayerId.SEVEN, s_g2_mages,   "G2 - Klasztor (usuwa Magow i Szakale)", 86, 2, 1000, BALANCE["fury_g2_hp"], BALANCE["fury_g2_atk"],
          [(UnitInfo.CAVALIER.ID, 10), (UnitInfo.HALBERDIER.ID, 12)], *s_coords["G2_Mages"],
          116, 114, *deep_target_center),
-        ("G3_North", PlayerId.EIGHT, s_g3_north, "G3 - Cytadela Pln. (usuwa Slonie-Tanki Pln.)", 85, 3, 1500, 15, 2,
+        ("G3_North", PlayerId.EIGHT, s_g3_north, "G3 - Cytadela Pln. (usuwa Slonie-Tanki Pln.)", 85, 3, 1500, BALANCE["fury_g3_hp"], BALANCE["fury_g3_atk"],
          [(ELITE_BATTLE_ELEPHANT_ID, 1), (UnitInfo.PALADIN.ID, 12), (UnitInfo.HALBERDIER.ID, 14)], *s_coords["G3_North"],
          116, 114, *deep_target_center),
-        ("G3_East",  PlayerId.EIGHT, s_g3_east,  "G3 - Cytadela Wsch. (usuwa Slonie Wsch. i Rajdy Handlowe)", 84, 3, 1500, 15, 2,
+        ("G3_East",  PlayerId.EIGHT, s_g3_east,  "G3 - Cytadela Wsch. (usuwa Slonie Wsch. i Rajdy Handlowe)", 84, 3, 1500, BALANCE["fury_g3_hp"], BALANCE["fury_g3_atk"],
          [(ELITE_BATTLE_ELEPHANT_ID, 1), (UnitInfo.PALADIN.ID, 12), (UnitInfo.HALBERDIER.ID, 14)], *s_coords["G3_East"],
          117, 178, *deep_target_east),
     ]
@@ -1118,21 +1131,21 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     send_highlight_chat(
         t_boss_warn,
         "<RED>",
-        "[FINAŁOWY ALARM] Wszystkie 6 Twierdz Hordy runęło! Macie 45 sekund na wycofanie armii pod Bramę Centralną (104, 114) — nadciąga Wielki Chan Subotai (3500 HP)!",
+        "[FINAŁOWY ALARM] Wszystkie 6 Twierdz Hordy runęło! Macie 60 sekund na wycofanie armii pod Bramę Centralną (104, 114) — nadciąga Wielki Chan Subotai (4500 HP)!",
         flare_x=116,
         flare_y=114,
     )
     safe_call(t_boss_warn.new_effect.activate_trigger, trigger_id=t_boss_spawn.trigger_id)
 
-    safe_call(t_boss_spawn.new_condition.timer, timer=45)
+    safe_call(t_boss_spawn.new_condition.timer, timer=BALANCE["final_boss_wait_sec"])
     add_spawn_and_attack_effect(
         t_boss_spawn,
         PlayerId.EIGHT,
         [
             (FINAL_BOSS_HERO_ID, 1),
-            (ELITE_BATTLE_ELEPHANT_ID, 4),
-            (UnitInfo.PALADIN.ID, 14),
-            (UnitInfo.SIEGE_RAM.ID, 3),
+            (ELITE_BATTLE_ELEPHANT_ID, 6),
+            (UnitInfo.PALADIN.ID, 16),
+            (UnitInfo.SIEGE_RAM.ID, 4),
         ],
         spawn_x=116,
         spawn_y=114,
@@ -1148,10 +1161,36 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         target_x=54,
         target_y=146,
     )
+    add_spawn_and_attack_effect(
+        t_boss_spawn,
+        PlayerId.EIGHT,
+        [
+            (UnitInfo.PALADIN.ID, 10),
+            (UnitInfo.HEAVY_CAVALRY_ARCHER.ID, 10),
+            (UnitInfo.SIEGE_RAM.ID, 2),
+        ],
+        spawn_x=68,
+        spawn_y=60,
+        target_x=48,
+        target_y=136,
+    )
+    add_spawn_and_attack_effect(
+        t_boss_spawn,
+        PlayerId.EIGHT,
+        [
+            (UnitInfo.PALADIN.ID, 10),
+            (UnitInfo.HEAVY_CAVALRY_ARCHER.ID, 10),
+            (UnitInfo.SIEGE_RAM.ID, 2),
+        ],
+        spawn_x=116,
+        spawn_y=162,
+        target_x=68,
+        target_y=152,
+    )
     send_highlight_chat(
         t_boss_spawn,
         "<RED>",
-        "[OSTATNI SZTURM] Wielki Chan Subotai (3500 HP, regeneruje +120 HP/3s dopóki żyje Żelazny Słoń!) z gwardią na (116, 114) i Arcymagami na (118, 122) rusza na Bramę Centralną!",
+        "[OSTATNI SZTURM] Wielki Chan Subotai (4500 HP, regeneruje +180 HP/3s dopóki w strefie bitwy (40..135, 90..175) żyje Żelazny Słoń!) uderza ze wszystkich 3 bram (Centralna 116,114; Północna 68,60; Wschodnia 116,162)!",
         flare_x=116,
         flare_y=114,
     )
@@ -1162,10 +1201,10 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     safe_call(t_boss_guard_heal.new_condition.timer, timer=3)
     safe_call(
         t_boss_guard_heal.new_condition.objects_in_area,
-        area_x1=0,
-        area_y1=0,
-        area_x2=MAP_SIZE - 1,
-        area_y2=MAP_SIZE - 1,
+        area_x1=40,
+        area_y1=90,
+        area_x2=135,
+        area_y2=175,
         source_player=PlayerId.EIGHT,
         object_list=ELITE_BATTLE_ELEPHANT_ID,
         object_state=ObjectState.ALIVE,
@@ -1179,16 +1218,16 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         area_y1=0,
         area_x2=MAP_SIZE - 1,
         area_y2=MAP_SIZE - 1,
-        quantity=120,
+        quantity=BALANCE["final_boss_regen_3s"],
     )
 
     safe_call(t_boss_guard_down.new_condition.timer, timer=10)
     safe_call(
         t_boss_guard_down.new_condition.objects_in_area,
-        area_x1=0,
-        area_y1=0,
-        area_x2=MAP_SIZE - 1,
-        area_y2=MAP_SIZE - 1,
+        area_x1=40,
+        area_y1=90,
+        area_x2=135,
+        area_y2=175,
         source_player=PlayerId.EIGHT,
         object_list=ELITE_BATTLE_ELEPHANT_ID,
         object_state=ObjectState.ALIVE,
@@ -1217,7 +1256,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     )
     safe_call(t_boss_confirm.new_effect.activate_trigger, trigger_id=t_win.trigger_id)
 
-    set_as_objective(t_win, "FINAL: Zgladz Wielkiego Chana Subotaia (3500 HP) przed Brama Centralna!", order=99)
+    set_as_objective(t_win, "FINAL: Zgladz Wielkiego Chana Subotaia (4500 HP) przed Brama Centralna!", order=99)
     safe_call(t_win.new_condition.timer, timer=5)
     safe_call(
         t_win.new_condition.objects_in_area,
@@ -1256,4 +1295,8 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         safe_call(t_lose.new_effect.declare_victory, source_player=ai_p, enabled=1)
 
     # 13. Licznik Czasu do Następnej Fali (Crash-Safe w panelu Objectives)
-    setup_wave_countdown_timer(tm)
+    wave_timer_triggers, t_boss_banner = setup_wave_countdown_timer(tm, ctx)
+    for wt_tr in wave_timer_triggers:
+        safe_call(t_boss_warn.new_effect.deactivate_trigger, trigger_id=wt_tr.trigger_id)
+    safe_call(t_boss_warn.new_effect.activate_trigger, trigger_id=t_boss_banner.trigger_id)
+    safe_call(t_win.new_effect.deactivate_trigger, trigger_id=t_boss_banner.trigger_id)

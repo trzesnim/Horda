@@ -1,4 +1,4 @@
-# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v7.0.2)
+# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v7.0.3)
 
 ## 0. Protokół Wykonawczy dla Agenta IDE (Antigravity / VS Code)
 1. **Atomowość etapów:** Realizuj podetapy ściśle po kolei (`Etap 0` -> `1A` -> `1B` -> `2` -> `3A` -> `3B` -> `3C` -> `4` -> `5` -> `6A` -> `6B` -> `6C` -> `7` -> `8`). **Zabrania się łączenia kilku podetapów (szczególnie 3A, 3B i 3C) w jedną edycję.**
@@ -508,4 +508,24 @@ Zaktualizuj `horda.md` oraz teksty w `populate_ingame_scenario_descriptions()` (
    - Komunikat czatu z flarą `(28, 30)` w `Garrison_Spawn_Quest2_SniperCliff` oraz czat Sanktuarium `09_Diff_*` dla wszystkich 4 graczy.
 5. **Weryfikacja 8-kierunkowego BFS izolacji komnat w `test_horde_scenario.py` (`29/29 testów OK`):**
    - Walidacja szczelności obu komnat flood-fillem `8-way BFS` (dokładnie `45` osiągalnych pól wewnątrz każdej z nich), obsadzenia pasa leśnego, wszystkich progów Kwatermistrza P2, `00_TLDR_Modal_1..4`, `PoI 3` oraz regeneracji Bossa.
+
+---
+
+## Plan Wdrożeniowy v7.0.3 (Etap R14 — Uszczelnienie detektorów, rebalans i 3-bramowy Boss Fight) [DONE / WDROŻONE]
+
+1. **Rozłączenie detektorów `PoI` od garnizonów oraz filtr `ObjectType.MILITARY` (`horde_map.py`, `horde_waves.py`, `horde_quests.py`):**
+   - Przeniesiono `PoI 2 (Zaginiona Karawana)` z `(128, 174)` na `(124, 178)` oraz `PoI 3 (Kamień Wędrowca i Zwiadowcy)` z `(64, 88)` na `(50, 90)`; wszystkie 3 detektory `PoI 1–3` używają promienia `3` (`PoI 1`: `27..33, 73..79`, `PoI 2`: `121..127, 175..181`, `PoI 3`: `47..53, 87..93`), dzięki czemu żaden detektor `PoI` nie przecina detektorów garnizonów obozowych.
+   - W `add_guarded_camp_with_leash` dodano filtr `object_type=ObjectType.MILITARY` i jednolity próg `quantity=1` dla `P1–P4` (eliminacja ryzyka obudzenia obozu przez `MAP_REVEALER`).
+   - W `06_Quest2_Shield_Loop` dodano `object_type=ObjectType.BUILDING` do `heal_object`, a w `06d_P2_QM_Eco_T2/T3` zmieniono drugi prostokąt leczenia Muru Handlowego P4 na `(111..199, 183..187)` (brak nakładania na `(0..110, 95..199)`).
+2. **Rebalans Tarczy Arcymaga, `Q3`, Eskalacji, Szakali, Palisad, Furii i Wyłomów (`horde_config.py`, `horde_waves.py`, `horde_quests.py`):**
+   - Tarcza Arcymaga: `+8/+8` pancerza zamiast `+30/+30`; `UnitInfo.ELITE_MAMELUKE.ID` w rejestrze `base_hp=100` (`hp_delta_down=15`, `-30` na `-2`).
+   - Skarbiec `Q3`: pasywny dochód skorygowany na `+100F, +100W, +90G, +20S` co `60s` dla każdego `P1–P4`.
+   - Eskalacja czasowa: Bieg 2 (`45:00+`) `+9 HP, +0 Atk`, Bieg 3 (`55:00+`) `+6 HP, +1 Atk` (`+19` Ataku w `80:00` / `+17` w F14 `78:30`); atak Szakala podniesiony z `2` do `7`; bonus Słonia przeciw budynkom zmniejszony z `+220` na `+140`; palisady i bramy palisadowe `P1–P4` wzmocnione o `+600 HP` w `01_Init`.
+   - Furia Settlementów wzmocniona do `Grade 1: +8 HP, +1 Atk`, `Grade 2: +14 HP, +1 Atk`, `Grade 3: +20 HP, +2 Atk`.
+   - Wyprzedzenie alarmów saperskich wydłużone z `15s` do `45s` (`3015s` = `50:15` oraz `4005s` = `66:45`).
+3. **Wzmocnienie i uszczelnienie Finałowego Boss Fightu (`horde_config.py`, `horde_quests.py`):**
+   - `setup_wave_countdown_timer` zwraca `(wave_timer_triggers, t_boss_banner)`; `07a` zatrzymuje wszystkie triggery zegara fal, przełącza nagłówek na `00_Wave_Timer_Boss_Banner` i daje `timer=60` sekund na powrót armii.
+   - `FINAL_BOSS_HERO_ID` (`Subotai`) wzmocniony do `4500 HP`, a jego Tarcza Gwardii Słoni w `07b_Boss_Elephant_Guard_Heal` do `+180 HP / 3s` przy ograniczeniu strefy warunku Słoni `P8` w `07b_Boss_Elephant_Guard_Heal` i `07b_Boss_Elephants_Slain_Disable_Heal` do obszaru `(40, 90, 135, 175)`.
+   - `07b_Spawn_Final_Boss_Wave` uderza jednocześnie na 3 bramy: Centralna `(116, 114) -> (54, 146)` (`1x Subotai, 6x Iron Elephant, 16x Paladin, 4x Siege Ram` + `2x Imam P7` z `(118, 122)`), Północna `(68, 60) -> (48, 136)` oraz Wschodnia `(116, 162) -> (68, 152)` (po `10x Paladin, 10x Heavy Cav Archer, 2x Siege Ram`).
+4. **Rozszerzenie walidacji (`test_horde_scenario.py` — `30/30 testów OK`) oraz aktualizacja kompletu dokumentacji (`v7.0.3`).**
 

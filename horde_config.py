@@ -10,6 +10,8 @@ if not hasattr(UnitInfo, "SUBOTAI"):
     UnitInfo.SUBOTAI = HeroInfo.SUBOTAI
 if not hasattr(UnitInfo, "RELIC"):
     UnitInfo.RELIC = OtherInfo.RELIC
+if not hasattr(UnitInfo, "HEAVY_CAV_ARCHER"):
+    UnitInfo.HEAVY_CAV_ARCHER = UnitInfo.HEAVY_CAVALRY_ARCHER
 
 TREE_OAK_ID = 349
 
@@ -392,19 +394,19 @@ def populate_ingame_scenario_descriptions(scenario):
 
     tldr_block = (
         "TL;DR (NAJWAZNIEJSZE ZASADY W 30 SEKUND):\n"
-        "- CEL GRY: Bron Cytadeli (Feitorii P2) w sercu bazy (54, 146) - jej utrata to natychmiastowa porazka wszystkich! Wyjdz za mury, zniszcz 6 Twierdz Hordy (G1-G3), a po 45s na powrot armii zgladz Wielkiego Chana Subotaia (3500 HP) przed Brama Centralna.\n"
+        "- CEL GRY: Bron Cytadeli (Feitorii P2) w sercu bazy (54, 146) - jej utrata to natychmiastowa porazka wszystkich! Wyjdz za mury, zniszcz 6 Twierdz Hordy (G1-G3), a po 60s na powrot armii zgladz Wielkiego Chana Subotaia (4500 HP) przed Brama Centralna.\n"
         "- USTAWIENIA I FALE: Gracze P1-P4 (ludzie, P2 najlepiej Hiszpanie) vs P5-P8 (AI Extreme). 14 fal od 8:30 do 78:30 (potem Endless) - zegar do kolejnej fali i poziom trudnosci sa zawsze na gorze Objectives (a skrot zasad w zakladce Objectives!).\n"
         "- ROLE GRACZY (P1-P4):\n"
         "  * P1 (Niebieski): Brama Centralna + Krol w odizolowanym Sanktuarium (4, 138) (wejscie na flage zmienia trudnosc -2..+2).\n"
         "  * P2 (Czerwony): Handel, obrona chlopow przed Szakalami + Krol-Kwatermistrz w odizolowanej komnacie (4, 164) (od 10:00 co 4 min rosnace wsparcie: 10-20m Male, 20-30m Srednie, 30m+ Duze).\n"
-        "  * P3 (Zielony): Brama Polnocna (uwaga: w 51:00 saperzy wyrabia wylom w polnocnym lesie!).\n"
-        "  * P4 (Zolty): Brama Wschodnia (w 67:30 wylom we wschodnim lesie) + korytarz handlowy na poludniu.\n"
-        "- WYPRAWY (SETTLEMENTY I QUESTY): Zburzenie kazdego Settlementu (G1-G3) daje surowce i na stale wylacza jego fale oraz jednostki specjalne (wywolujac jeden kontratak i lekka Furie). Questy (Q1-Q4) daja potezne perki calej druzynie (Q1: mur i handel; Q2: rozbij 2 Baszty Bombardowe by zdjac tarcze Uniwersytetu -> bonus strzelcow/jazdy; Q3: staly dochod co 1 min; Q4: przetrwaj 30s odwetu -> +30% HP/pancerz i Wielki Klasztor).\n"
-        "- 3 ZLOTE ZASADY W WALCE: (1) W pierwszej kolejnosci zabijaj Arcymaga (Imama) przed Brama Centralna (daje calej Hordzie tarcze +30 pancerza!), (2) Chron wiesniakow pod TC przed szybkimi Szakalami, (3) Nie buduj na polanach spawnu Hordy przed bramami (fala niszczy budynki w miejscu swojego pojawienia sie).\n\n"
+        "  * P3 (Zielony): Brama Polnocna (uwaga: w 50:15 alarm, a w 51:00 saperzy wyrabia wylom w polnocnym lesie!).\n"
+        "  * P4 (Zolty): Brama Wschodnia (w 66:45 alarm, w 67:30 wylom we wschodnim lesie) + korytarz handlowy na poludniu.\n"
+        "- WYPRAWY (SETTLEMENTY I QUESTY): Zburzenie kazdego Settlementu (G1-G3) daje surowce i na stale wylacza jego fale oraz jednostki specjalne (wywolujac jeden kontratak i Furie). Questy (Q1-Q4) daja potezne perki calej druzynie (Q1: mur i handel; Q2: rozbij 2 Baszty Bombardowe by zdjac tarcze Uniwersytetu -> bonus strzelcow/jazdy; Q3: staly dochod co 1 min; Q4: przetrwaj 30s odwetu -> +30% HP/pancerz i Wielki Klasztor).\n"
+        "- 3 ZLOTE ZASADY W WALCE: (1) W pierwszej kolejnosci zabijaj Arcymaga (Imama) przed Brama Centralna (daje calej Hordzie tarcze +8/+8 pancerza!), (2) Chron wiesniakow pod TC przed szybkimi Szakalami (7 ataku!), (3) Nie buduj na polanach spawnu Hordy przed bramami (fala niszczy budynki w miejscu swojego pojawienia sie).\n\n"
     )
 
     instructions_text = (
-        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v7.0.2 - 4P Co-op)\n\n"
+        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v7.0.3 - 4P Co-op)\n\n"
         f"{tldr_block}"
         "USTAWIENIA LOBBY I STARTU:\n"
         "- Gracze P5-P8 sa automatycznie skonfigurowani jako AI z zablokowanymi cywilizacjami (P5 Wikingowie, P6 Turcy, P7 Saraceni, P8 Persowie). Ustaw trudnosc AI na EKSTREMALNY (Extreme)!\n"
@@ -433,23 +435,23 @@ def populate_ingame_scenario_descriptions(scenario):
         "- Fala 1 w 8:30 (bez taranow), Fala 2 w 13:00 (z taranem/mangonelem i uderzeniem na wszystkie 3 bramy, bez mutantow), Fala 3 w 18:00, kolejne co 5,5 min.\n"
         "- Trzypoziomowa eskalacja czasowa (natychmiastowy 1. tick i powtorzenie co 5 min):\n"
         "  * Od 20:00: +5 HP, +1 Atak co 5 min.\n"
-        "  * Od 45:00: dodatkowo +9 HP, +1 Atak co 5 min (lacznie +14 HP, +2 Ataku co 5 min).\n"
-        "  * Od 55:00: dodatkowo +6 HP, +1 Atak co 5 min (lacznie +20 HP, +3 Ataku co 5 min).\n"
+        "  * Od 45:00: dodatkowo +9 HP, +0 Ataku co 5 min (lacznie +14 HP, +1 Atak co 5 min).\n"
+        "  * Od 55:00: dodatkowo +6 HP, +1 Atak co 5 min (lacznie +20 HP, +2 Ataku co 5 min).\n"
         "- Od 45. minuty (Fale 8-14) co druga fala wysyla szturm na SZLAK HANDLOWY w kierunku Bramy Handlowej.\n"
-        "- W Falach 9 (51:00) i 12 (67:30) Saperzy P6 wyrabuja przesieki w lesie (6x11 na polnocy, 11x6 na wschodzie)!\n"
-        "- FINALOWY BOSS FIGHT: Po zniszczeniu wszystkich 6 Settlementow Hordy macie 45 sekund na powrot armii pod Brama Centralna (104, 114), zanim Wielki Chan Subotai (3500 HP) uderzy z (116, 114). Dopoki zyje przynajmniej 1 Zelazny Slon gwardii P8, Chan regeneruje +120 HP co 3s! Zgladz Chana, aby wygrac!\n"
+        "- W Falach 9 (51:00, alarm 45s wczesniej o 50:15) i 12 (67:30, alarm 45s wczesniej o 66:45) Saperzy P6 wyrabuja przesieki w lesie (6x11 na polnocy, 11x6 na wschodzie)!\n"
+        "- FINALOWY BOSS FIGHT: Po zniszczeniu wszystkich 6 Settlementow Hordy macie 60 sekund na powrot armii pod Brama Centralna (104, 114), zanim Wielki Chan Subotai (4500 HP) uderzy z (116, 114) wsparty skrzydlami na Brame Polnocna (68, 60 -> 48, 136) i Wschodnia (116, 162 -> 68, 152). Dopoki w strefie bitwy (40..135, 90..175) zyje przynajmniej 1 Zelazny Slon gwardii P8, Chan regeneruje +180 HP co 3s! Zgladz Chana, aby wygrac!\n"
     )
 
     hints_text = (
         f"{tldr_block}"
         "BESTIARIUSZ HORDY (WYSPECJALIZOWANE JEDNOSTKI Z POSWIATA BOHATERA):\n"
-        "1. Taran-Zolw / Zelazny Slon (P8 - Tank): 1450 HP, szybkosc 0.72, +10/+12 pancerza, odporny na konwersje. Zadaje zawsze 3 dmg jednostkom (odpornosc na buffy ataku), ale +220 dmg budynkom!\n"
-        "2. Szakale Dywersyjne (Huzarzy P7 - Eco-Raiders): Szybkosc 1.62, +6 pancerza na strzaly, zawsze 2 ataku (skaluja wylacznie HP). Wjezdzaja pod TC atakowac chlopow!\n"
-        "3. Arcymag Tarczy (Imam P7 - Globalny Support): Gdy stoi w strefie przedpola (promien 18 kratek wokol 110, 114) przed Brama Centralna, daje GLOBALNIE +30/+30 Pancerza wszystkim armiom Hordy (P5-P8 na calej mapie) oraz LOKALNIE leczy (+15 HP/3s) jednostki Hordy w tej strefie! Ma 240 HP i regeneracje 5 HP/s. Zabicie go zdejmuje aure z calej Hordy!\n"
+        "1. Taran-Zolw / Zelazny Slon (P8 - Tank): 1450 HP, szybkosc 0.72, +10/+12 pancerza, odporny na konwersje. Zadaje zawsze 3 dmg jednostkom (odpornosc na buffy ataku), ale +140 dmg budynkom!\n"
+        "2. Szakale Dywersyjne (Huzarzy P7 - Eco-Raiders): Szybkosc 1.62, +6 pancerza na strzaly, zawsze 7 ataku (skaluja wylacznie HP). Wjezdzaja pod TC atakowac chlopow!\n"
+        "3. Arcymag Tarczy (Imam P7 - Globalny Support): Gdy stoi w strefie przedpola (promien 18 kratek wokol 110, 114) przed Brama Centralna, daje GLOBALNIE +8/+8 Pancerza wszystkim armiom Hordy (P5-P8 na calej mapie) oraz LOKALNIE leczy (+15 HP/3s) jednostki Hordy w tej strefie! Ma 240 HP i regeneracje 5 HP/s. Zabicie go zdejmuje aure z calej Hordy!\n"
         "4. Mozdzierz Oblezniczy (Onager P6): 350 HP, szybkosc 0.58, 21 zasiegu, wybuch co 10s, MARTWA STREFA 6 kratek. Pociski maja Blast Attack Level = 2 (nie scinaja drzew wokol bram).\n"
         "5. Snajperzy (Janczarzy P6): 90 HP, 19 zasiegu, ~107 dmg w 1 cel.\n"
         "6. Berserkerzy i Kamikaze (P5): Szybkie jednostki szturmowe o zerowym pancerzu na strzaly.\n"
-        "7. Wielki Chan Subotai (P8 - Finalowy Boss): 3500 HP, 45 ataku, 8/10 pancerza, szybkosc 0.85. Po upadku 6 Settlementow daje 45s na przegrupowanie, po czym pojawia sie z eskorta P8 (4x Zelazny Slon, 14x Paladyn, 3x Siege Ram) na (116, 114) oraz 2x Arcymag P7 na (118, 122). Dopoki zyje choc 1 Zelazny Slon P8, Chan odzyskuje +120 HP co 3s — wybij najpierw gwardie sloni lub skup caly ogien na Chanie!\n"
+        "7. Wielki Chan Subotai (P8 - Finalowy Boss): 4500 HP, 45 ataku, 8/10 pancerza, szybkosc 0.85. Po upadku 6 Settlementow daje 60s na przegrupowanie, po czym pojawia sie z eskorta P8 (6x Zelazny Slon, 16x Paladyn, 4x Siege Ram) na (116, 114), 2x Arcymag P7 na (118, 122) oraz skrzydlami na Brame Polnocna (68, 60 -> 48, 136) i Wschodnia (116, 162 -> 68, 152) (po 10x Paladyn, 10x Heavy Cav Archer, 2x Siege Ram). Dopoki w strefie bitwy (40..135, 90..175) zyje choc 1 Zelazny Slon P8, Chan odzyskuje +180 HP co 3s - wybij najpierw gwardie sloni lub skup caly ogien na Chanie!\n"
     )
 
     scouts_text = (
@@ -457,16 +459,16 @@ def populate_ingame_scenario_descriptions(scenario):
         "- UWAGA: Kazdy wykonany Quest (Q1-Q4) daje potezne nagrody graczom, ale wywoluje tez Adaptacje Hordy:\n"
         "  * Q1 Karawanseraj (154, 190): Mur Handlowy (y=186, baszty y=184, otwory wypadowe x=122..123 i 170..171), Market P2 (195, 194), +30 Popu, +20% szybsi Wiesniacy i 4 szybkie wozy handlowe. [Adaptacja Hordy: +8 HP, +1 Atak]\n"
         "  * Q2 Klif Artylerii (28, 32 - Dwuetapowy): Po obudzeniu garnizonu Q2 wlacza sie oslona leczaca Uniwersytetu (+400 HP/2s); zniszcz 2 wysuniete Baszty Artyleryjskie (24, 34 i 32, 34), aby zdjac oslone! Nagroda: Balistyka, Chemia, Siege Engineers, Thumb Ring, +2 Zasiegu i +4 Ataku strzelcow (w tym UU), +12% szybkosci i +4 Ataku jazdy, +12% szybkosci strzelcow konnych (w tym UU), 2x Kolubryna dla P3 na (27, 36) i (29, 36) oraz wizja na G2 Akademia! [Adaptacja Hordy: +8 HP, +1 Atak]\n"
-        "  * Q3 Skarbiec (142, 118): +20 Popu i staly dochod co minute (+250F, +250W, +200G, +40S dla KAZDEGO gracza P1-P4). [Adaptacja Hordy: +10 HP, +1 Atak]\n"
+        "  * Q3 Skarbiec (142, 118): +20 Popu i staly dochod co minute (+100F, +100W, +90G, +20S dla KAZDEGO gracza P1-P4). [Adaptacja Hordy: +10 HP, +1 Atak]\n"
         "  * Q4 Krwawy Oltarz (105, 20 - Dwuetapowy): Zburzenie Klasztoru spawnuje Relikt i odwet P7 (6x Heavy Camel, 6x Elite Mameluke, 4x Elite Steppe Lancer z 105, 34); przetrwaj 30s Krwawego Odwetu Zakonu! Nagroda: +30% HP armii, +2/+2 pancerza, +40% szybsza produkcja wojska, Arcymagowie oslabieni do 120 HP oraz Wielki Klasztor na (58, 152) i 2 Mnichow P1 na (57, 155) i (59, 155)! [Adaptacja Hordy: +10 HP, +1 Atak]\n"
         "- Trzy Zdarzenia Eksploracyjne na Mapie (PoI - jednorazowe dla pierwszego odkrywcy):\n"
         "  * PoI 1 Opuszczony Oboz Inzynierow (30, 76 - odblokowywany w 10:00): 2x Tarany (Capped Ram) + 2x Petarda dla odkrywcy oraz +200W/+200G dla P1-P4.\n"
-        "  * PoI 2 Zaginiona Karawana (128, 174): +350F/+350G dla P1-P4 i odkrycie obozu Q1 (154, 190).\n"
-        "  * PoI 3 Kamien Wedrowca i Zwiadowcy (64, 88): 2x Lekka Kawaleria (Light Cavalry) dla odkrywcy, +150S/+150G dla P1-P4 oraz odkrycie brodu rzecznego (122, 62).\n"
+        "  * PoI 2 Zaginiona Karawana (124, 178): +350F/+350G dla P1-P4 i odkrycie obozu Q1 (154, 190).\n"
+        "  * PoI 3 Kamien Wedrowca i Zwiadowcy (50, 90): 2x Lekka Kawaleria (Light Cavalry) dla odkrywcy, +150S/+150G dla P1-P4 oraz odkrycie brodu rzecznego (122, 62).\n"
         "- Stopniowanie Nagrod i Furii Settlementow (zburzenie obozu zawala jego budynki poboczne, wycofuje wojska z fal i wywoluje kontratak z odpowiedniego kierunku):\n"
-        "  * Grade 1 (G1 Polnocny, G1 Wschodni): Nagroda +700F/+700G, Furia +5 HP i +0 Ataku wroga, odwet 8 Cavalier + 10 Pikeman.\n"
-        "  * Grade 2 (G2 Akademia [usuwa tez Saperow], G2 Klasztor): Nagroda +1000F/+1000G, Furia +10 HP i +1 Atak wroga, odwet 10 Cavalier + 12 Halberdier.\n"
-        "  * Grade 3 (G3 Cytadela Pln., G3 Cytadela Wsch. [usuwa tez Rajdy Handlowe]): Nagroda +1500F/+1500G, Furia +15 HP i +2 Atak wroga, odwet 1 Zelazny Slon + 12 Paladin + 14 Halberdier.\n"
+        "  * Grade 1 (G1 Polnocny, G1 Wschodni): Nagroda +700F/+700G, Furia +8 HP i +1 Atak wroga, odwet 8 Cavalier + 10 Pikeman.\n"
+        "  * Grade 2 (G2 Akademia [usuwa tez Saperow], G2 Klasztor): Nagroda +1000F/+1000G, Furia +14 HP i +1 Atak wroga, odwet 10 Cavalier + 12 Halberdier.\n"
+        "  * Grade 3 (G3 Cytadela Pln., G3 Cytadela Wsch. [usuwa tez Rajdy Handlowe]): Nagroda +1500F/+1500G, Furia +20 HP i +2 Atak wroga, odwet 1 Zelazny Slon + 12 Paladin + 14 Halberdier.\n"
     )
 
     if hasattr(mm_msg, "instructions"):
@@ -513,24 +515,29 @@ BALANCE = {
     "escalation_interval_sec": 300,
     "escalation_hp_add": 5,
     "escalation_atk_add": 1,
-    "late_escalation_start_sec": 2700,    # Od 45:00 (Bieg 2): +9 HP i +1 Ataku co 5 minut
+    "gear1_atk": 1,
+    "late_escalation_start_sec": 2700,    # Od 45:00 (Bieg 2): +9 HP i +0 Ataku co 5 minut (lacznie +14 HP i +1 Ataku)
     "late_escalation_hp_add": 9,
-    "endgame_escalation_start_sec": 3300, # Od 55:00 (Bieg 3): +6 HP i +1 Ataku co 5 minut
+    "late_escalation_atk_add": 0,
+    "gear2_atk": 1,
+    "endgame_escalation_start_sec": 3300, # Od 55:00 (Bieg 3): +6 HP i +1 Ataku co 5 minut (lacznie +20 HP i +2 Ataku)
     "endgame_escalation_hp_add": 6,
+    "endgame_escalation_atk_add": 1,
+    "gear3_atk": 2,
 
     "diff_step_up_hp": 15,
     "diff_step_up_atk": 2,
 
     "tank_hp": 1450,
     "tank_unit_atk": 3,
-    "tank_bldg_bonus": 220,
+    "tank_bldg_bonus": 140,
     "tank_melee_armor": 10,
     "tank_pierce_armor": 12,
     "tank_speed": 0.72,
 
     "raider_hp": 95,
     "raider_speed": 1.62,
-    "raider_atk": 2,
+    "raider_atk": 7,
     "raider_pierce_armor": 6,
 
     "mage_hp": 240,
@@ -538,7 +545,7 @@ BALANCE = {
     "mage_pierce_armor": 4,
     "mage_regen_per_min": 300,
     "mage_local_radius": 18,
-    "mage_shield_armor": 30,
+    "mage_shield_armor": 8,
     "mage_aoe_heal_3s": 15,
     "mage_speed": 0.78,
 
@@ -565,12 +572,20 @@ BALANCE = {
 
     "q1_bonus_pop": 30,
     "q3_bonus_pop": 20,
-    "quest3_trickle": {"food": 250, "wood": 250, "gold": 200, "stone": 40},
+    "quest3_trickle": {"food": 100, "wood": 100, "gold": 90, "stone": 20},
+    "fury_g1_hp": 8,
+    "fury_g1_atk": 1,
+    "fury_g2_hp": 14,
+    "fury_g2_atk": 1,
+    "fury_g3_hp": 20,
+    "fury_g3_atk": 2,
     "human_start_res": {"food": 500, "wood": 600, "gold": 400, "stone": 300},
     "human_start_houses": 2,
     "p2_start_houses": 6,
 
-    "final_boss_hp": 3500,
+    "final_boss_hp": 4500,
+    "final_boss_regen_3s": 180,
+    "final_boss_wait_sec": 60,
     "final_boss_atk": 45,
     "final_boss_melee_armor": 8,
     "final_boss_pierce_armor": 10,
@@ -688,7 +703,7 @@ ENEMY_UNIT_REGISTRY: dict[int, EnemyUnitSpec] = {
         unit_id=ELITE_BATTLE_ELEPHANT_ID, name="Zelazny Slon-Tank", base_hp=1450, attack_class=None, scales_hp=True, receives_mage_shield=False, mandatory_min_one=True
     ),
     HUSSAR_ID: EnemyUnitSpec(
-        unit_id=HUSSAR_ID, name="Szakal Dywersyjny", base_hp=95, attack_class=None, scales_hp=True, receives_mage_shield=False, mandatory_min_one=False
+        unit_id=HUSSAR_ID, name="Szakal Dywersyjny", base_hp=95, attack_class=None, scales_hp=True, receives_mage_shield=False, mandatory_min_one=False, base_atk=7
     ),
     IMAM_UNIT_ID: EnemyUnitSpec(
         unit_id=IMAM_UNIT_ID, name="Arcymag Tarczy", base_hp=240, attack_class=None, scales_hp=False, receives_mage_shield=False, mandatory_min_one=True
@@ -712,12 +727,12 @@ ENEMY_UNIT_REGISTRY: dict[int, EnemyUnitSpec] = {
         unit_id=UnitInfo.HEAVY_CAMEL_RIDER.ID, name="Heavy Camel Rider", base_hp=140, attack_class=4, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
     ),
     UnitInfo.ELITE_MAMELUKE.ID: EnemyUnitSpec(
-        unit_id=UnitInfo.ELITE_MAMELUKE.ID, name="Elite Mameluke", base_hp=80, attack_class=4, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
+        unit_id=UnitInfo.ELITE_MAMELUKE.ID, name="Elite Mameluke", base_hp=100, attack_class=4, scales_hp=True, receives_mage_shield=True, mandatory_min_one=False
     ),
     FINAL_BOSS_HERO_ID: EnemyUnitSpec(
         unit_id=FINAL_BOSS_HERO_ID,
         name="Wielki Chan Subotai",
-        base_hp=3500,
+        base_hp=4500,
         attack_class=None,
         scales_hp=False,
         receives_mage_shield=False,
@@ -754,7 +769,7 @@ def get_wave_definitions() -> list[WaveDefinition]:
             [], [], 5,
         ),
         (
-            4, 1410, "Fala 4/14 (23:30 - Castle Age + Arcymag Tarczy dajacy +30 Pancerza calej Hordzie!)",
+            4, 1410, "Fala 4/14 (23:30 - Castle Age + Arcymag Tarczy dajacy +8/+8 Pancerza calej Hordzie!)",
             [(UnitInfo.PIKEMAN.ID, 14), (ELITE_BERSERK_ID, 4), (UnitInfo.BATTERING_RAM.ID, 2)],
             [(UnitInfo.HUSKARL.ID, 10), (UnitInfo.KNIGHT.ID, 6), (FLAMING_CAMEL_ID, 2)],
             [(UnitInfo.CROSSBOWMAN.ID, 12), (UnitInfo.ELITE_JANISSARY.ID, 3)],

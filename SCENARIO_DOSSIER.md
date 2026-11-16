@@ -1,21 +1,21 @@
-# SCENARIO DOSSIER — Kroniki Rubieży: Horda i Ekspedycje (v7.0.2)
+# SCENARIO DOSSIER — Kroniki Rubieży: Horda i Ekspedycje (v7.0.3)
 
-- **Plik wynikowy:** `Kroniki_Rubiezy_Horda_Coop.aoe2scenario` (`239 193` B, `968` triggerów, `5321` obiektów startowych: `P0=5113, P1=37, P2=18, P3=26, P4=39, P5=13, P6=12, P7=10, P8=53`) | **Rozmiar mapy:** `200×200` (Olbrzymia) | **Horyzont rozgrywki:** 60–90 min
+- **Plik wynikowy:** `Kroniki_Rubiezy_Horda_Coop.aoe2scenario` (`243 043` B, `969` triggerów, `5350` obiektów startowych: `P0=5142, P1=37, P2=18, P3=26, P4=39, P5=13, P6=12, P7=10, P8=53`) | **Rozmiar mapy:** `200×200` (Olbrzymia) | **Horyzont rozgrywki:** 60–90 min
 - **Struktura drużyn:** 8 graczy aktywnych — Drużyna 1 (`P1–P4` Ludzie, `human=True`, `lock_civ=False`, `allied_victory=True`) vs Drużyna 2 (`P5–P8` AI, `human=False`, `lock_civ=True`, `allied_victory=True`, zasoby startowe `0/0/0/0`)
 - **Wymagane ustawienia lobby:**
   - Tryb: `Custom Scenario` | AI Difficulty: **`Extreme`** (wymagane dla poprawnego wyboru celów przez jednostki AI po skryptowym rozkazie)
   - Widoczność: `Normal` | Limit populacji: `200` (dynamicznie rośnie do `230` po Q1 i `250` po Q3) | Zasoby/Wiek startowy: `Standard`
   - `Lock Teams = Off` (wymagane dla `01_Init_Diplomacy_And_Cartography`), `Lock Speed = On`, `All Techs = Off`, `Allow Cheats = Off`
 - **Warunek zwycięstwa (Czterofazowy Boss Fight `07a -> 07b -> 07c -> 07d` + Tarcza Gwardii Słoni):**
-  - **`07a_All_Settlements_Destroyed_Boss_Warning` (`enabled=True`):** zniszczenie wszystkich 6 głównych budynków Settlementów (`G1_North`, `G1_East`, `G2_Snipers`, `G2_Mages`, `G3_North`, `G3_East`) dezaktywuje eskalację (`04a–04f`) oraz wszystkie triggery Trybu Endless, czyści `kill_object` (`ObjectType.BUILDING`) budynki `P1–P4` na polanie `(110..124, 108..128)`, stawia `MAP_REVEALER` dla `P1–P4` na `(104, 114)` i `(116, 114)`, odtwarza dźwięk i flarę `(116, 114)`, ogłasza 45-sekundowe ostrzeżenie na odwrót armii i aktywuje `07b`
-  - **`07b_Spawn_Final_Boss_Wave` (`enabled=False`):** po upływie `timer=45s` spawnuje przed Bramą Centralną `(116, 114) -> (54, 146)` armię `P8` (`1x Wielki Chan Subotai [698]`, `4x Iron Elephant`, `14x Paladin`, `3x Siege Ram`) oraz na osobnych współrzędnych `(118, 122) -> (54, 146)` `2x Imam` `P7`, puszcza flarę `(116, 114)` i aktywuje `07c`, `07b_Boss_Elephant_Guard_Heal` oraz `07b_Boss_Elephants_Slain_Disable_Heal`
-  - **`07b_Boss_Elephant_Guard_Heal` (`enabled=False, looping=True`) / `07b_Boss_Elephants_Slain_Disable_Heal` (`enabled=False, looping=False`):** co `3s` leczy `FINAL_BOSS_HERO_ID` (`P8`) o `+120 HP`, dopóki na mapie `0..199` żyje `≥1` `ELITE_BATTLE_ELEPHANT_ID` (`P8`); po wybiciu wszystkich Żelaznych Słoni (`timer=10` + `inverted=True`) wyłącza regenerację i ogłasza to na czacie z flarą `(104, 114)`
+  - **`07a_All_Settlements_Destroyed_Boss_Warning` (`enabled=True`):** zniszczenie wszystkich 6 głównych budynków Settlementów (`G1_North`, `G1_East`, `G2_Snipers`, `G2_Mages`, `G3_North`, `G3_East`) dezaktywuje eskalację (`04a–04f`), wszystkie triggery Trybu Endless oraz wszystkie triggery Zegara Fal (`00_Wave_Timer_UI_*` / `Tick_*`), aktywuje nagłówek `00_Wave_Timer_Boss_Banner`, czyści `kill_object` (`ObjectType.BUILDING`) budynki `P1–P4` na polanie `(110..124, 108..128)`, stawia `MAP_REVEALER` dla `P1–P4` na `(104, 114)` i `(116, 114)`, odtwarza dźwięk i flarę `(116, 114)`, ogłasza 60-sekundowe ostrzeżenie na odwrót armii i aktywuje `07b`
+  - **`07b_Spawn_Final_Boss_Wave` (`enabled=False`):** po upływie `timer=60s` spawnuje szturm na **3 bramy**: przed Bramą Centralną `(116, 114) -> (54, 146)` armię `P8` (`1x Wielki Chan Subotai [698]`, `6x Iron Elephant`, `16x Paladin`, `4x Siege Ram`) oraz `(118, 122) -> (54, 146)` `2x Imam` `P7`, na Bramę Północną `(68, 60) -> (48, 136)` `P8` (`10x Paladin`, `10x Heavy Cav Archer`, `2x Siege Ram`) i na Bramę Wschodnią `(116, 162) -> (68, 152)` `P8` (`10x Paladin`, `10x Heavy Cav Archer`, `2x Siege Ram`), puszcza flarę `(116, 114)` i aktywuje `07c`, `07b_Boss_Elephant_Guard_Heal` oraz `07b_Boss_Elephants_Slain_Disable_Heal`
+  - **`07b_Boss_Elephant_Guard_Heal` (`enabled=False, looping=True`) / `07b_Boss_Elephants_Slain_Disable_Heal` (`enabled=False, looping=False`):** co `3s` leczy `FINAL_BOSS_HERO_ID` (`P8`) o **`+180 HP`**, dopóki w strefie bitwy **`(40, 90, 135, 175)`** żyje `≥1` `ELITE_BATTLE_ELEPHANT_ID` (`P8`); po wybiciu Żelaznych Słoni ze strefy `(40, 90, 135, 175)` (`timer=10` + `inverted=True`) wyłącza regenerację i ogłasza to na czacie z flarą `(104, 114)`
   - **`07c_Confirm_Boss_Spawned` (`enabled=False`):** warunek `objects_in_area` (`0..199`, `P8`, `FINAL_BOSS_HERO_ID`, `ObjectState.ALIVE`, `quantity=1`, bez inwersji) potwierdza fizyczną obecność żywego Chana na mapie i aktywuje `07d`
-  - **`07d_Victory_Final_Boss_Defeated` (`enabled=False`, `order=99`):** po upływie `5s` od potwierdzenia i braku żywego `FINAL_BOSS_HERO_ID` (`P8`, `ObjectState.ALIVE`, `inverted=1`) na całej mapie `0..199` wyłącza pętlę leczenia gwardii i ogłasza `declare_victory` dla `P1–P4`
+  - **`07d_Victory_Final_Boss_Defeated` (`enabled=False`, `order=99`):** po upływie `5s` od potwierdzenia i braku żywego `FINAL_BOSS_HERO_ID` (`P8`, `ObjectState.ALIVE`, `inverted=1`) na całej mapie `0..199` wyłącza pętlę leczenia gwardii, `07b_Boss_Elephants_Slain_Disable_Heal`, `00_Wave_Timer_Boss_Banner` i ogłasza `declare_victory` dla `P1–P4`
 - **Warunek porażki (`08_Defeat_Citadel_Lost`):** zniszczenie Cytadeli Sojuszu `P2` (`Feitoria` na `(54, 146)`) -> `declare_victory` dla `P5–P8`
 - **Interfejs panelu Celów (`Objectives`):**
   - `order=210..207`: **Skrót zasad `TL;DR` w oknie `Objectives`** (`00_TLDR_Modal_1_Cel` [`header=1, order=210`], `00_TLDR_Modal_2_Role` [`209`], `00_TLDR_Modal_3_Wyprawy` [`208`], `00_TLDR_Modal_4_Wrogowie` [`207`]) — `display_as_objective=1, display_on_screen=0, timer=999999` (widoczne po kliknięciu zakładki `Objectives`, bez zaśmiecania stałego HUD-u podczas rozgrywki; to samo `TL;DR` umieszczone też na początku zakładki `Hints`)
-  - `order=110`: Zegar Fali (`00_Wave_Timer_UI_000..168`) — statyczne banery (`timer=999999`) przełączane co `30s` od `0:00` do `84:00` (`5040s`); alerty na czacie na `-60s` przed każdą z Fal 1–14 i startem Endless (`84:00`) oraz dodatkowy alert `-30s` przed Falą 1 (`8:00`)
+  - `order=110`: Zegar Fali (`00_Wave_Timer_UI_000..168`) — statyczne banery (`timer=999999`) przełączane co `30s` od `0:00` do `84:00` (`5040s`) oraz `00_Wave_Timer_Boss_Banner` aktywowany w `07a`; alerty na czacie na `-60s` przed każdą z Fal 1–14 i startem Endless (`84:00`) oraz dodatkowy alert `-30s` przed Falą 1 (`8:00`)
   - `order=109`: Poziom Trudności (`State_Diff_Lvl_M2..P2`, lokalizacja `(4,138)`) aktualizowany na żywo przez Sanktuarium Balansu
   - `order=100..96`: Nagłówek Questów (`100`) i 4 Questy (`Q1=99`, `Q2=98`, `Q3=97`, `Q4=96` z etapami `Stage1 -> Stage2`)
   - `order=99` *(aktywowany w `07c`)*: Finałowy cel zgładzenia Wielkiego Chana Subotaia (`07d_Victory_Final_Boss_Defeated`)
@@ -38,13 +38,13 @@
 - **Puszcza Zaplecza, bufor leśny i zagajniki wewnętrzne:** nieprzebrany pas dębowy `FOREST_OAK` (`TREE_OAK_ID`) na każdym wolnym kafelku w `x=8..13, y=128..176` i pomiędzy komnatami `x=1..13, y=144..158` (a także `(0..13, 106..132)` i `(0..13, 170..175)`), oddzielający komnaty `(4, 138)` i `(4, 164)` od baz `P1–P4`; `FOREST_PINE` na `(26..98, 180..188)`; zagajniki w Twierdzy na `(54, 122)` (`r=5.5`, Oak) i `(54, 172)` (`r=4.5`, Pine); zarezerwowany plac `(58, 152)` (`mark_footprint(3, no_tree_margin=1)` + `mark_no_trees(r=4)` + `2x TORCH` na `(56, 150), (60, 154)`) pod Klasztor nagrody `Q4`
 - **Posterunek Kwatermistrza Twierdzy `P2` (`(4, 164)` — pełna izolacja na zachodniej krawędzi, odblokowywany w `10:00`, 3-poziomowe skalowanie):** szczelna komnata `7×11` (`x=1..7, y=159..169`, wnętrze `x=2..6, y=160..168` `ROAD`, `elev=0`, obwód z klifów `ROCK_CLIFF_ID` na `DIRT_3`); Kwatermistrz `UnitInfo.KING.ID` (`P2`) na `(4, 164)` (9999 HP, regen 5000/min) + stałe `MAP_REVEALER` dla `P1–P4` na `(4.5, 164.5)`; dwie flagi `GAIA`: północna `FLAG_A (600)` na `(4, 161)` + pochodnie `(3/5, 161)` oraz południowa `FLAG_B (601)` na `(4, 167)` + pochodnie `(3/5, 167)`. Gracz `P2` aktywuje rozkaz wchodząc **wyłącznie Królem (`UnitInfo.KING.ID`)** w `pad_x±2, pad_y±2` (Król jest teleportowany na `(4, 164)` i zatrzymywany przez `stop_object` w `(2..6, 160..168)`):
   - **Poziom 1 (`10:00–20:00`, odblokowany przez `06d_Unlock_Quartermaster_And_PoI1_10m` `timer=600`):** `06d_P2_QM_Mil_T1` = `4x Conquistador` `(52,149),(53,149),(55,149),(56,149)` + `1x Mangonel` `(54,150)` dla `P2`; `06d_P2_QM_Eco_T1` = `+125 Food, +125 Wood, +100 Gold` dla `P1–P4` (**bez naprawy murów**). Cooldown: `06d_P2_QM_Cooldown_T1_240s`.
-  - **Poziom 2 (`20:00–30:00`, przełączany przez `06d_Upgrade_Quartermaster_Tier2_20m` `timer=1200`):** `06d_P2_QM_Mil_T2` = `4x Conquistador` `(52..53/55..56, 149)` + `2x Bombard Cannon` `(53/55, 150)`; `06d_P2_QM_Eco_T2` = `+200 F/W/G` dla `P1–P4` + naprawa Twierdzy (`0..110, 95..199`) i Muru `Q1` (`105..199, 183..187`) o **`+250 HP`**. Cooldown: `06d_P2_QM_Cooldown_T2_240s`.
-  - **Poziom 3 (`od 30:00+`, przełączany przez `06d_Upgrade_Quartermaster_Tier3_30m` `timer=1800`):** `06d_P2_QM_Mil_T3` = `6x Elite Conquistador` `(51..53/55..57, 149)` + `2x Bombard Cannon` `(53/55, 150)` + `2x Siege Ram` `(52/56, 150)`; `06d_P2_QM_Eco_T3` = `+300 F/W/G` dla `P1–P4` + naprawa Twierdzy i Muru `Q1` o **`+500 HP`**. Cooldown: `06d_P2_QM_Cooldown_T3_240s`.
+  - **Poziom 2 (`20:00–30:00`, przełączany przez `06d_Upgrade_Quartermaster_Tier2_20m` `timer=1200`):** `06d_P2_QM_Mil_T2` = `4x Conquistador` `(52..53/55..56, 149)` + `2x Bombard Cannon` `(53/55, 150)`; `06d_P2_QM_Eco_T2` = `+200 F/W/G` dla `P1–P4` + naprawa Twierdzy (`0..110, 95..199`) i Muru `Q1` (`111..199, 183..187`) o **`+250 HP`**. Cooldown: `06d_P2_QM_Cooldown_T2_240s`.
+  - **Poziom 3 (`od 30:00+`, przełączany przez `06d_Upgrade_Quartermaster_Tier3_30m` `timer=1800`):** `06d_P2_QM_Mil_T3` = `6x Elite Conquistador` `(51..53/55..57, 149)` + `2x Bombard Cannon` `(53/55, 150)` + `2x Siege Ram` `(52/56, 150)`; `06d_P2_QM_Eco_T3` = `+300 F/W/G` dla `P1–P4` + naprawa Twierdzy (`0..110, 95..199`) i Muru `Q1` (`111..199, 183..187`) o **`+500 HP`**. Cooldown: `06d_P2_QM_Cooldown_T3_240s`.
   - **Wspólny czas odnowienia (`240s` / 4 minuty):** w każdym z 3 progów wybór flagi wyłącza obie flagi (`State_P2_QM_Ready` -> `06d_P2_QM_Cooldown_T*_240s` z `looping=True` i autodezaktywacją), a po `240s` resetuje licznik i przywraca gotowość.
-- **Zdarzenia Eksploracyjne na Mapie (`Map PoI`, `06e_PoI*`):**
-  - **PoI 1 — Opuszczony Obóz Inżynierów (`(30, 76)`, `enabled=False`, odblokowywany w `10:00` przez `06d_Unlock_Quartermaster_And_PoI1_10m`):** strefa bez drzew `r=4` przed lasem NW, `OUTPOST` `GAIA` na `(30, 75)` + `2x TORCH` `(28/32, 76)`; pierwszy odkrywca z `P1–P4` w `30±4, 76±4` otrzymuje `2x Capped Ram` `(29/31, 76)` + `2x Petard` `(29/31, 77)` oraz `+200W/+200G` dla wszystkich `P1–P4` (wzajemna dezaktywacja 4 triggerów)
-  - **PoI 2 — Zaginiona Karawana (`(128, 174)`, `enabled=True`):** strefa bez drzew `r=4`, `GOLD_MINE` `GAIA` na `(128, 174)` + `2x TORCH` `(127/129, 174)`; pierwszy odkrywca w `128±4, 174±4` przyznaje `+350F/+350G` dla `P1–P4` oraz stawia `MAP_REVEALER` dla `P1–P4` nad `Q1 (154, 190)`
-  - **PoI 3 — Kamień Wędrowca i Zwiadowcy (`(64, 88)`, `enabled=True`):** strefa bez drzew `r=4`, `DIRT_2` `r=3`, `OUTPOST` `GAIA` na `(64, 87)` + `2x TORCH` `(62/66, 88)`; pierwszy odkrywca z `P1–P4` w `60..68, 84..92` (`06e_PoI3_Scout_P1..P4`) otrzymuje `2x Light Cavalry` `(63, 88)` i `(65, 88)`, przyznaje `+150 Stone, +150 Gold` dla `P1–P4` oraz stawia `MAP_REVEALER` dla `P1–P4` nad brodem `(122, 62)`
+- **Zdarzenia Eksploracyjne na Mapie (`Map PoI`, `06e_PoI*`, promień detektora `r=3` — 100% rozłączne od wszystkich detektorów garnizonów):**
+  - **PoI 1 — Opuszczony Obóz Inżynierów (`(30, 76)`, `enabled=False`, odblokowywany w `10:00` przez `06d_Unlock_Quartermaster_And_PoI1_10m`):** strefa bez drzew `r=4` przed lasem NW, `OUTPOST` `GAIA` na `(30, 75)` + `2x TORCH` `(28/32, 76)`; pierwszy odkrywca z `P1–P4` w `27..33, 73..79` otrzymuje `2x Capped Ram` `(29/31, 76)` + `2x Petard` `(29/31, 77)` oraz `+200W/+200G` dla wszystkich `P1–P4` (wzajemna dezaktywacja 4 triggerów)
+  - **PoI 2 — Zaginiona Karawana (`(124, 178)`, `enabled=True`):** strefa bez drzew `r=4`, `DIRT_1` `r=3`, `GOLD_MINE` `GAIA` na `(124, 178)` + `2x TORCH` `(122/126, 178)`; pierwszy odkrywca w `121..127, 175..181` przyznaje `+350F/+350G` dla `P1–P4` oraz stawia `MAP_REVEALER` dla `P1–P4` nad `Q1 (154, 190)`
+  - **PoI 3 — Kamień Wędrowca i Zwiadowcy (`(50, 90)`, `enabled=True`):** strefa bez drzew `r=4`, `DIRT_2` `r=3`, `OUTPOST` `GAIA` na `(50, 89)` + `2x TORCH` `(48/52, 90)`; pierwszy odkrywca z `P1–P4` w `47..53, 87..93` (`06e_PoI3_Scout_P1..P4`) otrzymuje `2x Light Cavalry` `(49, 90)` i `(51, 90)`, przyznaje `+150 Stone, +150 Gold` dla `P1–P4` oraz stawia `MAP_REVEALER` dla `P1–P4` nad brodem `(122, 62)`
 
 ### 2. Bazy graczy P1–P4
 - **Wspólne zasoby i technologie startowe (`0:00`):** `500 Food, 600 Wood, 400 Gold, 300 Stone`, `TECH_CARTOGRAPHY` dla `P1–P4`, `6x Villager Male` (`(-3,-2)..(-1,-3)`), `1x Scout Cavalry` (`(+4,0)`), `MAP_REVEALER` (`LOS=4`, `P1`) nad każdym z 10 obozów AI oraz dla `P1–P4` nad `(4, 138)` i `(4, 164)`
@@ -65,10 +65,10 @@
 
 | Obiekt / Strefa | Współrzędne | Właściciel / Typ | Szczegóły geometryczne i umocnienia |
 | :--- | :--- | :--- | :--- |
-| **Brama Północna** | `(48, 100)` | `P3` (wzdłuż X) | Strefa płaska `13×13` (`DIRT_1`), brama `789` (`x=46..49`), mur `FORTIFIED_PALISADE` (`119`, `+400 HP`) na `x=41..55`, `2x Guard Tower` na `(44, 104)` i `(52, 104)` |
-| **Brama Centralna** | `(104, 114)` | `P1` (wzdłuż Y) | Strefa `13×13`, brama `793` (`y=112..115`), mur na `y=107..121`, `2x Guard Tower` na `(100, 110)` i `(100, 118)`, krąg `8` pochodni (promień `10` wokół `(116, 114)`) |
-| **Brama Wschodnia** | `(104, 162)` | `P4` (wzdłuż Y) | Strefa `13×13`, brama `793` (`y=160..163`), mur na `y=155..169`, `2x Guard Tower` na `(100, 158)` i `(100, 166)` |
-| **Brama Handlowa** | `(104, 193)` | `P4` (wzdłuż Y) | Strefa `13×13`, brama `793` (`y=191..194`), mur na `y=186..199`, `2x Guard Tower` na `(100, 189)` i `(100, 197)` |
+| **Brama Północna** | `(48, 100)` | `P3` (wzdłuż X) | Strefa płaska `13×13` (`DIRT_1`), brama `789` (`x=46..49`, `+600 HP`), mur `FORTIFIED_PALISADE` (`119`, `+600 HP`) na `x=41..55`, `2x Guard Tower` na `(44, 104)` i `(52, 104)` |
+| **Brama Centralna** | `(104, 114)` | `P1` (wzdłuż Y) | Strefa `13×13`, brama `793` (`y=112..115`, `+600 HP`), mur na `y=107..121`, `2x Guard Tower` na `(100, 110)` i `(100, 118)`, krąg `8` pochodni (promień `10` wokół `(116, 114)`) |
+| **Brama Wschodnia** | `(104, 162)` | `P4` (wzdłuż Y) | Strefa `13×13`, brama `793` (`y=160..163`, `+600 HP`), mur na `y=155..169`, `2x Guard Tower` na `(100, 158)` i `(100, 166)` |
+| **Brama Handlowa** | `(104, 193)` | `P4` (wzdłuż Y) | Strefa `13×13`, brama `793` (`y=191..194`, `+600 HP`), mur na `y=186..199`, `2x Guard Tower` na `(100, 189)` i `(100, 197)` |
 | **Rzeka i 3 brody** | `rx=62+0.9t, ry=8+0.8t+3sin(0.08t)` (`t=0..139`) | `TERRAIN_WATER=1` (`r=2`) | Warunek omijający Twierdzę: `rx>112 or ry<90`; 3 brody (`TERRAIN_SHALLOWS=4, r=5`): `(84, 30)`, `(122, 62)`, `(154, 92)` |
 | **Grzbiety skalne** | `(16,48)->(44,48)` i `(124,134)->(158,134)` | `GAIA` (`ROCK_CLIFF_ID`) | Grzbiet NW: `height=3`, łuk `curve=3sin(t*pi)`; grzbiet E: `height=2`; pas `DIRT_3` (`r=2`), bez drzew |
 | **Przesieka Północna** | `(75..80, 95..105)` | Wyłom `6×11` | Zablokowana drzewami (`north_breach_trees`), wycinana w Fali 9 (`51:00`) |
@@ -91,8 +91,8 @@
 - **P6 (Fioletowy — Turcy, `lock_civ=True`):** kontroluje `G2_Snipers`, `Q2` oraz wyłomy Saperów.
 - **P7 (Szary — Saraceni, `lock_civ=True`):** kontroluje `G2_Mages`, `Q4`, Arcymagów i Szakale.
 - **P8 (Pomarańczowy — Persowie, `lock_civ=True`):** kontroluje `G3_North`, `G3_East`, `Q3`, `Trade_Line_Attack`, wszystkie kontrataki Settlementów oraz Finałowego Bossa **Wielkiego Chana Subotaia (`698`)**.
-- **`01_Init` (`0:00`):** dla `P5–P8` bada `Feudal Age (101)`, `Castle Age (102)`, `Imperial Age (103)`; dla `P8` dodatkowo `TECH_FAITH (45)`.
-- **`01b` (`0:03`):** zeruje `ATTR_MAXIMUM_RANGE=0` i `ATTR_WORK_RATE=0` dla `IMAM (842)`, `MISSIONARY`, `MONK` dla `P5–P8` (brak konwersji przez AI), aplikuje statystyki 6 archetypów oraz Bossa (`FINAL_BOSS_HERO_ID = 698` `P8`: `3500 HP`, `Hero=1`, pancerz `8/10`, atak `cl=3: 45`, prędkość `0.85`).
+- **`01_Init` (`0:00`):** dla `P5–P8` bada `Feudal Age (101)`, `Castle Age (102)`, `Imperial Age (103)`; dla `P8` dodatkowo `TECH_FAITH (45)`; dla `P1–P4` dodaje **`+600 HP`** do `FORTIFIED_PALISADE_ID (119)` oraz wszystkich bram palisadowych (`789, 792, 793, 797, 801`).
+- **`01b` (`0:03`):** zeruje `ATTR_MAXIMUM_RANGE=0` i `ATTR_WORK_RATE=0` dla `IMAM (842)`, `MISSIONARY`, `MONK` dla `P5–P8` (brak konwersji przez AI), aplikuje statystyki 6 archetypów oraz Bossa (`FINAL_BOSS_HERO_ID = 698` `P8`: `4500 HP`, `Hero=1`, pancerz `8/10`, atak `cl=3: 45`, prędkość `0.85`).
 - **`01d` (`8:30` / `510s`):** bada dla `P5–P8`: `Forging (67)`, `Scale Mail (74)`, `Scale Barding (81)`, `Fletching (199)`, `Bloodlines (435)`; następnie odejmuje `-20 HP` dla `HUSSAR_ID` i `ELITE_BATTLE_ELEPHANT_ID` (neutralizacja Bloodlines) i wywołuje `enforce_specialized_unit_caps`.
 - **`01e` (`18:00` / `1080s`):** bada dla `P5–P8`: `Iron Casting (68)`, `Chain Mail (76)`, `Squires (215)`, `Chain Barding (82)`, `Bodkin Arrow (200)`, `Ballistics (93)`, `Husbandry (39)`, **`TECH_FAITH (45)`** + `enforce_specialized_unit_caps`.
 - **`01f` (`34:30` / `2070s`):** bada dla `P5–P8`: `Blast Furnace (75)`, `Plate Mail (77)`, `Plate Barding (80)`, `Bracer (201)`, `Chemistry (47)`, `Siege Engineers (377)` + `enforce_specialized_unit_caps`.
@@ -101,8 +101,8 @@
 
 | Archetyp (ID / Gracz) | Bazowe HP (Skala?) | Prędkość (Cap) | Atak bazowy / bonus (Skala?) | Pancerz M/P (Cap) | Zasięg / Reload / Blast / Poświata / Uwagi |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **1. Żelazny Słoń (`1134`, `P8`)** | `1450` (Tak; `-20` w `8:30`) | `0.72` (Cap) | `3` melee `cl=4` (Cap; **Nie skaluje**) + `+220` vs budynki (`cl=11, 21`) | `10 / 12` (Cap `cl=4, 3`) | `Hero Status=1` (odporny na konwersję), `receives_mage_shield=False`, `mandatory_min_one=True` |
-| **2. Szakal Dywersyjny (`441`, `P7`)** | `95` (Tak; `-20` w `8:30`) | `1.62` (Cap) | `2` melee `cl=4` (Cap; **Nie skaluje**) | `0 / 6` (Cap `cl=4, 3`) | `receives_mage_shield=False`, `mandatory_min_one=False` |
+| **1. Żelazny Słoń (`1134`, `P8`)** | `1450` (Tak; `-20` w `8:30`) | `0.72` (Cap) | `3` melee `cl=4` (Cap; **Nie skaluje**) + `+140` vs budynki (`cl=11, 21`) | `10 / 12` (Cap `cl=4, 3`) | `Hero Status=1` (odporny na konwersję), `receives_mage_shield=False`, `mandatory_min_one=True` |
+| **2. Szakal Dywersyjny (`441`, `P7`)** | `95` (Tak; `-20` w `8:30`) | `1.62` (Cap) | `7` melee `cl=4` (Cap; **Nie skaluje**) | `0 / 6` (Cap `cl=4, 3`) | `receives_mage_shield=False`, `mandatory_min_one=False` |
 | **3. Arcymag Tarczy (`842`, `P7`)** | `240` (Nie; `Q4 -> 120`) | `0.78` (Cap) | Brak (`range=0, work_rate=0`) | `3 / 4` (z `01b`) | `Hero Status=1`, regen `300/min` (`5 HP/s`), `receives_mage_shield=False`, `mandatory_min_one=True` |
 | **4. Moździerz Oblężniczy (`588`, `P6`)** | `350` (Tak) | `0.58` (Cap) | `+75` bonus `cl=4` (Tak `cl=4`) | Bazowy + Kuźnia | `Hero Status=1`, Range `21` (Cap), `min_range=6`, `LOS/Search=23`, Reload `10.0s`, `Blast Width=2.6`, `Blast Attack Level=2` (nie ścina drzew), `receives_mage_shield=False`, `mandatory_min_one=True` |
 | **5. Snajper Imperialny (`557`, `P6`)** | `90` (Tak) | Bazowy + Squires | `+85` bonus `cl=3` (Tak `cl=3`) | Bazowy + Kuźnia | `Hero Status=1`, Range `19` (Cap), `LOS/Search=21`, Reload `6.5s`, `receives_mage_shield=False`, `mandatory_min_one=True` |
@@ -111,11 +111,11 @@
 
 ### 3. Mechanika Aury Arcymaga, ruch Szakali i popychanie bram (`02a–02e`)
 - **Strefa Aury Arcymaga (`02a–02d`):** kwadrat `±18` wokół `(110, 114)`, czyli `(92, 96)..(128, 132)` (`37×37` kratek) przed Bramą Centralną:
-  - **`02a_Mage_Global_Horde_Shield_On`:** aktywuje się przy `≥1` `IMAM_UNIT_ID` (`P7`) w strefie; nakłada **globalnie wszystkim graczom `P5–P8`** **`+30/+30` pancerza** (`cl=3, 4`) dla **`17` jednostek** z `receives_mage_shield=True` (6 typów piechoty, 5 jazdy, 4 łuczników, `Capped Ram`, `Siege Ram`)
-  - **Wykluczenia z Tarczy Maga (`9` jednostek):** `Snajper Imperialny`, `Mangonel`, `Moździerz Oblężniczy`, `Żelazny Słoń`, `Szakal`, `Arcymag`, `Petard`, `Płonący Wielbłąd`, `Battering Ram`
+  - **`02a_Mage_Global_Horde_Shield_On`:** aktywuje się przy `≥1` `IMAM_UNIT_ID` (`P7`) w strefie; nakłada **globalnie wszystkim graczom `P5–P8`** **`+8/+8` pancerza** (`cl=3, 4`) dla **`20` jednostek** z `receives_mage_shield=True` (6 typów piechoty, 6 jazdy, 4 łuczników, `Capped Ram`, `Siege Ram`, `Heavy Camel Rider`, `Elite Mameluke`)
+  - **Wykluczenia z Tarczy Maga (`10` jednostek):** `Snajper Imperialny`, `Mangonel`, `Moździerz Oblężniczy`, `Żelazny Słoń`, `Szakal`, `Arcymag`, `Petard`, `Płonący Wielbłąd`, `Battering Ram`, `Wielki Chan Subotai`
   - **`02b_Mage_AoE_Heal_Pulse_3s`:** co `3s` (gdy Imam `P7` w strefie) leczy wszystkie jednostki `P5–P8` w `(92..128, 96..132)` o **`+15 HP`**
   - **`02c_Mage_Visual_Flare_Beacon_8s`:** co **`20s`** (`timer=20`, gdy Imam `P7` w strefie) wysyła ostrzeżenie na czacie i flarę na `(114, 114)`
-  - **`02d_Mage_Global_Horde_Shield_Off`:** gdy brak Imama `P7` w strefie (`inverted=1`), odejmuje `-30/-30` pancerza tym samym `17` typom jednostek, wyłącza `02b/02c/02d` i reaktywuje `02a`
+  - **`02d_Mage_Global_Horde_Shield_Off`:** gdy brak Imama `P7` w strefie (`inverted=1`), odejmuje `-8/-8` pancerza tym samym `20` typom jednostek, wyłącza `02b/02c/02d` i reaktywuje `02a`
 - **Zachowanie Szakali (`ActionType.MOVE`):**
   - Spawnowane w Falach 3–14 z `G2_Mages` (`P7`) rozkazem `task_object(..., ActionType.MOVE)` na obszar `±8` wokół spawnu — ignorują jednostki na przedpolu aż do celu pod TC
   - Fale nieparzyste (`3,5,7,9,11,13`): spawn Brama Północna `(52, 86)`; fale parzyste (`4,6,8,10,12,14`): spawn Brama Wschodnia `(116, 162)`
@@ -167,10 +167,10 @@
   - `G2_Snipers`: `22+3m` Arb, `4+m//2` Jan, `2+m//3` S.Onag | `G2_Mages`: `2+m//3` Imam, `16+3m` Pal, `4` S.Ram, `12+m` Szakali
   - `G3_North`: `3+m//2` Ele, `16+3m` Pal, `16+2m` Halb | `G3_East`: `3+m//2` Ele, `20+3m` Arb, `2+m//3` S.Onag
 - **Wyłom Północny (`G2_Snipers`, `P6`, Fala 9):**
-  - `50:45` (`3045s`): alarm i flara `(78, 98)` + spawn `2x S.Onag, 8x Halb` na `(78, 90)` -> `attack_move` `(78, 95)`
+  - `50:15` (`3015s`): alarm (`45s` wyprzedzenia) i flara `(78, 98)` + spawn `2x S.Onag, 8x Halb` na `(78, 90)` -> `attack_move` `(78, 95)`
   - `51:00` (`3060s`): usuwa drzewa `north_breach_trees (75..80, 95..105)` + spawn `2x S.Onag, 14x Halb, 8x Jan` na `(78, 94)` -> `attack_move` `(68, 130)`, flara `(78, 102)`
 - **Wyłom Wschodni (`G2_Snipers`, `P6`, Fala 12):**
-  - `67:15` (`4035s`): alarm i flara `(106, 140)` + spawn `2x S.Onag, 10x Halb` na `(115, 140)` -> `attack_move` `(109, 140)`
+  - `66:45` (`4005s`): alarm (`45s` wyprzedzenia) i flara `(106, 140)` + spawn `2x S.Onag, 10x Halb` na `(115, 140)` -> `attack_move` `(109, 140)`
   - `67:30` (`4050s`): usuwa drzewa `east_breach_trees (99..109, 137..142)` + spawn `2x S.Onag, 16x Halb, 12x Arb` na `(115, 140)` -> `attack_move` `(68, 146)`, flara `(104, 140)`
 - **Wyłom w Trybie Endless (`03_Endless_Forest_Breach_Assault`):** aktywowany co `330s` przez bramkę `G2_Snipers` (`03_Endless_Gate_G2_Snipers`); spawnuje równocześnie `2x S.Onag, 14x Halb, 8x Jan` na `(78, 94)->(68, 130)` oraz `2x S.Onag, 14x Halb, 10x Arb` na `(115, 140)->(68, 146)` (uwaga: wyłomy F9/F12/Endless nie przechodzą przez `scale_comp_for_level`)
 - **`Trade_Line_Attack` (`G3_East`, `P8`):** fale `8, 10, 12, 14` i `Endless`; spawn `(162, 180)` -> `attack_move` `(96, 194)`, flara `(162, 184)`; skład w Fali `w`: `3x Siege Ram`, `10+(w-8)*2` Paladin, `10+(w-8)*2` Heavy Cav Archer (skalowany przez `scale_comp_for_level`)
@@ -182,12 +182,12 @@
 
 ### 1. Trzystopniowa Eskalacja Czasowa (`04a–04f`, aplikowana przez `ENEMY_UNIT_REGISTRY`)
 - **Bieg 1 (`04a`/`04b`, start `20:00` / `1200s`):** natychmiastowy 1. tick w `20:00` i powtórzenie co `300s`: **`+5 HP, +1 Atk`**
-- **Bieg 2 (`04c`/`04d`, start `45:00` / `2700s`):** natychmiastowy 1. tick w `45:00` i powtórzenie co `300s`: dodatkowo **`+9 HP, +1 Atk`** (łącznie z Biegiem 1: **`+14 HP, +2 Atk`** co `5` min)
-- **Bieg 3 (`04e`/`04f`, start `55:00` / `3300s`):** natychmiastowy 1. tick w `55:00` i powtórzenie co `300s`: dodatkowo **`+6 HP, +1 Atk`** (łącznie z Biegami 1+2: **`+20 HP, +3 Atk`** co `5` min)
+- **Bieg 2 (`04c`/`04d`, start `45:00` / `2700s`):** natychmiastowy 1. tick w `45:00` i powtórzenie co `300s`: dodatkowo **`+9 HP, +0 Atk`** (łącznie z Biegiem 1: **`+14 HP, +1 Atk`** co `5` min)
+- **Bieg 3 (`04e`/`04f`, start `55:00` / `3300s`):** natychmiastowy 1. tick w `55:00` i powtórzenie co `300s`: dodatkowo **`+6 HP, +1 Atk`** (łącznie z Biegami 1+2: **`+20 HP, +2 Atk`** co `5` min)
 - **Kumulacyjny przyrost czasowy (bez Questów i Furii Settlementów):**
   - `20:00`: `+5 HP / +1 Atk` | `30:00`: `+15 HP / +3 Atk` | `40:00`: `+25 HP / +5 Atk`
-  - `45:00`: `+39 HP / +7 Atk` | `50:00`: `+53 HP / +9 Atk` | `55:00`: `+73 HP / +12 Atk`
-  - `60:00`: `+93 HP / +15 Atk` | `70:00`: `+133 HP / +21 Atk` | `80:00`: `+173 HP / +27 Atk`
+  - `45:00`: `+39 HP / +6 Atk` | `50:00`: `+53 HP / +7 Atk` | `55:00`: `+73 HP / +9 Atk`
+  - `60:00`: `+93 HP / +11 Atk` | `70:00`: `+133 HP / +15 Atk` | `80:00`: `+173 HP / +19 Atk`
 
 ### 2. Sanktuarium Balansu (`(4, 138)`, `09_Diff_*`)
 - **Strefy komnaty:** pad górny `(2..6, 134..136)` (+1 stopień), pad dolny `(2..6, 140..142)` (-1 stopień), pełna strefa resetu `(2..6, 134..142)`. Po wykryciu Króla `P1` trigger wykonuje `teleport_object` na `(4, 138)`, `stop_object`, przełącza `State_Diff_Lvl_*`, wysyła flarę `(4, 138)` i komunikat czatu do wszystkich graczy `P1–P4` oraz modyfikuje statystyki jednostek w `ENEMY_UNIT_REGISTRY`.
@@ -240,8 +240,8 @@
 | `422` | Capped Ram | `200` | **Nie** | `0` | **None** | Tak | **Tak** |
 | `548` | Siege Ram | `270` | **Nie** | `0` | **None** | Tak | **Tak** |
 | `330` | Heavy Camel Rider | `140` | Tak | `21` | `4` (Melee) | Tak | Nie |
-| `556` | Elite Mameluke | `130` | Tak | `20` | `4` (Melee) | Tak | Nie |
-| `698` | Wielki Chan Subotai (Boss) | `3500` | **Nie** | `0` | **None** | **Nie** | **Tak** |
+| `556` | Elite Mameluke | `100` | Tak | `15` | `4` (Melee) | Tak | Nie |
+| `698` | Wielki Chan Subotai (Boss) | `4500` | **Nie** | `0` | **None** | **Nie** | **Tak** |
 
 *(Wzór całkowitoliczbowy: `hp_delta_down = max(2, (base_hp * 15 + 50) // 100)`; gwarantuje zerowy dryf HP przy wielokrotnych zmianach poziomu trudności).*
 
@@ -250,7 +250,7 @@
 ## E. Ekspedycje: 4 Questy (Q1–Q4) i 6 Settlementów (G1–G3)
 
 ### 1. Mechanika garnizonów, smyczy i zawalania obozów (wspólna dla 10 celów)
-- **Detektory (`Garrison_Detect_*_P1..P4`):** uzbrajane w `t=4s` (`01c`) na kwadrat `±20` (`detect_radius=20`) wokół środka obozu `(cx, cy)` dla `Q2–Q4` i `G1–G3`; dla `Q1 - Karawanseraj (154, 190)` przycięte przez `detect_radius=14, detect_y2_max=191` (`140..168, 176..191`), aby wozy jadące szlakiem `y=194` nie budziły garnizonu Q1. Próg aktywacji: **`≥2` obiekty dla `P1`** lub **`≥1` obiekt dla `P2, P3, P4`**.
+- **Detektory (`Garrison_Detect_*_P1..P4`):** uzbrajane w `t=4s` (`01c`) na kwadrat `±20` (`detect_radius=20`) wokół środka obozu `(cx, cy)` dla `Q2–Q4` i `G1–G3`; dla `Q1 - Karawanseraj (154, 190)` przycięte przez `detect_radius=14, detect_y2_max=191` (`140..168, 176..191`), aby wozy jadące szlakiem `y=194` nie budziły garnizonu Q1. Warunek: filtr **`object_type=ObjectType.MILITARY`** oraz jednolity próg **`quantity=1`** dla wszystkich `P1–P4` (brak możliwości obudzenia przez `MAP_REVEALER`).
 - **Spawn garnizonu (`Garrison_Spawn_*`):** jednorazowy; szuka wolnych kafelków poza `occupied_tiles` w pierścieniach `r=3..12` wokół `(cx, cy+2)` (przy warunku `max(|x-cx|, |y-cy|) < 13`), stawia oddział i wydaje `attack_move` w promieniu `±13` na `(cx, cy)`. Aktywuje smycz.
 - **Smycz (`Garrison_Leash_*`):** pętla co **`2s`**, wydaje `attack_move` na `(cx, cy)` jednostkom właściciela obozu znajdującym się w 4 pasach strefy `ring_inner=14 .. ring_outer=20` wokół `(cx, cy)`.
 - **Zniszczenie budynku głównego:** dezaktywuje `t_spawn`, `t_leash` i 4 detektory `t_detect`. Dla `Q2–Q4` i `G1–G3` wywołuje `collapse_camp_buildings` — `kill_object` w promieniu `±14` dla 10 typów budynków (`Castle, Keep, Bombard Tower, Guard Tower, Barracks, Stable, Archery Range, Siege Workshop, Monastery, Fortified Wall`).
@@ -271,14 +271,14 @@
 #### `Q2 - Klif Artylerii` `(28, 32)` | Właściciel: `P6` (Dwuetapowy)
 - **Teren i zabudowa:** plateau `flat_radius=9, height=4`, strefa bez drzew `r=11`, `DIRT_2` `r=10`; `University` (`4×4`, cel główny) na `(28, 32)` + `2x Keep` na `(23, 37)` i `(33, 37)` + **`2x Bombard Tower`** na `(24, 34)` i `(32, 34)` (`q2_bombard_towers`)
 - **Garnizon (`±20`):** `6x Elite Janissary`, **`1x Siege Onager`**, `14x Halberdier`
-- **Etap 1 (`06_Quest2_Shield_Loop` & `06_Quest2_Batteries_Down`):** pętla tarczy startuje z `enabled=False` i jest aktywowana dopiero przez `Garrison_Spawn_Quest2_SniperCliff` (z komunikatem na czacie i flarą na `(28, 30)` wskazującą obie baszty), po czym co `2s` leczy `University` (`26..30, 28..34`) o `+400 HP`; zniszczenie obu `Bombard Tower` dezaktywuje pętlę tarczy (także w `t_q2` na wypadek siłowego przebicia); etykieta Objectives: `"Q2: Klif Artylerii (28,30) - zniszcz 2 Baszty Bombardowe, by zdjac tarcze Uniwersytetu"`
+- **Etap 1 (`06_Quest2_Shield_Loop` & `06_Quest2_Batteries_Down`):** pętla tarczy startuje z `enabled=False` i jest aktywowana dopiero przez `Garrison_Spawn_Quest2_SniperCliff` (z komunikatem na czacie i flarą na `(28, 30)` wskazującą obie baszty), po czym co `2s` leczy wyłącznie `University` (`object_list_unit_id=BuildingInfo.UNIVERSITY.ID`, `object_type=ObjectType.BUILDING` w `26..30, 28..34`) o `+400 HP`; zniszczenie obu `Bombard Tower` dezaktywuje pętlę tarczy (także w `t_q2` na wypadek siłowego przebicia); etykieta Objectives: `"Q2: Klif Artylerii (28,30) - zniszcz 2 Baszty Bombardowe, by zdjac tarcze Uniwersytetu"`
 - **Nagroda dla graczy (`P1–P4`) w Etapie 2 (`06_Quest2_Sniper_Cliff_Buff`):** `collapse_camp_buildings` (`P6, ±14`); darmowe technologie: `Ballistics (93)`, `Chemistry (47)`, `Siege Engineers (377)`, `Thumb Ring (437)`, `PLAYER_RANGED_UNITS` (`+2` Range/Search, `+4` Atak `cl=3`), `PLAYER_MOUNTED_RANGED_UNITS` (`×1.12` prędkości), `PLAYER_CAVALRY_UNITS` (`×1.12` prędkości, `+4` Atak `cl=4`), **`2x Bombard Cannon` (`P3`) na `(27, 36)` i `(29, 36)`** oraz **`MAP_REVEALER` (`P1–P4`) na `G2_Snipers (68, 34)`**
 - **Adaptacja Hordy:** **`+8 HP, +1 Atak`**
 
 #### `Q3 - Skarbiec` `(142, 118)` | Właściciel: `P8`
 - **Teren i zabudowa:** plateau `flat_radius=10, height=2`, strefa bez drzew `r=11`, `ROAD` `r=10`; `Krepost` (`4×4`, cel główny) na `(142, 118)` + `4x Keep` (`±5, ±5`) + 2 linie `Fortified Wall` (`x=135..149` na `y=110` i `y=126`)
 - **Garnizon (`±20`):** `18x Halberdier`, `2x Elite Battle Elephant`, `14x Arbalester`
-- **Nagroda dla graczy (`P1–P4`):** `collapse_camp_buildings` (`P8, ±14`); `+20` Bonus Pop Cap (`250 pop`), jednorazowo `+600 Gold, +300 Stone` oraz stały pasywny dochód co `60s` (`06b_Quest3_Passive_Resource_Trickle`): **`+250 Food, +250 Wood, +200 Gold, +40 Stone`** dla każdego gracza `P1–P4`
+- **Nagroda dla graczy (`P1–P4`):** `collapse_camp_buildings` (`P8, ±14`); `+20` Bonus Pop Cap (`250 pop`), jednorazowo `+600 Gold, +300 Stone` oraz stały pasywny dochód co `60s` (`06b_Quest3_Passive_Resource_Trickle`): **`+100 Food, +100 Wood, +90 Gold, +20 Stone`** dla każdego gracza `P1–P4` (`310/min` na gracza = `1240/min` dla drużyny)
 - **Adaptacja Hordy:** **`+10 HP, +1 Atak`**
 
 #### `Q4 - Krwawy Ołtarz` `(105, 20)` | Właściciel: `P7` (Dwuetapowy)
@@ -296,36 +296,36 @@
 
 | Stopień (Grade) | Obozy | Nagroda (`P1–P4`) | Furia Hordy | Kontratak (`P8`) |
 | :--- | :--- | :--- | :--- | :--- |
-| **Grade 1** | `G1_North`, `G1_East` | `+700 Food, +700 Gold` | **`+5 HP, +0 Atk`** | `8x Cavalier, 10x Pikeman` |
-| **Grade 2** | `G2_Snipers`, `G2_Mages` | `+1000 Food, +1000 Gold` | **`+10 HP, +1 Atk`** | `10x Cavalier, 12x Halberdier` |
-| **Grade 3** | `G3_North`, `G3_East` | `+1500 Food, +1500 Gold` | **`+15 HP, +2 Atk`** | `1x Iron Elephant, 12x Paladin, 14x Halberdier` |
+| **Grade 1** | `G1_North`, `G1_East` | `+700 Food, +700 Gold` | **`+8 HP, +1 Atk`** | `8x Cavalier, 10x Pikeman` |
+| **Grade 2** | `G2_Snipers`, `G2_Mages` | `+1000 Food, +1000 Gold` | **`+14 HP, +1 Atk`** | `10x Cavalier, 12x Halberdier` |
+| **Grade 3** | `G3_North`, `G3_East` | `+1500 Food, +1500 Gold` | **`+20 HP, +2 Atk`** | `1x Iron Elephant, 12x Paladin, 14x Halberdier` |
 
 #### `G1 - Północny` `(76, 72)` | Grade 1 | Właściciel: `P5`
 - **Teren i zabudowa:** plateau `flat_radius=9, height=1`, bez drzew `r=11`; cel główny `Guard Tower` `(76, 72)` + `2x Guard Tower` `(71, 76), (81, 76)` + `Barracks` `(70, 68)` + `Siege Workshop` `(82, 68)`
 - **Garnizon (`±20`):** `14x Pikeman`, `6x Elite Berserk`, `8x Crossbowman`
-- **Po zburzeniu:** `+700F/+700G`, Furia `+5 HP / +0 Atk`, kontratak `8x Cav, 10x Pike` z `(48, 86)->(48, 138)`, wycofuje fale `G1_North` (Berserkerzy, Petardy)
+- **Po zburzeniu:** `+700F/+700G`, Furia `+8 HP / +1 Atk`, kontratak `8x Cav, 10x Pike` z `(48, 86)->(48, 138)`, wycofuje fale `G1_North` (Berserkerzy, Petardy)
 
 #### `G1 - Wschodni` `(132, 152)` | Grade 1 | Właściciel: `P5`
 - **Teren i zabudowa:** plateau `flat_radius=9, height=1`, bez drzew `r=11`; cel główny `Guard Tower` `(132, 152)` + `2x Guard Tower` `(127, 156), (137, 156)` + `Barracks` `(126, 148)` + `Siege Workshop` `(138, 148)`
 - **Garnizon (`±20`):** `12x Huskarl`, `10x Pikeman`, `3x Flaming Camel`
-- **Po zburzeniu:** `+700F/+700G`, Furia `+5 HP / +0 Atk`, kontratak `8x Cav, 10x Pike` z `(117, 178)->(68, 162)`, wycofuje fale `G1_East` (Huskarle, Płonące Wielbłądy)
+- **Po zburzeniu:** `+700F/+700G`, Furia `+8 HP / +1 Atk`, kontratak `8x Cav, 10x Pike` z `(117, 178)->(68, 162)`, wycofuje fale `G1_East` (Huskarle, Płonące Wielbłądy)
 
 #### `G2 - Akademia` `(68, 34)` | Grade 2 | Właściciel: `P6`
 - **Teren i zabudowa:** plateau `flat_radius=13, height=2`, bez drzew `r=14`; cel główny `Castle` `(68, 34)` + `Archery Range` `(61, 29)` + `Monastery` `(75, 29)` + `4x Guard Tower` `(59, 25), (73, 25), (59, 43), (77, 43)`
 - **Garnizon (`±20`):** `7x Elite Janissary`, `2x Siege Onager`, `16x Halberdier`
-- **Po zburzeniu:** `+1000F/+1000G`, Furia `+10 HP / +1 Atk`, kontratak `10x Cav, 12x Halb` z `(48, 86)->(48, 138)`, wycofuje fale `G2_Snipers` (Snajperzy, Moździerze) oraz **wszystkie wyłomy Saperów** (F9, F12, Endless)
+- **Po zburzeniu:** `+1000F/+1000G`, Furia `+14 HP / +1 Atk`, kontratak `10x Cav, 12x Halb` z `(48, 86)->(48, 138)`, wycofuje fale `G2_Snipers` (Snajperzy, Moździerze) oraz **wszystkie wyłomy Saperów** (F9, F12, Endless)
 
 #### `G2 - Klasztor` `(148, 72)` | Grade 2 | Właściciel: `P7`
 - **Teren i zabudowa:** plateau `flat_radius=13, height=2`, bez drzew `r=14`; cel główny `Castle` `(148, 72)` + `Archery Range` `(141, 67)` + `Monastery` `(155, 67)` + `4x Guard Tower` `(139, 63), (153, 63), (139, 81), (157, 81)`
 - **Garnizon (`±20`):** `14x Cavalier`, `8x Szakal (Hussar)`, `1x Arcymag (Imam)`
-- **Po zburzeniu:** `+1000F/+1000G`, Furia `+10 HP / +1 Atk`, kontratak `10x Cav, 12x Halb` z `(116, 114)->(54, 146)`, wycofuje fale `G2_Mages` (Arcymagowie, Szakale)
+- **Po zburzeniu:** `+1000F/+1000G`, Furia `+14 HP / +1 Atk`, kontratak `10x Cav, 12x Halb` z `(116, 114)->(54, 146)`, wycofuje fale `G2_Mages` (Arcymagowie, Szakale)
 
 #### `G3 - Cytadela Północna` `(142, 24)` | Grade 3 | Właściciel: `P8`
 - **Teren i zabudowa:** plateau `flat_radius=17, height=4`, bez drzew `r=18`; cel główny `Castle` `(142, 24)` + `2x Castle` `(133, 32), (151, 16)` + `Stable` `(135, 17)` + `Siege Workshop` `(149, 31)` + `4x Keep` `(130, 12), (154, 12), (130, 36), (154, 36)`
 - **Garnizon (`±20`):** `3x Iron Elephant`, `20x Halberdier`, `12x Paladin`
-- **Po zburzeniu:** `+1500F/+1500G`, Furia `+15 HP / +2 Atk`, kontratak `1x Iron Elephant, 12x Pal, 14x Halb` z `(116, 114)->(54, 146)`, wycofuje fale `G3_North` (Słonie-Tanki Płn.)
+- **Po zburzeniu:** `+1500F/+1500G`, Furia `+20 HP / +2 Atk`, kontratak `1x Iron Elephant, 12x Pal, 14x Halb` z `(116, 114)->(54, 146)`, wycofuje fale `G3_North` (Słonie-Tanki Płn.)
 
 #### `G3 - Cytadela Wschodnia` `(176, 56)` | Grade 3 | Właściciel: `P8`
 - **Teren i zabudowa:** plateau `flat_radius=17, height=4`, bez drzew `r=18`; cel główny `Castle` `(176, 56)` + `2x Castle` `(167, 64), (185, 48)` + `Stable` `(169, 49)` + `Siege Workshop` `(183, 63)` + `4x Keep` `(164, 44), (188, 44), (164, 68), (188, 68)`
 - **Garnizon (`±20`):** `3x Iron Elephant`, `20x Arbalester`, `2x Siege Onager`
-- **Po zburzeniu:** `+1500F/+1500G`, Furia `+15 HP / +2 Atk`, kontratak `1x Iron Elephant, 12x Pal, 14x Halb` z `(117, 178)->(68, 162)`, wycofuje fale `G3_East` (Słonie Wsch.) oraz **Rajdy Handlowe** (F8, F10, F12, F14, Endless)
+- **Po zburzeniu:** `+1500F/+1500G`, Furia `+20 HP / +2 Atk`, kontratak `1x Iron Elephant, 12x Pal, 14x Halb` z `(117, 178)->(68, 162)`, wycofuje fale `G3_East` (Słonie Wsch.) oraz **Rajdy Handlowe** (F8, F10, F12, F14, Endless)

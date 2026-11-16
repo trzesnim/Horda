@@ -1,4 +1,4 @@
-# Przewodnik Gracza — Kroniki Rubieży: Horda i Ekspedycje (v7.0.2)
+# Przewodnik Gracza — Kroniki Rubieży: Horda i Ekspedycje (v7.0.3)
 
 Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, podział ról na mapie i przegląd zmian od ostatniej gry.
 
@@ -6,15 +6,15 @@ Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, 
 
 ## TL;DR — Najważniejsze zasady w 30 sekund
 
-- **Cel gry:** Broń **Cytadeli (Feitorii P2)** w sercu bazy `(54, 146)` (jej utrata = natychmiastowa porażka wszystkich). Wyjdź za mury, zniszcz **6 Twierdz Hordy (`G1–G3`)**, a po `45s` na powrót armii zgładź **Wielkiego Chana Subotaia (3500 HP)** przed Bramą Centralną (dopóki żyją jego Żelazne Słonie, Chan regeneruje `+120 HP/3s`).
+- **Cel gry:** Broń **Cytadeli (Feitorii P2)** w sercu bazy `(54, 146)` (jej utrata = natychmiastowa porażka wszystkich). Wyjdź za mury, zniszcz **6 Twierdz Hordy (`G1–G3`)**, a po `60s` na powrót armii zgładź **Wielkiego Chana Subotaia (4500 HP)** przed Bramą Centralną (dopóki w strefie bitwy żyją jego Żelazne Słonie, Chan regeneruje `+180 HP/3s`; w finale Horda atakuje jednocześnie na wszystkie 3 bramy).
 - **Ustawienia i Fale:** Gracze `P1–P4` (ludzie, P2 najlepiej Hiszpanie) vs `P5–P8` (AI **Extreme**). 14 fal od `8:30` do `78:30` (potem Endless) — zegar do kolejnej fali i poziom trudności są zawsze na górze **Objectives**, a skrót tych zasad (`TL;DR`) znajduje się na górze zakładki **Objectives** po kliknięciu ikony w górnym pasku gry oraz w **Hints**.
 - **Role (`P1–P4`):**
   * **P1 (Niebieski):** Brama Centralna + Król w odizolowanym **Sanktuarium `(4, 138)`** na zachodniej krawędzi mapy (wejście na flagę zmienia trudność `-2..+2`).
   * **P2 (Czerwony):** Handel, obrona chłopów przed **Szakalami** + Król-Kwatermistrz w odizolowanej komnacie **`(4, 164)`** (od `10:00` co 4 min wejście Królem na Północną lub Południową Flagę daje rosnące wsparcie: `10–20m` Małe, `20–30m` Średnie, `30m+` Duże).
-  * **P3 (Zielony):** Brama Północna (uwaga: w `51:00` saperzy wyrąbią wyłom w północnym lesie!).
-  * **P4 (Żółty):** Brama Wschodnia (w `67:30` wyłom we wschodnim lesie) + korytarz handlowy na południu.
-- **Wyprawy (Settlementy, Questy i Map PoI):** Zburzenie każdego **Settlementu (`G1–G3`)** daje surowce i **na stałe wyłącza jego fale oraz jednostki specjalne** (wywołując jeden kontratak i lekką *Furię*). **Questy (`Q1–Q4`)** dają potężne perki całej drużynie (`Q1`: mur i handel; `Q2`: rozbij 2 Baszty Bombardowe by zdjąć tarczę Uniwersytetu -> bonus strzelców/jazdy; `Q3`: stały dochód co 1 min; `Q4`: przetrwaj 30s odwetu -> `+30%` HP/pancerz i Wielki Klasztor). Dodatkowo na mapie ukryto **3 punkty eksploracyjne (`PoI 1–3`)**.
-- **3 złote zasady w walce:** (1) W pierwszej kolejności zabijaj **Arcymaga (Imama)** przed Bramą Centralną (daje całej Hordzie tarczę `+30` pancerza!), (2) Chroń wieśniaków pod TC przed szybkimi **Szakalami**, (3) Nie buduj na polanach spawnu Hordy przed bramami (fala niszczy budynki w miejscu swojego pojawienia się).
+  * **P3 (Zielony):** Brama Północna (uwaga: w `50:15` alarm, a w `51:00` saperzy wyrąbią wyłom w północnym lesie!).
+  * **P4 (Żółty):** Brama Wschodnia (w `66:45` alarm, w `67:30` wyłom we wschodnim lesie) + korytarz handlowy na południu.
+- **Wyprawy (Settlementy, Questy i Map PoI):** Zburzenie każdego **Settlementu (`G1–G3`)** daje surowce i **na stałe wyłącza jego fale oraz jednostki specjalne** (wywołując jeden kontratak i *Furię*). **Questy (`Q1–Q4`)** dają potężne perki całej drużynie (`Q1`: mur i handel; `Q2`: rozbij 2 Baszty Bombardowe by zdjąć tarczę Uniwersytetu -> bonus strzelców/jazdy; `Q3`: stały dochód `+100F/+100W/+90G/+20S` co 1 min; `Q4`: przetrwaj 30s odwetu -> `+30%` HP/pancerz i Wielki Klasztor). Dodatkowo na mapie ukryto **3 punkty eksploracyjne (`PoI 1–3`)**.
+- **3 złote zasady w walce:** (1) W pierwszej kolejności zabijaj **Arcymaga (Imama)** przed Bramą Centralną (daje całej Hordzie tarczę `+8/+8` pancerza!), (2) Chroń wieśniaków pod TC przed szybkimi **Szakalami** (`7` ataku!), (3) Nie buduj na polanach spawnu Hordy przed bramami (fala niszczy budynki w miejscu swojego pojawienia się).
 
 ---
 
@@ -33,7 +33,7 @@ Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, 
 ## 2. Cel Gry i Zasady Przetrwania
 
 * **Obrona Twierdzy Sojuszu:** Startujemy razem w południowo-zachodniej części mapy (z gotowymi domkami i wspólną wizją z Kartografii). Horda uderza w **14 głównych falach**: pierwsza fala przychodzi o **`8:30`**, druga o **`13:00`**, trzecia o **`18:00`**, a kolejne co 5,5 minuty aż do finałowej 14. fali o **`78:30`** (od **`84:00`** włącza się Tryb Endless).
-* **Jak wygrać:** Nie wystarczy siedzieć za murami! Musimy wyjść w głąb mapy, zniszczyć wszystkie **6 Twierdz Hordy (Settlementów `G1–G3`)**, po czym dostajemy **45 sekund** na wycofanie armii pod Bramę Centralną `(104, 114)`, aby odeprzeć **Ostatni Szturm Wielkiego Chana Subotaia (3500 HP)** i zgładzić samego Chana.
+* **Jak wygrać:** Nie wystarczy siedzieć za murami! Musimy wyjść w głąb mapy, zniszczyć wszystkie **6 Twierdz Hordy (Settlementów `G1–G3`)**, po czym dostajemy **60 sekund** na wycofanie armii i obstawienie wszystkich 3 bram (Centralnej `(104, 114)`, Północnej i Wschodniej), aby odeprzeć **Ostatni Szturm Wielkiego Chana Subotaia (4500 HP)** i zgładzić samego Chana.
 * **Jak przegrywamy:** Jeśli wrogowie zburzą centralną **Cytadelę (Feitorię Gracza 2)** w sercu naszej bazy, cała drużyna natychmiast przegrywa.
 
 ---
@@ -53,11 +53,11 @@ Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, 
     * **Poziom 3 (`od 30:00+` — Duży Bonus):** Flaga Północna `(4, 161)` daje **`6x Elitarny Konkwistador + 2x Kolubryna + 2x Taran Oblężniczy`**; Flaga Południowa `(4, 167)` daje **`+300 Żywności/Drewna/Złota`** każdemu graczowi oraz naprawia Twierdzę i Mur `Q1` o **`+500 HP`**.
 
 * **Gracz 3 (Zielony — Brama Północna i Klif Artylerii):**
-  * Broni **Bramy Północnej** (pierwsze uderzenie już o **`8:30`**!). Uwaga: w **51. minucie** wrodzy saperzy wyrąbią dodatkowy wyłom w północnym lesie na prawo od bramy.
+  * Broni **Bramy Północnej** (pierwsze uderzenie już o **`8:30`**!). Uwaga: w **`50:15`** pojawia się alarm saperski (45s na reakcję!), a w **51. minucie** wrodzy saperzy wyrąbią dodatkowy wyłom w północnym lesie na prawo od bramy.
   * Ma najbliżej do pierwszego obozu wroga (**`G1 Północ`**) oraz zadania **`Q2 (Klif Artylerii)`** w północno-zachodnim narożniku mapy.
 
 * **Gracz 4 (Żółty — Brama Wschodnia i Szlak Handlowy):**
-  * Broni **Bramy Wschodniej** (pierwszy atak już o **`8:30`**) oraz południowej **Bramy Handlowej**. Uwaga: od **45. minuty** co druga fala wysyła dodatkowy atak od południa wprost na Szlak Handlowy, a w **`67:30`** saperzy wycinają przejście we wschodnim lesie!
+  * Broni **Bramy Wschodniej** (pierwszy atak już o **`8:30`**) oraz południowej **Bramy Handlowej**. Uwaga: od **45. minuty** co druga fala wysyła dodatkowy atak od południa wprost na Szlak Handlowy, w **`66:45`** przychodzi alarm saperski, a w **`67:30`** saperzy wycinają przejście we wschodnim lesie!
   * Ma najbliżej do zadania **`Q1 (Karawanseraj)`**, którego zburzenie buduje długi Kamienny Mur Handlowy z 6 basztami i otwiera bezpieczny szlak dla wozów handlowych przez całą mapę.
 
 ---
@@ -81,20 +81,20 @@ Zniszczenie głównego budynku obozu daje każdemu graczowi duży zastrzyk Żywn
 Każdy ukończony Quest daje stałe, potężne wzmocnienie całej drużynie (i lekko wzmacnia Hordę):
 * **`Q1` Karawanseraj (południowy wschód):** Stawia długi Kamienny Mur Handlowy z 6 basztami i bramami wypadowymi oraz sojusznicze Targowisko w prawym dolnym rogu mapy. Daje **`+30` limitu populacji**, **+20% szybszą pracę wieśniaków**, +25% szybsze wozy handlowe, 4 darmowe wozy i +500 Złota dla każdego.
 * **`Q2` Klif Artylerii (północny zachód — dwuetapowy):** Po obudzeniu garnizonu `Q2` włącza się tarcza regenerująca Uniwersytet (`+400 HP` co 2s), którą utrzymują **2 wysunięte Baszty Bombardowe** — zniszczcie je w pierwszej kolejności, a potem sam Uniwersytet. Nagroda: darmowa Balistyka, Chemia, Inżynierowie Oblężniczy i Thumb Ring, **`+2` zasięgu i `+4` ataku** dla wszystkich strzelców, **`+12%` prędkości i `+4` ataku** dla kawalerii, **`+12%` prędkości** dla konnych strzelców, **`2 Kolubryny`** dla Zielonego (`(27, 36)` i `(29, 36)`) oraz podgląd na obóz `G2 Akademia`.
-* **`Q3` Skarbiec (wschód):** Daje **`+20` limitu populacji**, jednorazowo +600 Złota / +300 Kamienia oraz **stały dochód co minutę dla każdego gracza**: **`+250 Żywności, +250 Drewna, +200 Złota i +40 Kamienia`**.
+* **`Q3` Skarbiec (wschód):** Daje **`+20` limitu populacji**, jednorazowo +600 Złota / +300 Kamienia oraz **stały dochód co minutę dla każdego gracza**: **`+100 Żywności, +100 Drewna, +90 Złota i +20 Kamienia`**.
 * **`Q4` Krwawy Ołtarz (daleka północ — dwuetapowy):** Po zburzeniu Klasztoru wroga zabudowa obozu zapada się, w ruinach pojawia się Relikt, a z południa rusza odsiecz Zakonu (m.in. Elitarni Jeźdźcy Stepowi, Mamelucy i Wielbłądy) — trzeba **przetrwać 30 sekund Krwawego Odwetu**. Nagroda: **`+30% HP` i `+2/+2` pancerza** dla całej piechoty, jazdy i strzelców, **`+40%` szybsza produkcja wojska**, osłabienie wrogich Arcymagów do 120 HP oraz budowa **Wielkiego Klasztoru z `2` Mnichami** dla Niebieskiego na wyznaczonym placu `(58, 152)` (oznaczonym dwiema pochodniami — nie budujcie tam własnych budynków!).
 
 ### Warto zwiedzać mapę zwiadowcą!
-Poza głównymi obozami na rubieżach ukryte są także trzy punkty eksploracyjne: **Opuszczony Obóz Inżynierów `(30, 76)`** przed północno-zachodnim lasem (odblokowywany w `10:00`), **Zaginiona Karawana `(128, 174)`** na wschodzie oraz **Kamień Wędrowca i Zwiadowcy `(64, 88)`** na północ od bazy (`2x Lekka Kawaleria`, `+150 Kamienia/+150 Złota` dla każdego oraz odsłonięcie brodu rzecznego `(122, 62)`). Pierwszy gracz, który wyśle tam zwiadowcę lub oddział, zgarnia bonus dla całej drużyny.
+Poza głównymi obozami na rubieżach ukryte są także trzy punkty eksploracyjne: **Opuszczony Obóz Inżynierów `(30, 76)`** przed północno-zachodnim lasem (odblokowywany w `10:00`), **Zaginiona Karawana `(124, 178)`** na wschodzie oraz **Kamień Wędrowca i Zwiadowcy `(50, 90)`** na północ od bazy (`2x Lekka Kawaleria`, `+150 Kamienia/+150 Złota` dla każdego oraz odsłonięcie brodu rzecznego `(122, 62)`). Pierwszy gracz, który wyśle tam zwiadowcę lub oddział, zgarnia bonus dla całej drużyny.
 
 ---
 
 ## 5. Groźni Przeciwnicy (Na kogo uważać w tłumie)
 
-* **Arcymag Tarczy (Imam przed Bramą Centralną):** Najwyższy priorytet! Dopóki żyje w strefie przed Bramą Centralną (pokazuje go flara na mapie), nakłada na **całą Hordę na wszystkich bramach** potężną tarczę **`+30/+30` pancerza** i leczy wrogów wokół siebie. Zabijcie go jako pierwszego!
-* **Szakale Dywersanci:** Bardzo szybka lekka jazda, która ignoruje walkę na murach i pędzi prosto pod nasze Town Center zabijać wieśniaków. Mają wysoki pancerz na strzały, ale zadają małe obrażenia — chowajcie chłopów do TC i wybijajcie ich rycerzami lub pikinierami.
+* **Arcymag Tarczy (Imam przed Bramą Centralną):** Najwyższy priorytet! Dopóki żyje w strefie przed Bramą Centralną (pokazuje go flara na mapie), nakłada na **całą Hordę na wszystkich bramach** tarczę **`+8/+8` pancerza** i leczy wrogów wokół siebie. Zabijcie go jako pierwszego!
+* **Szakale Dywersanci:** Bardzo szybka lekka jazda, która ignoruje walkę na murach i pędzi prosto pod nasze Town Center zabijać wieśniaków. Mają wysoki pancerz na strzały i zadają teraz **7 obrażeń** — chowajcie chłopów do TC i wybijajcie ich rycerzami lub pikinierami.
 * **Moździerze Oblężnicze i Snajperzy:** Dalekosiężna artyleria (zasięg **21**, ale z martwą strefą 6 kratek w zwarciu — i nie niszczy już lasów przy bramach!) oraz strzelcy (zasięg **19**, ogromne obrażenia w pojedynczy cel). Przewyższają zasięgiem nasze zamki, więc najlepiej wyjeżdżać po nich kawalerią.
-* **Żelazne Słonie (1450 HP):** Olbrzymie żywe tarany o wysokim pancerzu i pełnej odporności na mnichów. Walcząc z żołnierzami zadają tylko po **3 obrażenia**, ale zburzą mur lub zamek w kilka sekund — najlepiej wybić najpierw ich eskortę, a potem otoczyć słonie halabardnikami.
+* **Żelazne Słonie (1450 HP):** Olbrzymie żywe tarany o wysokim pancerzu i pełnej odporności na mnichów. Walcząc z żołnierzami zadają tylko po **3 obrażenia**, ale szybko niszczą mury i zamki (**`+140` obrażeń przeciw budynkom**) — najlepiej wybić najpierw ich eskortę, a potem otoczyć słonie halabardnikami.
 
 ---
 
@@ -104,4 +104,4 @@ Poza głównymi obozami na rubieżach ukryte są także trzy punkty eksploracyjn
 2. **Zegar Fali i `TL;DR` w zakładce Objectives:** Na samej górze listy zadań w prawym górnym rogu ekranu działa czytelny licznik odliczający czas do następnej fali co 30 sekund, wspierany ostrzeżeniami na czacie minutę przed każdym atakiem, a kliknięcie ikony **Objectives** na górnym pasku pokazuje 4-punktowy skrót zasad (`TL;DR`) bez zaśmiecania ekranu podczas gry.
 3. **Płynny start bez blokady populacji:** Każdy z nas zaczyna od razu z gotowymi domkami przy swoim Town Center, a Cytadela Czerwonego (P2) ma zrekompensowane miejsce w populacji, więc od pierwszej sekundy można swobodnie szkolić wieśniaków.
 4. **Aktywna gra na wszystkich frontach i izolacja komnat:** Komnaty Sanktuarium `(4, 138)` i Kwatermistrza P2 `(4, 164)` zostały przeniesione na zachodnią krawędź mapy za gęstą ścianę lasu, a wsparcie Kwatermistrza skaluje się w czasie (`10–20m`, `20–30m`, `30m+`); Niebieski (P1) w centrum dostaje pierwsze uderzenia już w 13. minucie, a Żelazne Słonie maszerują szybciej razem z armią.
-5. **Fale Specjalne, zawalanie obozów i Finałowy Boss:** Wybrane fale mają własny, unikalny motyw (np. *Pancerna Szarża*, *Noc Szakali*, *Nawałnica Artylerii i Snajperów*), po zburzeniu głównej budowli obozu wszystkie jego wieże i zamki efektownie zawalają się naraz, a po rozbiciu 6 Twierdz Hordy czeka nas wielki finał przeciwko **Wielkiemu Chanowi Subotaiowi** (którego gwardia Żelaznych Słoni regeneruje go o `+120 HP/3s`, dopóki żyje przynajmniej 1 Słoń).
+5. **Fale Specjalne, zawalanie obozów i Finałowy Boss:** Wybrane fale mają własny, unikalny motyw (np. *Pancerna Szarża*, *Noc Szakali*, *Nawałnica Artylerii i Snajperów*), po zburzeniu głównej budowli obozu wszystkie jego wieże i zamki efektownie zawalają się naraz, a po rozbiciu 6 Twierdz Hordy czeka nas 3-bramowy wielki finał przeciwko **Wielkiemu Chanowi Subotaiowi (4500 HP)** (którego gwardia Żelaznych Słoni ze strefy bitwy regeneruje go o `+180 HP/3s`, dopóki żyje przynajmniej 1 Słoń).
