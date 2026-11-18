@@ -62,11 +62,15 @@ def setup_wave_countdown_timer(tm, ctx: dict | None = None) -> tuple[list, objec
     wave_defs = get_wave_definitions()
     milestones = [(w.wave_num, w.wave_sec) for w in wave_defs]
 
+    endless_start = BALANCE["endless_start_sec"]
+    endless_interval_str = format_mm_ss(BALANCE["endless_repeat_interval"])
+    endless_start_str = format_mm_ss(endless_start)
+
     ui_steps: list[tuple[int, str, str | None]] = [
         (0, "Zegar Fali: Fala 1/14 za 8:30 (uderzenie 8:30)", None),
     ]
 
-    for t in range(30, 5040 + 1, 30):
+    for t in range(30, endless_start + 1, 30):
         next_w = None
         for w_num, w_sec in milestones:
             if w_sec > t:
@@ -82,15 +86,15 @@ def setup_wave_countdown_timer(tm, ctx: dict | None = None) -> tuple[list, objec
             elif w_num == 1 and rem == 30:
                 chat_warn = "[ZEGAR FALI]: Pozostalo 30 sekund do Pierwszej Fali Hordy (8:30)!"
             ui_steps.append((t, label, chat_warn))
-        elif t < 5040:
-            rem = 5040 - t
-            label = f"Zegar Fali: Tryb Endless za {format_mm_ss(rem)} (od 84:00 co 5:30)"
+        elif t < endless_start:
+            rem = endless_start - t
+            label = f"Zegar Fali: Tryb Endless za {format_mm_ss(rem)} (od {endless_start_str} co {endless_interval_str})"
             chat_warn = None
             if rem == 60:
-                chat_warn = "[ZEGAR FALI]: Pozostala 1 minuta do pierwszego szturmu TRYBU ENDLESS (84:00)!"
+                chat_warn = f"[ZEGAR FALI]: Pozostala 1 minuta do pierwszego szturmu TRYBU ENDLESS ({endless_start_str})!"
             ui_steps.append((t, label, chat_warn))
         else:
-            label = "Zegar Fali: TRYB ENDLESS AKTYWNY (szturm co 5:30)"
+            label = f"Zegar Fali: TRYB ENDLESS AKTYWNY (szturm co {endless_interval_str})"
             ui_steps.append((t, label, None))
 
     tldr_modal_defs = [
@@ -104,7 +108,7 @@ def setup_wave_countdown_timer(tm, ctx: dict | None = None) -> tuple[list, objec
             "00_TLDR_Modal_2_Role",
             209,
             False,
-            "ROLE GRACZY: P1 (Niebieski) = Brama Centralna + Krol w Sanktuarium (4,138) zmieniajacy trudnosc (-2..+2). P2 (Czerwony) = Cytadela, handel, obrona chlopow przed Szakalami + Krol-Kwatermistrz (4,164) dajacy od 10:00 co 4 min rosnace wsparcie (10-20m Male, 20-30m Srednie, 30m+ Duze). P3 (Zielony) = Brama Polnocna (w 50:15 alarm, w 51:00 wylom w lesie!). P4 (Zolty) = Brama Wschodnia (w 66:45 alarm, w 67:30 wylom!) + szlak handlowy.",
+            "ROLE GRACZY: P1 (Niebieski) = Brama Centralna + Krol w Sanktuarium (4,138) zmieniajacy trudnosc (-2..+2). P2 (Czerwony) = Cytadela, handel, obrona chlopow przed Szakalami + Krol-Kwatermistrz (4,164) dajacy od 10:00 co 4 min rosnace wsparcie (10-20m Male, 20-30m Srednie, 30m+ Duze). P3 (Zielony) = Brama Polnocna (w 52:00 alarm 2 min, w 54:00 wylom w lesie!). P4 (Zolty) = Brama Wschodnia (w 74:00 alarm 2 min, w 76:00 wylom!) + szlak handlowy.",
         ),
         (
             "00_TLDR_Modal_3_Wyprawy",
@@ -116,7 +120,7 @@ def setup_wave_countdown_timer(tm, ctx: dict | None = None) -> tuple[list, objec
             "00_TLDR_Modal_4_Wrogowie",
             207,
             False,
-            "PRIORYTETY W WALCE: (1) Zabijaj w pierwszej kolejnosci Arcymaga/Imama przed Brama Centralna - naklada na cala Horde tarcze +8/+8 pancerza i leczy wrogow! (2) Chron wiesniakow pod TC przed szybkimi Szakalami (7 ataku)! (3) Nie buduj na polanach spawnu Hordy przed bramami (fala niszczy tam budynki).",
+            "PRIORYTETY W WALCE: (1) Zabijaj w pierwszej kolejnosci Arcymaga/Imama przed Brama Centralna - naklada na kolumne P7 tarcze +8/+8 pancerza i leczy wrogow (+25 HP/3s)! (2) Chron wiesniakow pod TC przed szybkimi Szakalami (7 ataku)! (3) Nie buduj na polanach spawnu Hordy przed bramami (fala niszczy tam budynki).",
         ),
     ]
     for m_name, m_order, m_header, m_text in tldr_modal_defs:

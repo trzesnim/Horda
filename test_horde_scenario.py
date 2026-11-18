@@ -1,6 +1,6 @@
 """
 test_horde_scenario.py - Kompleksowy zestaw testow jednostkowych, integracyjnych
-oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Horda (v7.0.3).
+oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Horda (v7.0.4).
 """
 
 import tempfile
@@ -48,6 +48,7 @@ from horde_config import (
     KREPOST_ID,
     MAP_REVEALER_ID,
     MAP_SIZE,
+    ONAGER_PROJECTILE_IDS,
     OUTPUT_SCENARIO,
     PALISADE_GATE_NW_SE_ID,
     PALISADE_GATE_SW_NE_ID,
@@ -337,20 +338,20 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                         f"{d_name} modyfikuje trigger fali {target_tr.name}! (Regresja BUG-01)",
                     )
 
-        # Porzadek topologiczny trigger_id (571..578)
-        # Pad GORNY: P1->P2 (571) < 0->P1 (572) < M1->0 (573) < M2->M1 (574)
+        # Porzadek topologiczny trigger_id (574..581)
+        # Pad GORNY: P1->P2 (574) < 0->P1 (575) < M1->0 (576) < M2->M1 (577)
         id_up_p1_p2 = self.t_map["09_Diff_Up_P1_to_P2"].trigger_id
         id_up_0_p1 = self.t_map["09_Diff_Up_0_to_P1"].trigger_id
         id_up_m1_0 = self.t_map["09_Diff_Up_M1_to_0"].trigger_id
         id_up_m2_m1 = self.t_map["09_Diff_Up_M2_to_M1"].trigger_id
-        self.assertEqual((id_up_p1_p2, id_up_0_p1, id_up_m1_0, id_up_m2_m1), (571, 572, 573, 574))
+        self.assertEqual((id_up_p1_p2, id_up_0_p1, id_up_m1_0, id_up_m2_m1), (574, 575, 576, 577))
 
-        # Pad DOLNY: M1->M2 (575) < 0->M1 (576) < P1->0 (577) < P2->P1 (578)
+        # Pad DOLNY: M1->M2 (578) < 0->M1 (579) < P1->0 (580) < P2->P1 (581)
         id_down_m1_m2 = self.t_map["09_Diff_Down_M1_to_M2"].trigger_id
         id_down_0_m1 = self.t_map["09_Diff_Down_0_to_M1"].trigger_id
         id_down_p1_0 = self.t_map["09_Diff_Down_P1_to_0"].trigger_id
         id_down_p2_p1 = self.t_map["09_Diff_Down_P2_to_P1"].trigger_id
-        self.assertEqual((id_down_m1_m2, id_down_0_m1, id_down_p1_0, id_down_p2_p1), (575, 576, 577, 578))
+        self.assertEqual((id_down_m1_m2, id_down_0_m1, id_down_p1_0, id_down_p2_p1), (578, 579, 580, 581))
 
     def test_siege_onager_blast_attack_level_bug02(self):
         """01b musi ustawiac ATTR_BLAST_ATTACK_LEVEL = 44 na 2 dla SIEGE_ONAGER_ID dla wszystkich 4 graczy AI."""
@@ -407,13 +408,41 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                 self.assertEqual(val, BALANCE["raider_atk"])
 
     def test_escalation_prompt_buffs_bug08(self):
-        """04a, 04c, 04e musza natychmiast aplikowac 1. tick eskalacji."""
-        for esc_name in ["04a_Enable_Escalation_At_20m", "04c_Enable_LateGame_Escalation_At_45m", "04e_Enable_Endgame_Escalation_At_55m"]:
-            tr = self.t_map[esc_name]
-            mod_effects = [e for e in tr.effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE]
-            self.assertGreater(len(mod_effects), 0, f"{esc_name} brak efektow modify_attribute!")
-            chat_effects = [e for e in tr.effects if e.effect_type in (EffectId.DISPLAY_INSTRUCTIONS, EffectId.SEND_CHAT)]
-            self.assertGreater(len(chat_effects), 0, f"{esc_name} brak czatu!")
+        """04a/04c/04e przełączają rozłącznie Biegi 1-3 (+17s), 04b/04d/04f aplikują buffy, a 04g nakłada twardy limit w 65:30."""
+        t_04a = self.t_map["04a_Enable_Escalation_At_20m"]
+        t_04b = self.t_map["04b_Global_Horde_Escalation_Every_5m"]
+        t_04c = self.t_map["04c_Enable_LateGame_Escalation_At_45m"]
+        t_04d = self.t_map["04d_LateGame_Horde_Overdrive_Every_5m"]
+        t_04e = self.t_map["04e_Enable_Endgame_Escalation_At_55m"]
+        t_04f = self.t_map["04f_Endgame_Horde_Escalation_Every_5m"]
+        t_04g = self.t_map["04g_Cap_All_Time_Escalation_At_65m"]
+
+        self.assertEqual(t_04a.conditions[0].timer, 1217)
+        self.assertEqual(t_04c.conditions[0].timer, 2117)
+        self.assertEqual(t_04e.conditions[0].timer, 3317)
+        self.assertEqual(t_04g.conditions[0].timer, 3930)
+
+        self.assertIn(t_04b.trigger_id, {e.trigger_id for e in t_04a.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER})
+        self.assertIn(t_04b.trigger_id, {e.trigger_id for e in t_04c.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER})
+        self.assertIn(t_04d.trigger_id, {e.trigger_id for e in t_04c.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER})
+        self.assertIn(t_04d.trigger_id, {e.trigger_id for e in t_04e.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER})
+        self.assertIn(t_04f.trigger_id, {e.trigger_id for e in t_04e.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER})
+        self.assertEqual(
+            {e.trigger_id for e in t_04g.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER},
+            {t_04b.trigger_id, t_04d.trigger_id, t_04f.trigger_id},
+        )
+
+        for esc_loop in (t_04b, t_04d, t_04f):
+            self.assertEqual((esc_loop.enabled, esc_loop.looping), (0, 1))
+            self.assertEqual(esc_loop.conditions[0].timer, 300)
+            mod_effects = [e for e in esc_loop.effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE]
+            self.assertGreater(len(mod_effects), 0, f"{esc_loop.name} brak efektow modify_attribute!")
+            chat_effects = [e for e in esc_loop.effects if e.effect_type in (EffectId.DISPLAY_INSTRUCTIONS, EffectId.SEND_CHAT)]
+            self.assertGreater(len(chat_effects), 0, f"{esc_loop.name} brak czatu!")
+
+        for esc_ctrl in (t_04a, t_04c, t_04e, t_04g):
+            chat_effects = [e for e in esc_ctrl.effects if e.effect_type in (EffectId.DISPLAY_INSTRUCTIONS, EffectId.SEND_CHAT)]
+            self.assertGreater(len(chat_effects), 0, f"{esc_ctrl.name} brak czatu!")
 
     def test_archmage_aura_automaton_bug05(self):
         """Aura Arcymaga 02a/02d musi tworzyc dwustanowy automat z inverted=1."""
@@ -660,7 +689,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             self.assertEqual(tr_g.looping, 1)
             self.assertEqual(len(tr_g.conditions), 1)
             self.assertEqual(tr_g.conditions[0].condition_type, ConditionId.TIMER)
-            self.assertEqual(tr_g.conditions[0].timer, BALANCE["wave_interval_sec"])
+            self.assertEqual(tr_g.conditions[0].timer, BALANCE["endless_repeat_interval"])
 
             for lvl_tag in ["M2", "M1", "0", "P1", "P2"]:
                 var_name = f"03_Endless_{s_key}_Diff_{lvl_tag}"
@@ -1176,7 +1205,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                 self.assertLessEqual(abs(h.x - tc_x), 4.0)
 
     def test_crash_safe_wave_countdown_timer(self):
-        """Weryfikuje bezpieczny Zegar Fali w Objectives (brak DISPLAY_TIMER, timer=999999 na UI, 168 krokow co 30s)."""
+        """Weryfikuje bezpieczny Zegar Fali w Objectives (brak DISPLAY_TIMER, timer=999999 na UI, 204 kroki co 30s do 102:00)."""
         for tr in self.triggers:
             for eff in tr.effects:
                 self.assertNotEqual(
@@ -1187,8 +1216,8 @@ class TestScenarioBinaryStructure(unittest.TestCase):
 
         ui_triggers = [t for t in self.triggers if t.name.startswith("00_Wave_Timer_UI_")]
         tick_triggers = [t for t in self.triggers if t.name.startswith("00_Wave_Timer_Tick_")]
-        self.assertEqual(len(ui_triggers), 169)
-        self.assertEqual(len(tick_triggers), 168)
+        self.assertEqual(len(ui_triggers), 205)
+        self.assertEqual(len(tick_triggers), 204)
 
         for idx, t_ui in enumerate(ui_triggers):
             self.assertEqual(t_ui.enabled, 1 if idx == 0 else 0)
@@ -1289,20 +1318,20 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             self.assertIn(u_id, PLAYER_MOUNTED_RANGED_UNITS)
 
         wave_map = {w.wave_num: w for w in get_wave_definitions()}
-        self.assertEqual(wave_map[7].wave_title, "Fala 7/14 (40:00 - Wczesny Imperial: PANCERNA SZARZA!)")
+        self.assertEqual(wave_map[7].wave_title, "Fala 7/14 (40:30 - Wczesny Imperial: PANCERNA SZARZA!)")
         self.assertEqual(dict(wave_map[7].g2_mages)[UnitInfo.CAVALIER.ID], 18)
         self.assertEqual(dict(wave_map[7].g3_north)[UnitInfo.CAVALIER.ID], 16)
         self.assertEqual(dict(wave_map[7].g3_north)[UnitInfo.SIEGE_RAM.ID], 2)
 
-        self.assertEqual(wave_map[10].wave_title, "Fala 10/14 (56m - NOC SZAKALI + ATAK NA TRADE LINE!)")
+        self.assertEqual(wave_map[10].wave_title, "Fala 10/14 (61:00 - NOC SZAKALI + ATAK NA TRADE LINE!)")
         self.assertEqual(wave_map[10].raider_count, 22)
 
-        self.assertEqual(wave_map[11].wave_title, "Fala 11/14 (62m - NAWALNICA ARTYLERII I SNAJPEROW!)")
+        self.assertEqual(wave_map[11].wave_title, "Fala 11/14 (68:30 - NAWALNICA ARTYLERII I SNAJPEROW!)")
         self.assertEqual(dict(wave_map[11].g2_snipers)[UnitInfo.ELITE_JANISSARY.ID], 8)
         self.assertEqual(dict(wave_map[11].g2_snipers)[SIEGE_ONAGER_ID], 4)
         self.assertEqual(dict(wave_map[11].g3_east)[SIEGE_ONAGER_ID], 4)
 
-        self.assertEqual(wave_map[13].wave_title, "Fala 13/14 (73m - STRAZ PRZEDNIA TYTANOW!)")
+        self.assertEqual(wave_map[13].wave_title, "Fala 13/14 (84:00 - STRAZ PRZEDNIA TYTANOW!)")
         self.assertEqual(dict(wave_map[13].g2_mages)[IMAM_UNIT_ID], 3)
         self.assertEqual(dict(wave_map[13].g3_north)[ELITE_BATTLE_ELEPHANT_ID], 6)
         self.assertEqual(dict(wave_map[13].g3_east)[ELITE_BATTLE_ELEPHANT_ID], 6)
@@ -1769,7 +1798,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
 
         # 8. Opcjonalny output_path w build_horde_scenario + weryfikacja round-trip z TemporaryDirectory
         with tempfile.TemporaryDirectory() as tmp_dir:
-            custom_path = Path(tmp_dir) / "test_custom_horda_v703.aoe2scenario"
+            custom_path = Path(tmp_dir) / "test_custom_horda_v704.aoe2scenario"
             returned_path = build_horde_scenario(output_path=custom_path)
             self.assertEqual(returned_path, custom_path)
             self.assertTrue(custom_path.exists())
@@ -1975,7 +2004,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             tr for tr in self.triggers
             if tr.name.startswith("00_Wave_Timer_UI_") or tr.name.startswith("00_Wave_Timer_Tick_")
         ]
-        self.assertEqual(len(wave_timer_trs), 169 + 168)
+        self.assertEqual(len(wave_timer_trs), 205 + 204)
         for wt_tr in wave_timer_trs:
             self.assertIn(wt_tr.trigger_id, deact_07a, f"07a nie dezaktywuje {wt_tr.name}!")
         self.assertIn(t_boss_banner.trigger_id, {e.trigger_id for e in t_07a.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER})
@@ -2034,30 +2063,198 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         self.assertEqual(len(palisade_hp_adds), 12)
         self.assertTrue(all(e.quantity == 600 for e in palisade_hp_adds))
 
-        # Eskalacja ataku: 04a/04b maja atk, 04c/04d nie maja atk (0), 04e/04f maja +1 atk
-        for esc_no_atk in ("04c_Enable_LateGame_Escalation_At_45m", "04d_LateGame_Horde_Overdrive_Every_5m"):
-            atk_effs = [
-                e for e in self.t_map[esc_no_atk].effects
-                if e.effect_type == EffectId.MODIFY_ATTRIBUTE and e.object_attributes == ATTR_ATTACK
-            ]
-            self.assertEqual(len(atk_effs), 0, f"{esc_no_atk} nie powinien zwiekszac ataku w Biegu 2!")
-        for esc_with_atk in (
+        # Eskalacja: kontrolery 04a/04c/04e/04g bez MODIFY_ATTRIBUTE, petle 04b/04d/04f z HP i Atk
+        for esc_ctrl in (
             "04a_Enable_Escalation_At_20m",
-            "04b_Global_Horde_Escalation_Every_5m",
+            "04c_Enable_LateGame_Escalation_At_45m",
             "04e_Enable_Endgame_Escalation_At_55m",
+            "04g_Cap_All_Time_Escalation_At_65m",
+        ):
+            mod_effs = [e for e in self.t_map[esc_ctrl].effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE]
+            self.assertEqual(len(mod_effs), 0, f"{esc_ctrl} powinien byc wylacznie kontrolerem bez MODIFY_ATTRIBUTE!")
+        for esc_loop in (
+            "04b_Global_Horde_Escalation_Every_5m",
+            "04d_LateGame_Horde_Overdrive_Every_5m",
             "04f_Endgame_Horde_Escalation_Every_5m",
         ):
+            hp_effs = [
+                e for e in self.t_map[esc_loop].effects
+                if e.effect_type == EffectId.MODIFY_ATTRIBUTE and e.object_attributes == ATTR_HIT_POINTS
+            ]
             atk_effs = [
-                e for e in self.t_map[esc_with_atk].effects
+                e for e in self.t_map[esc_loop].effects
                 if e.effect_type == EffectId.MODIFY_ATTRIBUTE and e.object_attributes == ATTR_ATTACK
             ]
+            self.assertGreater(len(hp_effs), 0)
             self.assertGreater(len(atk_effs), 0)
 
-        # Wylomy saperskie: ostrzezenie 45s przed (3015s i 4005s)
+        # Wylomy saperskie: ostrzezenia 120s przed (3120s i 4440s) oraz 30s przed (3210s i 4530s)
+        t_wn_2m = self.t_map["03_W09_Forest_Breach_North_Warn_2m"]
         t_wn = self.t_map["03_W09_Forest_Breach_North_Warn"]
+        t_we_2m = self.t_map["03_W12_Forest_Breach_East_Warn_2m"]
         t_we = self.t_map["03_W12_Forest_Breach_East_Warn"]
-        self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 3015 for c in t_wn.conditions))
-        self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 4005 for c in t_we.conditions))
+        self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 3120 for c in t_wn_2m.conditions))
+        self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 3210 for c in t_wn.conditions))
+        self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 4440 for c in t_we_2m.conditions))
+        self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 4530 for c in t_we.conditions))
+
+    def test_v704_r15_pacing_escalation_cap_mortar_and_local_imam(self):
+        """Weryfikuje zmiany v7.0.4 (Etap R15): harmonogram F7-F14 i Endless 600s, alarmy wylomow 120s/30s, przesuniecie fazowe OOS, twardy limit eskalacji 65:30, Mozdzierz Glass Cannon i lokalna aura Imama P7."""
+        # 1. Harmonogram Fal 1-14 oraz Trybu Endless (6120s, interwal 600s)
+        wave_map = {w.wave_num: w for w in get_wave_definitions()}
+        expected_times = {
+            1: 510, 2: 780, 3: 1080, 4: 1410, 5: 1740, 6: 2070,
+            7: 2430, 8: 2820, 9: 3240, 10: 3660, 11: 4110, 12: 4560, 13: 5040, 14: 5520,
+        }
+        for w_num, exp_sec in expected_times.items():
+            self.assertEqual(wave_map[w_num].wave_sec, exp_sec)
+            t_ann = self.t_map[f"03_W{w_num:02d}_Announce"]
+            self.assertEqual(t_ann.conditions[0].timer, exp_sec)
+
+        self.assertEqual(BALANCE["endless_start_sec"], 6120)
+        self.assertEqual(BALANCE["endless_repeat_interval"], 600)
+        t_end_gate_ann = self.t_map["03_Endless_Announce_Gate"]
+        t_end_loop = self.t_map["03_Endless_Announce_Loop"]
+        self.assertEqual(t_end_gate_ann.conditions[0].timer, 5520)
+        self.assertEqual(t_end_loop.conditions[0].timer, 600)
+        for s_key in ("G1_North", "G1_East", "G2_Snipers", "G2_Mages", "G3_North", "G3_East"):
+            self.assertEqual(self.t_map[f"03_Endless_Gate_{s_key}"].conditions[0].timer, 600)
+
+        # Zegar Fali konczy na 6120s (102:00)
+        t_ui_last = self.t_map["00_Wave_Timer_UI_204_6120s"]
+        self.assertIn("TRYB ENDLESS AKTYWNY (szturm co 10:00)", t_ui_last.short_description)
+
+        # 2. Alarmy wylomow saperskich na 120s i 30s przed F9 (3240s) i F12 (4560s) + deaktywacja po upadku G2_Snipers
+        t_wn_2m = self.t_map["03_W09_Forest_Breach_North_Warn_2m"]
+        t_wn = self.t_map["03_W09_Forest_Breach_North_Warn"]
+        t_bn = self.t_map["03_W09_Forest_Breach_North_Execute"]
+        t_we_2m = self.t_map["03_W12_Forest_Breach_East_Warn_2m"]
+        t_we = self.t_map["03_W12_Forest_Breach_East_Warn"]
+        t_be = self.t_map["03_W12_Forest_Breach_East_Execute"]
+
+        self.assertEqual(t_wn_2m.conditions[0].timer, 3120)
+        self.assertEqual(t_wn.conditions[0].timer, 3210)
+        self.assertEqual(t_bn.conditions[0].timer, 3240)
+        self.assertEqual(t_we_2m.conditions[0].timer, 4440)
+        self.assertEqual(t_we.conditions[0].timer, 4530)
+        self.assertEqual(t_be.conditions[0].timer, 4560)
+
+        self.assertTrue(any(e.effect_type == EffectId.CREATE_OBJECT and e.object_list_unit_id == FLARE_UNIT_ID and (e.location_x, e.location_y) == (78, 95) for e in t_wn_2m.effects))
+        self.assertTrue(any(e.effect_type == EffectId.CREATE_OBJECT and e.object_list_unit_id == FLARE_UNIT_ID and (e.location_x, e.location_y) == (109, 140) for e in t_we_2m.effects))
+
+        deact_g2_s = {e.trigger_id for e in self.t_map["05_Settlement_Destroyed_G2_Snipers"].effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER}
+        self.assertIn(t_wn_2m.trigger_id, deact_g2_s)
+        self.assertIn(t_we_2m.trigger_id, deact_g2_s)
+
+        # 3. Przesuniecie fazowe OOS (02e = 17s; Biegi 1217, 2117, 3317) oraz rozlaczna eskalacja + limit 65:30 (+67 HP, +9 Atk)
+        self.assertEqual(self.t_map["02e_Push_Gate_Units_Deep_Into_Base"].conditions[0].timer, 17)
+        t_04a = self.t_map["04a_Enable_Escalation_At_20m"]
+        t_04b = self.t_map["04b_Global_Horde_Escalation_Every_5m"]
+        t_04c = self.t_map["04c_Enable_LateGame_Escalation_At_45m"]
+        t_04d = self.t_map["04d_LateGame_Horde_Overdrive_Every_5m"]
+        t_04e = self.t_map["04e_Enable_Endgame_Escalation_At_55m"]
+        t_04f = self.t_map["04f_Endgame_Horde_Escalation_Every_5m"]
+        t_04g = self.t_map["04g_Cap_All_Time_Escalation_At_65m"]
+
+        self.assertEqual(t_04a.conditions[0].timer, 1217)
+        self.assertEqual(t_04c.conditions[0].timer, 2117)
+        self.assertEqual(t_04e.conditions[0].timer, 3317)
+        self.assertIn(t_04b.trigger_id, {e.trigger_id for e in t_04c.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER})
+        self.assertIn(t_04d.trigger_id, {e.trigger_id for e in t_04e.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER})
+        self.assertEqual(
+            {e.trigger_id for e in t_04g.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER},
+            {t_04b.trigger_id, t_04d.trigger_id, t_04f.trigger_id},
+        )
+        self.assertLess(t_04b.trigger_id, t_04c.trigger_id)
+        self.assertLess(t_04d.trigger_id, t_04e.trigger_id)
+        self.assertEqual((t_04g.enabled, t_04g.looping, t_04g.conditions[0].timer), (1, 0, 3930))
+
+        def _check_loop_buffs(tr, exp_hp: int, exp_atk: int):
+            hp_mods = [e.quantity for e in tr.effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE and e.object_attributes == ATTR_HIT_POINTS]
+            atk_mods = [
+                (e.armour_attack_quantity if e.armour_attack_quantity is not None else (e.quantity % 65536))
+                for e in tr.effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE and e.object_attributes == ATTR_ATTACK
+            ]
+            self.assertGreater(len(hp_mods), 0)
+            self.assertGreater(len(atk_mods), 0)
+            self.assertTrue(all(v == exp_hp for v in hp_mods))
+            self.assertTrue(all(v == exp_atk for v in atk_mods))
+
+        _check_loop_buffs(t_04b, 5, 1)
+        _check_loop_buffs(t_04d, 8, 1)
+        _check_loop_buffs(t_04f, 10, 1)
+
+        # 4. Mozdzierz (Siege Onager): 70 HP, pancerz 0/3, brak skalowania HP/Atk, 8 szt. w F11, pociski 3.2
+        mortar_spec = ENEMY_UNIT_REGISTRY[SIEGE_ONAGER_ID]
+        self.assertEqual(mortar_spec.base_hp, 70)
+        self.assertEqual(mortar_spec.hp_delta_up, 10)
+        self.assertEqual(mortar_spec.hp_delta_down, 15)
+        self.assertFalse(mortar_spec.scales_hp)
+        self.assertFalse(mortar_spec.scales_atk)
+        self.assertIsNone(mortar_spec.attack_class)
+
+        self.assertEqual(dict(wave_map[11].g2_snipers)[SIEGE_ONAGER_ID], 4)
+        self.assertEqual(dict(wave_map[11].g3_east)[SIEGE_ONAGER_ID], 4)
+
+        def _armor_val(e):
+            return e.armour_attack_quantity if e.armour_attack_quantity is not None else (e.quantity % 65536)
+
+        t_01b = self.t_map["01b_Apply_Specialized_Unit_Archetypes"]
+        mortar_hp_mods = [
+            e for e in t_01b.effects
+            if e.effect_type == EffectId.MODIFY_ATTRIBUTE
+            and e.object_list_unit_id == SIEGE_ONAGER_ID
+            and e.object_attributes == ATTR_HIT_POINTS
+        ]
+        self.assertEqual(len(mortar_hp_mods), 4)
+        self.assertTrue(all(e.operation == Operation.SET.value and e.quantity == 70 for e in mortar_hp_mods))
+
+        mortar_pierce = [
+            e for e in t_01b.effects
+            if e.effect_type == EffectId.MODIFY_ATTRIBUTE
+            and e.object_list_unit_id == SIEGE_ONAGER_ID
+            and e.object_attributes == ATTR_ARMOR
+            and e.armour_attack_class == 3
+        ]
+        mortar_melee = [
+            e for e in t_01b.effects
+            if e.effect_type == EffectId.MODIFY_ATTRIBUTE
+            and e.object_list_unit_id == SIEGE_ONAGER_ID
+            and e.object_attributes == ATTR_ARMOR
+            and e.armour_attack_class == 4
+        ]
+        self.assertEqual(len(mortar_pierce), 4)
+        self.assertEqual(len(mortar_melee), 4)
+        self.assertTrue(all(_armor_val(e) == 3 for e in mortar_pierce))
+        self.assertTrue(all(_armor_val(e) == 0 for e in mortar_melee))
+
+        for ai_p in (PlayerId.SIX.value, PlayerId.EIGHT.value):
+            for proj_id in ONAGER_PROJECTILE_IDS:
+                proj_mods = [
+                    e for e in t_01b.effects
+                    if e.effect_type == EffectId.MODIFY_ATTRIBUTE
+                    and e.source_player == ai_p
+                    and e.object_list_unit_id == proj_id
+                    and e.object_attributes == ATTR_MOVEMENT_SPEED
+                    and e.operation == Operation.SET.value
+                ]
+                self.assertEqual(len(proj_mods), 1, f"Brak spowolnienia pocisku {proj_id} dla P{ai_p} w 01b!")
+                self.assertAlmostEqual(proj_mods[0].quantity, 3.2, places=2)
+
+        # 5. Lokalna Aura Imama: +8/-8 pancerza wylacznie dla P7 oraz leczenie 25 HP/3s w strefie
+        for trig_name in ("02a_Mage_Global_Horde_Shield_On", "02d_Mage_Global_Horde_Shield_Off"):
+            tr = self.t_map[trig_name]
+            armor_mods = [
+                e for e in tr.effects
+                if e.effect_type == EffectId.MODIFY_ATTRIBUTE and e.object_attributes == ATTR_ARMOR
+            ]
+            self.assertGreater(len(armor_mods), 0)
+            self.assertEqual({e.source_player for e in armor_mods}, {PlayerId.SEVEN.value})
+
+        t_heal = self.t_map["02b_Mage_AoE_Heal_Pulse_3s"]
+        heal_effs = [e for e in t_heal.effects if e.effect_type == EffectId.HEAL_OBJECT]
+        self.assertEqual(len(heal_effs), 4)
+        self.assertTrue(all(e.quantity == 25 for e in heal_effs))
 
 
 if __name__ == "__main__":

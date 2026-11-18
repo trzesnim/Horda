@@ -1,20 +1,20 @@
-# Przewodnik Gracza — Kroniki Rubieży: Horda i Ekspedycje (v7.0.3)
+# Przewodnik Gracza — Kroniki Rubieży: Horda i Ekspedycje (v7.0.4)
 
-Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, podział ról na mapie i przegląd zmian od ostatniej gry.
+Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, podział ról na mapie i przegląd zmian po naszym pierwszym pełnym, 62-minutowym playteście co-op (`2026-11-16`).
 
 ---
 
 ## TL;DR — Najważniejsze zasady w 30 sekund
 
 - **Cel gry:** Broń **Cytadeli (Feitorii P2)** w sercu bazy `(54, 146)` (jej utrata = natychmiastowa porażka wszystkich). Wyjdź za mury, zniszcz **6 Twierdz Hordy (`G1–G3`)**, a po `60s` na powrót armii zgładź **Wielkiego Chana Subotaia (4500 HP)** przed Bramą Centralną (dopóki w strefie bitwy żyją jego Żelazne Słonie, Chan regeneruje `+180 HP/3s`; w finale Horda atakuje jednocześnie na wszystkie 3 bramy).
-- **Ustawienia i Fale:** Gracze `P1–P4` (ludzie, P2 najlepiej Hiszpanie) vs `P5–P8` (AI **Extreme**). 14 fal od `8:30` do `78:30` (potem Endless) — zegar do kolejnej fali i poziom trudności są zawsze na górze **Objectives**, a skrót tych zasad (`TL;DR`) znajduje się na górze zakładki **Objectives** po kliknięciu ikony w górnym pasku gry oraz w **Hints**.
+- **Ustawienia i Fale:** Gracze `P1–P4` (ludzie, P2 najlepiej Hiszpanie) vs `P5–P8` (AI **Extreme**). 14 fal od `8:30` do `92:00` (Fale 7–14 rozrzedzone co 6–8 min, potem Endless co 10 min od `102:00`) — zegar do kolejnej fali i poziom trudności są zawsze na górze **Objectives**, a skrót tych zasad (`TL;DR`) znajduje się na górze zakładki **Objectives** po kliknięciu ikony w górnym pasku gry oraz w **Hints**.
 - **Role (`P1–P4`):**
   * **P1 (Niebieski):** Brama Centralna + Król w odizolowanym **Sanktuarium `(4, 138)`** na zachodniej krawędzi mapy (wejście na flagę zmienia trudność `-2..+2`).
   * **P2 (Czerwony):** Handel, obrona chłopów przed **Szakalami** + Król-Kwatermistrz w odizolowanej komnacie **`(4, 164)`** (od `10:00` co 4 min wejście Królem na Północną lub Południową Flagę daje rosnące wsparcie: `10–20m` Małe, `20–30m` Średnie, `30m+` Duże).
-  * **P3 (Zielony):** Brama Północna (uwaga: w `50:15` alarm, a w `51:00` saperzy wyrąbią wyłom w północnym lesie!).
-  * **P4 (Żółty):** Brama Wschodnia (w `66:45` alarm, w `67:30` wyłom we wschodnim lesie) + korytarz handlowy na południu.
+  * **P3 (Zielony):** Brama Północna (uwaga: w **`52:00`** alarm 2 minuty przed wycinką, w `53:30` drugi alarm 30s, a w **`54:00`** saperzy wyrąbią wyłom w północnym lesie!).
+  * **P4 (Żółty):** Brama Wschodnia (w **`74:00`** alarm 2 minuty przed wycinką, w `75:30` drugi alarm 30s, a w **`76:00`** wyłom we wschodnim lesie) + korytarz handlowy na południu.
 - **Wyprawy (Settlementy, Questy i Map PoI):** Zburzenie każdego **Settlementu (`G1–G3`)** daje surowce i **na stałe wyłącza jego fale oraz jednostki specjalne** (wywołując jeden kontratak i *Furię*). **Questy (`Q1–Q4`)** dają potężne perki całej drużynie (`Q1`: mur i handel; `Q2`: rozbij 2 Baszty Bombardowe by zdjąć tarczę Uniwersytetu -> bonus strzelców/jazdy; `Q3`: stały dochód `+100F/+100W/+90G/+20S` co 1 min; `Q4`: przetrwaj 30s odwetu -> `+30%` HP/pancerz i Wielki Klasztor). Dodatkowo na mapie ukryto **3 punkty eksploracyjne (`PoI 1–3`)**.
-- **3 złote zasady w walce:** (1) W pierwszej kolejności zabijaj **Arcymaga (Imama)** przed Bramą Centralną (daje całej Hordzie tarczę `+8/+8` pancerza!), (2) Chroń wieśniaków pod TC przed szybkimi **Szakalami** (`7` ataku!), (3) Nie buduj na polanach spawnu Hordy przed bramami (fala niszczy budynki w miejscu swojego pojawienia się).
+- **3 złote zasady w walce:** (1) W pierwszej kolejności zabijaj **Arcymaga (Imama)** przed Bramą Centralną (daje kolumnie `P7` tarczę `+8/+8` pancerza i leczy wrogów w strefie `+25 HP/3s`!), (2) Chroń wieśniaków pod TC przed szybkimi **Szakalami** (`7` ataku!), (3) Nie buduj na polanach spawnu Hordy przed bramami (fala niszczy budynki w miejscu swojego pojawienia się).
 
 ---
 
@@ -32,7 +32,7 @@ Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, 
 
 ## 2. Cel Gry i Zasady Przetrwania
 
-* **Obrona Twierdzy Sojuszu:** Startujemy razem w południowo-zachodniej części mapy (z gotowymi domkami i wspólną wizją z Kartografii). Horda uderza w **14 głównych falach**: pierwsza fala przychodzi o **`8:30`**, druga o **`13:00`**, trzecia o **`18:00`**, a kolejne co 5,5 minuty aż do finałowej 14. fali o **`78:30`** (od **`84:00`** włącza się Tryb Endless).
+* **Obrona Twierdzy Sojuszu:** Startujemy razem w południowo-zachodniej części mapy (z gotowymi domkami i wspólną wizją z Kartografii). Horda uderza w **14 głównych falach**: pierwsza fala przychodzi o **`8:30`**, druga o **`13:00`**, trzecia o **`18:00`**, Fale 4–6 co 5,5 minuty (`23:30`, `29:00`, `34:30`), natomiast od Fali 7 tempo zwalnia (co 6–8 minut: `40:30`, `47:00`, `54:00`, `61:00`, `68:30`, `76:00`, `84:00`) aż do finałowej 14. fali o **`92:00`** (od **`102:00`** włącza się Tryb Endless co `10` minut). Po `65:30` eskalacja czasowa Hordy całkowicie staje na limicie `+67 HP / +9 Ataku`.
 * **Jak wygrać:** Nie wystarczy siedzieć za murami! Musimy wyjść w głąb mapy, zniszczyć wszystkie **6 Twierdz Hordy (Settlementów `G1–G3`)**, po czym dostajemy **60 sekund** na wycofanie armii i obstawienie wszystkich 3 bram (Centralnej `(104, 114)`, Północnej i Wschodniej), aby odeprzeć **Ostatni Szturm Wielkiego Chana Subotaia (4500 HP)** i zgładzić samego Chana.
 * **Jak przegrywamy:** Jeśli wrogowie zburzą centralną **Cytadelę (Feitorię Gracza 2)** w sercu naszej bazy, cała drużyna natychmiast przegrywa.
 
@@ -53,11 +53,11 @@ Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, 
     * **Poziom 3 (`od 30:00+` — Duży Bonus):** Flaga Północna `(4, 161)` daje **`6x Elitarny Konkwistador + 2x Kolubryna + 2x Taran Oblężniczy`**; Flaga Południowa `(4, 167)` daje **`+300 Żywności/Drewna/Złota`** każdemu graczowi oraz naprawia Twierdzę i Mur `Q1` o **`+500 HP`**.
 
 * **Gracz 3 (Zielony — Brama Północna i Klif Artylerii):**
-  * Broni **Bramy Północnej** (pierwsze uderzenie już o **`8:30`**!). Uwaga: w **`50:15`** pojawia się alarm saperski (45s na reakcję!), a w **51. minucie** wrodzy saperzy wyrąbią dodatkowy wyłom w północnym lesie na prawo od bramy.
+  * Broni **Bramy Północnej** (pierwsze uderzenie już o **`8:30`**!). Uwaga: w **`52:00`** pojawia się **wczesny alarm saperski na 2 minuty przed wycinką** (drugi alarm 30s przed w `53:30`), a w **`54:00`** wrodzy saperzy wyrąbią dodatkowy wyłom w północnym lesie na prawo od bramy.
   * Ma najbliżej do pierwszego obozu wroga (**`G1 Północ`**) oraz zadania **`Q2 (Klif Artylerii)`** w północno-zachodnim narożniku mapy.
 
 * **Gracz 4 (Żółty — Brama Wschodnia i Szlak Handlowy):**
-  * Broni **Bramy Wschodniej** (pierwszy atak już o **`8:30`**) oraz południowej **Bramy Handlowej**. Uwaga: od **45. minuty** co druga fala wysyła dodatkowy atak od południa wprost na Szlak Handlowy, w **`66:45`** przychodzi alarm saperski, a w **`67:30`** saperzy wycinają przejście we wschodnim lesie!
+  * Broni **Bramy Wschodniej** (pierwszy atak już o **`8:30`**) oraz południowej **Bramy Handlowej**. Uwaga: od **47. minuty** (`47:00`, Fala 8) co druga fala wysyła dodatkowy atak od południa wprost na Szlak Handlowy, w **`74:00`** przychodzi **alarm saperski 2 minuty przed wycinką** (drugi alarm 30s przed w `75:30`), a w **`76:00`** saperzy wycinają przejście we wschodnim lesie!
   * Ma najbliżej do zadania **`Q1 (Karawanseraj)`**, którego zburzenie buduje długi Kamienny Mur Handlowy z 6 basztami i otwiera bezpieczny szlak dla wozów handlowych przez całą mapę.
 
 ---
@@ -91,17 +91,17 @@ Poza głównymi obozami na rubieżach ukryte są także trzy punkty eksploracyjn
 
 ## 5. Groźni Przeciwnicy (Na kogo uważać w tłumie)
 
-* **Arcymag Tarczy (Imam przed Bramą Centralną):** Najwyższy priorytet! Dopóki żyje w strefie przed Bramą Centralną (pokazuje go flara na mapie), nakłada na **całą Hordę na wszystkich bramach** tarczę **`+8/+8` pancerza** i leczy wrogów wokół siebie. Zabijcie go jako pierwszego!
+* **Arcymag Tarczy (Imam przed Bramą Centralną):** Najwyższy priorytet pod Bramą Centralną! Dopóki żyje w strefie przed Bramą Centralną (pokazuje go flara na mapie), nakłada na **swoją kolumnę `P7`** tarczę **`+8/+8` pancerza** (nie wzmacnia już pozostałych bram!) i mocno leczy wrogów wokół siebie (**`+25 HP / 3s`**). Zabijcie go jako pierwszego!
 * **Szakale Dywersanci:** Bardzo szybka lekka jazda, która ignoruje walkę na murach i pędzi prosto pod nasze Town Center zabijać wieśniaków. Mają wysoki pancerz na strzały i zadają teraz **7 obrażeń** — chowajcie chłopów do TC i wybijajcie ich rycerzami lub pikinierami.
-* **Moździerze Oblężnicze i Snajperzy:** Dalekosiężna artyleria (zasięg **21**, ale z martwą strefą 6 kratek w zwarciu — i nie niszczy już lasów przy bramach!) oraz strzelcy (zasięg **19**, ogromne obrażenia w pojedynczy cel). Przewyższają zasięgiem nasze zamki, więc najlepiej wyjeżdżać po nich kawalerią.
+* **Moździerze Oblężnicze i Snajperzy:** Dalekosiężna artyleria typu *Glass Cannon* — Moździerze mają teraz tylko **70 HP** (bez skalowania HP!), pancerz **`0/3`**, zasięg **21**, martwą strefę 6 kratek w zwarciu, nie niszczą lasów przy bramach, a ich pociski lecą znacznie wolniej (**`3.2`**), więc można z nich unikać i łatwo dobić je kawalerią lub łucznikami! Snajperzy (zasięg **19**) wciąż biją mocno w pojedynczy cel.
 * **Żelazne Słonie (1450 HP):** Olbrzymie żywe tarany o wysokim pancerzu i pełnej odporności na mnichów. Walcząc z żołnierzami zadają tylko po **3 obrażenia**, ale szybko niszczą mury i zamki (**`+140` obrażeń przeciw budynkom**) — najlepiej wybić najpierw ich eskortę, a potem otoczyć słonie halabardnikami.
 
 ---
 
-## 6. Co zmieniło się od naszej ostatniej próby (kiedy zmiana trudności odpaliła 14. falę)?
+## 6. Co zmieniło się po naszym pełnym 62-minutowym playteście co-op (`v7.0.3 -> v7.0.4`)?
 
-1. **Naprawione Sanktuarium Balansu:** Przesunięcie Króla na flagę trudności działa teraz płynnie w dowolnej sekundzie gry, nie ma sztucznych blokad czasowych i **nigdy więcej nie uruchamia finałowej fali ze słoniami w 1. minucie meczu**. Aktualny poziom trudności widać cały czas na górze panelu Celów.
-2. **Zegar Fali i `TL;DR` w zakładce Objectives:** Na samej górze listy zadań w prawym górnym rogu ekranu działa czytelny licznik odliczający czas do następnej fali co 30 sekund, wspierany ostrzeżeniami na czacie minutę przed każdym atakiem, a kliknięcie ikony **Objectives** na górnym pasku pokazuje 4-punktowy skrót zasad (`TL;DR`) bez zaśmiecania ekranu podczas gry.
-3. **Płynny start bez blokady populacji:** Każdy z nas zaczyna od razu z gotowymi domkami przy swoim Town Center, a Cytadela Czerwonego (P2) ma zrekompensowane miejsce w populacji, więc od pierwszej sekundy można swobodnie szkolić wieśniaków.
-4. **Aktywna gra na wszystkich frontach i izolacja komnat:** Komnaty Sanktuarium `(4, 138)` i Kwatermistrza P2 `(4, 164)` zostały przeniesione na zachodnią krawędź mapy za gęstą ścianę lasu, a wsparcie Kwatermistrza skaluje się w czasie (`10–20m`, `20–30m`, `30m+`); Niebieski (P1) w centrum dostaje pierwsze uderzenia już w 13. minucie, a Żelazne Słonie maszerują szybciej razem z armią.
-5. **Fale Specjalne, zawalanie obozów i Finałowy Boss:** Wybrane fale mają własny, unikalny motyw (np. *Pancerna Szarża*, *Noc Szakali*, *Nawałnica Artylerii i Snajperów*), po zburzeniu głównej budowli obozu wszystkie jego wieże i zamki efektownie zawalają się naraz, a po rozbiciu 6 Twierdz Hordy czeka nas 3-bramowy wielki finał przeciwko **Wielkiemu Chanowi Subotaiowi (4500 HP)** (którego gwardia Żelaznych Słoni ze strefy bitwy regeneruje go o `+180 HP/3s`, dopóki żyje przynajmniej 1 Słoń).
+1. **Więcej oddechu w late-game (rozrzedzenie Fal 7–14 i Endless co 10 min):** Od Fali 7 (`40:30`) do Fali 14 (`92:00`) fale są rozrzedzone z `5,5` do `6–8` minut, a Tryb Endless rusza o `102:00` co `10` minut (`600s`), dzięki czemu po odparciu szturmu mamy wreszcie czas wyjść z kontratakiem na obozy wroga i Questy.
+2. **Brak OOS w `40:00` oraz twardy sufit eskalacji w `65:30`:** Przesunięto fazowo pętlę bram (`17s`) i Biegów Eskalacji (`+17s`), naprawiono nakładanie się trzech pętli eskalacji i dodano twardy wyłącznik w `65:30` (maks. **`+67 HP, +9 Ataku`**).
+3. **2 minuty na reakcję przed wyłomami saperskimi:** Saperzy w Fali 9 (`54:00`) i Fali 12 (`76:00`) dają wczesny alarm z flarą już **2 minuty przed wycinką** (`52:00` i `74:00`), a przypomnienie na `30s` przed.
+4. **Lokalny Imam i Moździerze *Glass Cannon*:** Aura pancerza Imama (`+8/+8`) działa już tylko na jego kolumnę `P7` pod Bramą Centralną (z mocniejszym leczeniem `+25 HP/3s` w tej strefie), a Moździerze mają **70 HP**, pancerz **`0/3`** i spowolnione pociski (`3.2`).
+5. **Sprawdzone fundamenty z `v7.0.1–v7.0.3`:** Płynnie działające Sanktuarium Balansu `(4, 138)` i Kwatermistrz P2 `(4, 164)` (od `10:00` co 4 min z awansem `10–20m`, `20–30m`, `30m+`), Zegar Fali i `TL;DR` w zakładce **Objectives**, `PoI 1–3`, dwuetapowe `Q2/Q4` i 3-bramowy finał z Wielkim Chanem Subotaiem (`4500 HP`).

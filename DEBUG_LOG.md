@@ -1,4 +1,4 @@
-# DEBUG_LOG.md — Dokumentacja Architektury, Stanu Bazowego i Błędów (`Kroniki Rubieży: Horda i Ekspedycje` v6.3 -> v7.0.3)
+# DEBUG_LOG.md — Dokumentacja Architektury, Stanu Bazowego i Błędów (`Kroniki Rubieży: Horda i Ekspedycje` v6.3 -> v7.0.4)
 
 ## 0. Identyfikacja stanu bazowego i zasady dla Agenta IDE (Antigravity / VS Code)
 - **Repozytorium bazowe:** `https://github.com/trzesnim/AoE_Scenarios/tree/main` (stan odpowiadający wersji `v6.3 -> v6.4` po audycie kodu i testów).
@@ -18,17 +18,17 @@ Projekt generuje 4-osobowy scenariusz kooperacyjny RPG/RTS do *Age of Empires II
    - Udostępnia funkcję `build_horde_scenario(output_path: Path | str | None = None) -> Path` (domyślnie używa `OUTPUT_SCENARIO` i zwraca ścieżkę zapisanego pliku).
    - Wczytuje plik szablonu `INPUT_TEMPLATE` (`template.aoe2scenario`) przez `AoE2DEScenario.from_file()` i wywołuje kolejno `populate_ingame_scenario_descriptions`, `build_map_and_entities`, `setup_init_aura_and_waves`, `setup_sanctuary_quests_and_victory`.
 2. **`horde_config.py` — Konfiguracja, stałe ID, rejestr jednostek i definicje fal:**
-   - Zawiera stałe ID obiektów, jednostek specjalnych, Bossa (`FINAL_BOSS_HERO_ID = 698`, `4500 HP`), zasobów (`RES_*`), atrybutów silnika Genie (`ATTR_*`) oraz technologii (`TECH_*`), a także rejestr `ENEMY_UNIT_REGISTRY` (`30` jednostek wroga).
-   - Definiuje słownik `BALANCE` (czasy fal, progi eskalacji, statystyki 6 archetypów + Bossa `Subotai`, wartości nagród za Questy i Furii).
-   - Definiuje funkcje: `find_scenario_folder()`, `populate_ingame_scenario_descriptions(scenario)` (z blokiem `TL;DR` umieszczonym zarówno w `instructions`, jak i na początku `hints`) oraz `get_wave_definitions()`.
+   - Zawiera stałe ID obiektów, jednostek specjalnych, pocisków Onagera (`ONAGER_PROJECTILE_IDS`: `551, 552, 369, 468`), Bossa (`FINAL_BOSS_HERO_ID = 698`, `4500 HP`), zasobów (`RES_*`), atrybutów silnika Genie (`ATTR_*`) oraz technologii (`TECH_*`), a także rejestr `ENEMY_UNIT_REGISTRY` (`30` jednostek wroga, w tym Moździerz `588` o `70 HP`, `scales_hp=False`, `scales_atk=False`).
+   - Definiuje słownik `BALANCE` (czasy fal F7–F14 rozrzedzone `40:30..92:00`, Endless od `6120s` co `600s`, przesunięta o `+17s` eskalacja `1217/2117/3317s` z limitem `3930s`, statystyki 6 archetypów + Bossa `Subotai`, wartości nagród za Questy i Furii).
+   - Definiuje funkcje: `find_scenario_folder()`, `populate_ingame_scenario_descriptions(scenario)` (`v7.0.4`, z blokiem `TL;DR` umieszczonym zarówno w `instructions`, jak i na początku `hints`) oraz `get_wave_definitions()`.
 3. **`horde_map.py` — Silnik geometryczny mapy i spawner obiektów startowych:**
    - Zawiera klasę siatki antykolizyjnej `SafeMapGrid` (`mark_footprint`, `mark_no_trees`) oraz funkcje rzeźby terenu, biomu, lasów, rzeki, klifów, baz graczy, odizolowanych komnat Sanktuarium P1 `(4, 138)` i Kwatermistrza P2 `(4, 164)` (z pasem gęstego lasu `x=8..13, y=128..176` i `x=1..13, y=144..158` oraz stałymi `MAP_REVEALER` dla `P1–P4`), 3 Map PoI (`(30, 76)`, `(124, 178)`, `(50, 90)`), przełęczy i Settlementów.
    - Główna funkcja `build_map_and_entities(scenario) -> dict` buduje mapę `200x200` i zwraca słownik `ctx` z referencjami do obiektów i współrzędnych.
-4. **`horde_waves.py` — Inicjalizacja AI, mutacje jednostek, Aura Maga, eskalacja i fale 1–14:**
+4. **`horde_waves.py` — Inicjalizacja AI, mutacje jednostek, Lokalna Aura Maga, eskalacja i fale 1–14:**
    - Zawiera funkcje pomocnicze triggerów (`safe_call`, `safe_modify_attribute`, `add_enemy_combat_buff`, `set_as_objective`, `send_highlight_chat`, `add_player_resource`, `research_techs`, `add_guarded_camp_with_leash` z `detect_y2_max` i `object_type=ObjectType.MILITARY`, `add_spawn_and_attack_effect`, `scale_comp_for_level`).
-   - Główna funkcja `setup_init_aura_and_waves(scenario, ctx)` tworzy triggery dyplomacji (`+600 HP` palisad i bram palisadowych), technologii AI, mutacji jednostek specjalnych i Bossa (`01b`), garnizonów, Aury Arcymaga (`+8/+8`), 3-stopniowej eskalacji oraz 14 fal Hordy (alarmy wyłomów z `45s` wyprzedzeniem: `3015s` i `4005s`) + Endless (eksportuje `escalation_triggers` i `endless_triggers`).
+   - Główna funkcja `setup_init_aura_and_waves(scenario, ctx)` tworzy triggery dyplomacji (`+600 HP` palisad i bram palisadowych), technologii AI, mutacji jednostek specjalnych (Moździerz `70 HP`, `0/3` pancerza, pociski `3.2` dla `P6/P8`) i Bossa (`01b`), garnizonów, Lokalnej Aury Arcymaga (`+8/+8` wyłącznie dla `P7` i leczenie `+25 HP/3s` w strefie), popychania bram (`02e` co `17s`), rozłącznej 3-stopniowej eskalacji z twardym limitem w `65:30` (`04a–04g`: `+67 HP, +9 Atk`) oraz 14 fal Hordy (alarmy wyłomów z `120s` i `30s` wyprzedzenia: `3120/3210s` i `4440/4530s`) + Endless co `600s` od `6120s` (eksportuje `escalation_triggers` i `endless_triggers`).
 5. **`horde_quests.py` — Zegar Fali, TL;DR w Objectives, Sanktuarium Balansu, Questy Q1–Q4, 3-poziomowy Kwatermistrz P2, PoI 1–3, Settlementy i Boss Finałowy:**
-   - Główna funkcja `setup_sanctuary_quests_and_victory(scenario, ctx)` tworzy Zegar Fali (`00_Wave_Timer_*` zwracający `wave_timer_triggers` i `00_Wave_Timer_Boss_Banner`) i 4 triggery `00_TLDR_Modal_1..4` (`display_as_objective=1, display_on_screen=0, order=210..207`), maszynę stanów Sanktuarium Balansu (`09_Diff_*`), dwuetapowe Questy `Q1–Q4` (`06_Quest*`), 3-poziomowy Posterunek Kwatermistrza P2 (`06d_*`), Map PoI 1–3 (`06e_*`, `r=3`), zniszczenie 6 Settlementów (`05_Settlement_Destroyed_*`, Furia `8/1, 14/1, 20/2`), czterofazowy Boss Fight na 3 bramy z Tarczą Gwardii Słoni (`07a -> 07b (+ 07b_Boss_Elephant_Guard_Heal) -> 07c -> 07d`) oraz warunek porażki (`08_Defeat_*`).
+   - Główna funkcja `setup_sanctuary_quests_and_victory(scenario, ctx)` tworzy Zegar Fali do `102:00` (`00_Wave_Timer_*` zwracający `wave_timer_triggers` i `00_Wave_Timer_Boss_Banner`) i 4 triggery `00_TLDR_Modal_1..4` (`display_as_objective=1, display_on_screen=0, order=210..207`), maszynę stanów Sanktuarium Balansu (`09_Diff_*`, ID `574..581`), dwuetapowe Questy `Q1–Q4` (`06_Quest*`), 3-poziomowy Posterunek Kwatermistrza P2 (`06d_*`), Map PoI 1–3 (`06e_*`, `r=3`), zniszczenie 6 Settlementów (`05_Settlement_Destroyed_*`, Furia `8/1, 14/1, 20/2`), czterofazowy Boss Fight na 3 bramy z Tarczą Gwardii Słoni (`07a -> 07b (+ 07b_Boss_Elephant_Guard_Heal) -> 07c -> 07d`) oraz warunek porażki (`08_Defeat_*`).
 6. **`horda.md` — Dokumentacja scenariusza dla graczy.**
 
 ### Uruchamianie kompilacji
@@ -74,8 +74,8 @@ Wszyscy 4 gracze AI są w sojuszu między sobą i w stanie wojny (`DiplomacyStat
 - **Cele rajdów ekonomicznych Szakali (`eco_raid_targets`):**
   - `(32, 118)` (eko P3), `(76, 120)` (eko P1), `(32, 168)` (eko P2), `(76, 172)` (eko P4).
 - **Korytarze wyrębu lasu przez Saperów:**
-  - `north_breach_box = (75, 95, 80, 105)` (wymiar `6×11` kratek — Fala 9 w `51:00`),
-  - `east_breach_box = (99, 137, 109, 142)` (wymiar `11×6` kratek — Fala 12 w `67:30`).
+  - `north_breach_box = (75, 95, 80, 105)` (wymiar `6×11` kratek — Fala 9 w `54:00`, alarmy `52:00` i `53:30`),
+  - `east_breach_box = (99, 137, 109, 142)` (wymiar `11×6` kratek — Fala 12 w `76:00`, alarmy `74:00` i `75:30`).
 - **Sanktuarium Balansu i Kwatermistrz P2 (pełna izolacja na zachodniej krawędzi):**
   - Środek komnaty Sanktuarium P1: `(4, 138)` (`sanctuary_cx = 4, sanctuary_cy = 138`, obrys klifów `x = 1..7, y = 133..143`, wnętrze `ROAD` `2..6, 134..142`).
   - Górna flaga (`pad_up_box` — Trudniej, `FLAG_A`): `(2, 134)` do `(6, 136)` (flaga na `(4, 135)`).
@@ -226,6 +226,10 @@ Wszyscy 4 gracze AI są w sojuszu między sobą i w stanie wojny (`DiplomacyStat
   3. `06_Quest2_Shield_Loop` nie filtrował `ObjectType.BUILDING` (mógł leczyć stojące w środku jednostki), a `06d_P2_QM_Eco_T2/T3` miał nakładające się prostokąty leczenia dla `P4` (`0..110` vs `105..199`).
   4. `07a` nie zatrzymywał Zegara Fal (`00_Wave_Timer_*`), a warunek Słoni w `07b_Boss_Elephant_Guard_Heal` obejmował całą mapę `0..199` (samotny Słoń w ruinach `G3` leczył Chana).
 - **Naprawa:** Przeniesiono `PoI 2` na `(124, 178)` i `PoI 3` na `(50, 90)` z detektorami `r=3` (`PoI 1`: `27..33, 73..79`, `PoI 2`: `121..127, 175..181`, `PoI 3`: `47..53, 87..93`), dodano `object_type=ObjectType.MILITARY` (`quantity=1`) w `add_guarded_camp_with_leash`, dodano `object_type=ObjectType.BUILDING` w `06_Quest2_Shield_Loop`, przesunięto mur P4 na `111..199, 183..187`, wyłączono Zegar Fal w `07a` (`00_Wave_Timer_Boss_Banner`) oraz ograniczono strefę warunku Słoni w `07b_Boss_Elephant_Guard_Heal` / `Disable_Heal` do `(40, 90, 135, 175)`.
+
+### BUG-28 [KRYTYCZNY — WDROŻONY / NAPRAWIONY w Etapie R15]: Desynchronizacja *Out of Sync* w `40:00`, nakładająca się bez limitu eskalacja `04b+04d+04f`, globalna aura Imama na wszystkich frontach oraz zbyt pancerne Moździerze (wnioski z playtestu 2026-11-16)
+- **Objaw w grze:** Podczas pierwszego pełnego, 62-minutowego playtestu kooperacyjnego (`v7.0.3`, 2026-11-16) w `40:00` (`2400 s`) wystąpiła desynchronizacja *OOS* w chwili jednoczesnego spawnu Fali 7, pętli `04b` (`300 s`) i `02e` (`15 s`); w późnej grze (Fale 9–11, porażka o `62:21`) trzy pętle eskalacji działały równocześnie bez górnego pułapu (`+20 HP / +2 Atk` co 5 min), Arcymag dawał `+8/+8` pancerza wszystkim armiom `P5–P8` na całej mapie, Moździerze skalowały się z `350 HP` w górę, a krótkie `45s` ostrzeżenie o wyłomie oraz ciasne fale co `5,5 min` uniemożliwiały kontratak.
+- **Naprawa (`v7.0.4`):** Rozrzedzono Fale 7–14 (`2430..5520 s`) i Endless (`6120 s+`, co `600 s`), dodano wczesne alarmy wyłomów na `120 s` przed wycinką (`3120 s` i `4440 s`) + `30 s` (`3210 s` i `4530 s`), przesunięto fazowo `02e` na `17 s` oraz Biegi Eskalacji na `+17 s` (`1217/2117/3317 s`) z wzajemnym wyłączaniem `04b -> 04d -> 04f` i twardym wyłącznikiem `04g` w `65:30` (`+67 HP, +9 Atk`), zawężono pancerz Imama `+8/+8` wyłącznie do `PlayerId.SEVEN` (z podniesieniem leczenia obszarowego w strefie do `+25 HP/3s`) oraz zmieniono Moździerze na rolę *Glass Cannon* (`70 HP`, pancerz `0/3`, `scales_hp=False`, spowolnione pociski `3.2` dla `P6/P8`).
 
 ---
 
@@ -536,3 +540,23 @@ Dzięki temu przejście `0 -> -1` odejmuje dokładnie `hp_delta_down` (ok. 15% b
   * `python -m ruff check .` -> `All checks passed!`.
   * `python test_horde_scenario.py -v` -> `Ran 30 tests in 81.279s` (`OK`, `30/30` testów zaliczonych).
   * Metryki binarnego `Kroniki_Rubiezy_Horda_Coop.aoe2scenario` w docelowym folderze gry: **`243 043` bajtów**, **`969` triggerów**, **`5350` obiektów startowych** (`P0=5142, P1=37, P2=18, P3=26, P4=39, P5=13, P6=12, P7=10, P8=53`), topologiczne `trigger_id` Sanktuarium `09_Diff_*` nienaruszone (`571..578`).
+
+### Wdrożenie 16: Etap R15 — Aktualizacja v7.0.4 (Rozrzedzenie Fal F7–F14, Limit Eskalacji 65:30 + Anty-OOS, Moździerz Glass Cannon, Lokalny Imam P7) [STATUS: OK]
+* **Zmodyfikowane pliki:** `horde_config.py`, `horde_waves.py`, `horde_quests.py`, `test_horde_scenario.py`, `horda.md`, `PRZEWODNIK_GRACZA.md`, `SCENARIO_DOSSIER.md`, `BALANCE_DOSSIER.md`, `DEBUG_LOG.md`, `ROADMAP.md`, `GEMINI.md` (+ usunięte tymczasowe skrypty po analizie `.aoe2record`).
+* **Opis wdrożonych zmian i przyczyn (`BUG-28`, wnioski z 62-min playtestu 2026-11-16):**
+  * **1. Rozrzedzenie Fal 7–14, Endless co 10 min (`600 s`) i 2-minutowe alarmy wyłomów (`horde_config.py`, `horde_waves.py`, `horde_quests.py`):**
+    * Wydłużono odstępy Fal 7–14 (`2430, 2820, 3240, 3660, 4110, 4560, 5040, 5520 s`, tj. `40:30` do `92:00`), ustawiono `endless_repeat_interval = 600` (`10 min`) i `endless_start_sec = 6120` (`102:00`) oraz rozciągnięto Zegar Fali `00_Wave_Timer_UI_000..204` (`205` banerów UI i `204` przełączniki co `30 s`).
+    * Dodano wczesne triggery alarmowe `03_W09_Forest_Breach_North_Warn_2m` (`timer=3120`, flara `78, 95`) oraz `03_W12_Forest_Breach_East_Warn_2m` (`timer=4440`, flara `109, 140`) na `120 s` przed wyłomem (z deaktywacją po upadku `G2_Snipers`), przesuwając drugi alarm + pre-spawn (`_Warn`) na `30 s` przed (`3210 s` i `4530 s`).
+  * **2. Eliminacja OOS z `40:00`, rozłączne Biegi Eskalacji 1–3 i Twardy Limit `65:30` (`horde_config.py`, `horde_waves.py`):**
+    * Zmieniono interwał `02e_Push_Gate_Units_Deep_Into_Base` z `15 s` na **`17 s`** (liczba pierwsza) oraz przesunięto starty Biegów Eskalacji o `+17 s`: `04a` (`1217 s`), `04c` (`2117 s`), `04e` (`3317 s`).
+    * Przebudowano `04a–04g` w rozłączną sekwencję: `04a` włącza `04b` (`+5/+1`, 3 ticki: `25:17..35:17`), `04c` **wyłącza `04b`** i włącza `04d` (`+8/+1`, 4 ticki: `40:17..55:17`), `04e` **wyłącza `04d`** i włącza `04f` (`+10/+1`, 2 ticki: `60:17, 65:17`), a nowy trigger **`04g_Cap_All_Time_Escalation_At_65m` (`timer=3930` / `65:30`)** wyłącza wszystkie trzy pętle na pułapie **`+67 HP, +9 Ataku`**.
+  * **3. Rebalans Moździerza (`Glass Cannon` + spowolnione pociski `3.2`) bez redukcji liczebności (`horde_config.py`, `horde_waves.py`):**
+    * Zachowano pełną liczebność `SIEGE_ONAGER_ID` we wszystkich falach (w tym `4 + 4 = 8` szt. w F11).
+    * W `ENEMY_UNIT_REGISTRY`: `base_hp=70`, `hp_delta_up=10`, `hp_delta_down=15`, `scales_hp=False`, `scales_atk=False`, `attack_class=None`; w `01b`: `ATTR_HIT_POINTS=70`, `armor cl=3: 3`, `cl=4: 0`, oraz `ATTR_MOVEMENT_SPEED=3.2` dla `ONAGER_PROJECTILE_IDS` (`551, 552, 369, 468` z `ProjectileInfo`) dla `PlayerId.SIX` i `PlayerId.EIGHT`.
+  * **4. Lokalna Aura Imama (`+8/+8` wyłącznie dla `P7` i leczenie `+25 HP/3s`) (`horde_config.py`, `horde_waves.py`):**
+    * W `02a` i `02d` ograniczono modyfikację pancerza `+8 / -8` wyłącznie do `PlayerId.SEVEN` (bez `P5, P6, P8`), a w `02b_Mage_AoE_Heal_Pulse_3s` podniesiono `mage_aoe_heal_3s` z `15` na **`25 HP / 3s`**.
+  * **5. Rozszerzenie testów (`test_horde_scenario.py` — `31/31 testów OK`) i aktualizacja kompletu dokumentacji + telemetrii w dossierach.**
+* **Weryfikacja binarna:**
+  * `python -m ruff check .` -> `All checks passed!`.
+  * `python test_horde_scenario.py -v` -> `Ran 31 tests in 80.203s` (`OK`, `31/31` testów zaliczonych, w tym `test_v704_r15_pacing_escalation_cap_mortar_and_local_imam`).
+  * Metryki binarnego `Kroniki_Rubiezy_Horda_Coop.aoe2scenario` w docelowym folderze gry: **`239 537` bajtów**, **`1044` triggerów**, **`5350` obiektów startowych** (`P0=5142, P1=37, P2=18, P3=26, P4=39, P5=13, P6=12, P7=10, P8=53`), topologiczne `trigger_id` Sanktuarium `09_Diff_*` (`574..581`, porządek zachowany).

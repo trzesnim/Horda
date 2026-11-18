@@ -38,6 +38,7 @@ from horde_config import (
     IMAM_UNIT_ID,
     MAP_REVEALER_ID,
     MAP_SIZE,
+    ONAGER_PROJECTILE_IDS,
     PALISADE_GATE_NW_SE_ID,
     PALISADE_GATE_SW_NE_ID,
     PETARD_ID,
@@ -594,7 +595,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     send_highlight_chat(
         t_init, "<YELLOW>",
-        "=== KRONIKI RUBIEZY v7.0.3 === Inzynier Balansu P1 czeka w Sanktuarium (4, 138), a Kwatermistrz P2 w komnacie (4, 164) [od 10:00]! W panelu Celow (Objectives) dziala ZEGAR FALI oraz skrot zasad TL;DR!",
+        "=== KRONIKI RUBIEZY v7.0.4 === Inzynier Balansu P1 czeka w Sanktuarium (4, 138), a Kwatermistrz P2 w komnacie (4, 164) [od 10:00]! W panelu Celow (Objectives) dziala ZEGAR FALI oraz skrot zasad TL;DR!",
     )
 
     t_mutate = tm.add_trigger("01b_Apply_Specialized_Unit_Archetypes", enabled=True, looping=False)
@@ -633,6 +634,8 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         # 4. MOŹDZIERZ OBLĘŻNICZY (Siege Onager)
         safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_HIT_POINTS, Operation.SET, BALANCE["mortar_hp"])
         safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_HERO_STATUS, Operation.SET, 1)
+        safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_ARMOR, Operation.SET, BALANCE["mortar_pierce_armor"], armor_class=3)
+        safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_ARMOR, Operation.SET, BALANCE["mortar_melee_armor"], armor_class=4)
         safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_MAXIMUM_RANGE, Operation.SET, BALANCE["mortar_range"])
         safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_MINIMUM_RANGE, Operation.SET, BALANCE["mortar_min_range"])
         safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_SEARCH_RADIUS, Operation.SET, 23)
@@ -642,6 +645,11 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_BLAST_ATTACK_LEVEL, Operation.SET, 2)
         safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["mortar_speed"])
         safe_modify_attribute(t_mutate, ai_p, SIEGE_ONAGER_ID, ATTR_ATTACK, Operation.ADD, BALANCE["mortar_bonus_atk"], armor_class=4)
+        if ai_p in (PlayerId.SIX, PlayerId.EIGHT):
+            for proj_id in ONAGER_PROJECTILE_IDS:
+                safe_modify_attribute(
+                    t_mutate, ai_p, proj_id, ATTR_MOVEMENT_SPEED, Operation.SET, BALANCE["mortar_projectile_speed"]
+                )
 
         # 5. SNAJPER IMPERIALNY (Elitarny Janczar)
         safe_modify_attribute(t_mutate, ai_p, UnitInfo.ELITE_JANISSARY.ID, ATTR_HIT_POINTS, Operation.SET, BALANCE["sniper_hp"])
@@ -732,7 +740,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     }
 
     # ==============================================================================
-    # 6. GLOBALNA AURA MAGÓW (AUTOMAT DWUSTANOWY NA REJESTRZE - ETAP 5 - BUG-05)
+    # 6. LOKALNA AURA MAGÓW (AUTOMAT DWUSTANOWY NA REJESTRZE - P7 + LECZENIE 25 HP/3s)
     # ==============================================================================
     r_local = BALANCE["mage_local_radius"]
     mage_aura_center = (110, 114)
@@ -753,17 +761,16 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         area_x1=mx1, area_y1=my1, area_x2=mx2, area_y2=my2,
         quantity=1,
     )
-    for ai_p in ai_players:
-        for u_id in global_shielded_units:
-            safe_modify_attribute(t_shield_on, ai_p, u_id, ATTR_ARMOR, Operation.ADD, BALANCE["mage_shield_armor"], armor_class=3)
-            safe_modify_attribute(t_shield_on, ai_p, u_id, ATTR_ARMOR, Operation.ADD, BALANCE["mage_shield_armor"], armor_class=4)
+    for u_id in global_shielded_units:
+        safe_modify_attribute(t_shield_on, PlayerId.SEVEN, u_id, ATTR_ARMOR, Operation.ADD, BALANCE["mage_shield_armor"], armor_class=3)
+        safe_modify_attribute(t_shield_on, PlayerId.SEVEN, u_id, ATTR_ARMOR, Operation.ADD, BALANCE["mage_shield_armor"], armor_class=4)
     safe_call(t_shield_on.new_effect.deactivate_trigger, trigger_id=t_shield_on.trigger_id)
     safe_call(t_shield_on.new_effect.activate_trigger, trigger_id=t_mage_heal_pulse.trigger_id)
     safe_call(t_shield_on.new_effect.activate_trigger, trigger_id=t_mage_beacon.trigger_id)
     safe_call(t_shield_on.new_effect.activate_trigger, trigger_id=t_shield_off.trigger_id)
     send_highlight_chat(
         t_shield_on, "<PURPLE>",
-        "[GLOBALNA AURA MAGA]: Arcymag na przedpolu Bramy Centralnej dal GLOBALNIE +8/+8 Pancerza calej Hordzie (P5-P8) oraz LOKALNIE leczy jednostki w tej strefie! Skupcie na nim ogien!",
+        "[LOKALNA AURA MAGA]: Arcymag na przedpolu Bramy Centralnej dal kolumnie P7 +8/+8 Pancerza oraz leczy (+25 HP/3s) jednostki Hordy w tej strefie! Skupcie na nim ogien!",
         flare_x=114, flare_y=114,
     )
 
@@ -793,7 +800,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     )
     send_highlight_chat(
         t_mage_beacon, "<PURPLE>",
-        "[FLARA - ARCYMAG TARCZY]: Arcymag (P7 - 240 HP, regen 5 HP/s) w kregu pochodni przed Brama Centralna leczy i utrzymuje +8/+8 Pancerza na Hordzie!",
+        "[FLARA - ARCYMAG TARCZY]: Arcymag (P7 - 240 HP, regen 5 HP/s) w kregu pochodni przed Brama Centralna leczy (+25 HP/3s) i utrzymuje +8/+8 Pancerza na kolumnie P7!",
         flare_x=114, flare_y=114,
     )
 
@@ -805,21 +812,20 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         quantity=1,
         inverted=1,
     )
-    for ai_p in ai_players:
-        for u_id in global_shielded_units:
-            safe_modify_attribute(t_shield_off, ai_p, u_id, ATTR_ARMOR, Operation.SUBTRACT, BALANCE["mage_shield_armor"], armor_class=3)
-            safe_modify_attribute(t_shield_off, ai_p, u_id, ATTR_ARMOR, Operation.SUBTRACT, BALANCE["mage_shield_armor"], armor_class=4)
+    for u_id in global_shielded_units:
+        safe_modify_attribute(t_shield_off, PlayerId.SEVEN, u_id, ATTR_ARMOR, Operation.SUBTRACT, BALANCE["mage_shield_armor"], armor_class=3)
+        safe_modify_attribute(t_shield_off, PlayerId.SEVEN, u_id, ATTR_ARMOR, Operation.SUBTRACT, BALANCE["mage_shield_armor"], armor_class=4)
     safe_call(t_shield_off.new_effect.deactivate_trigger, trigger_id=t_mage_heal_pulse.trigger_id)
     safe_call(t_shield_off.new_effect.deactivate_trigger, trigger_id=t_mage_beacon.trigger_id)
     safe_call(t_shield_off.new_effect.deactivate_trigger, trigger_id=t_shield_off.trigger_id)
     safe_call(t_shield_off.new_effect.activate_trigger, trigger_id=t_shield_on.trigger_id)
     send_highlight_chat(
         t_shield_off, "<GREEN>",
-        "[BARIERA PRZELAMANA]: Arcymag zabity! Wszystkie armie Hordy (P5, P6, P7, P8) traca +8/+8 Pancerza i leczenie!",
+        "[BARIERA PRZELAMANA]: Arcymag zabity! Kolumna P7 traci +8/+8 Pancerza, a leczenie w strefie Bramy Centralnej wygasa!",
     )
 
     t_push_inside = tm.add_trigger("02e_Push_Gate_Units_Deep_Into_Base", enabled=True, looping=True)
-    safe_call(t_push_inside.new_condition.timer, timer=15)
+    safe_call(t_push_inside.new_condition.timer, timer=17)
     # P7 (Saracens / G2_Mages) wystawia Szakale Dywersyjne (HUSSAR_ID) przez Bramę Północną (52, 86)
     # oraz Wschodnią (116, 162) z rozkazem ActionType.MOVE. Wykluczamy P7 z tych stref, aby 02e
     # nie nadpisywał ich rozkazu MOVE rozkazem ATTACK_MOVE. P7 główną armią idzie wyłącznie przez Bramę Centralną.
@@ -841,18 +847,14 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             )
 
     # ==============================================================================
-    # 7. 3-STOPNIOWA ESKALACJA CZASOWA (ENEMY_UNIT_REGISTRY)
+    # 7. ROZLACZNA 3-STOPNIOWA ESKALACJA CZASOWA (+17s) + TWARDY LIMIT 65:30
     # ==============================================================================
 
     t_enable_esc1 = tm.add_trigger("04a_Enable_Escalation_At_20m", enabled=True, looping=False)
     safe_call(t_enable_esc1.new_condition.timer, timer=BALANCE["escalation_start_sec"])
-    add_enemy_combat_buff(
-        t_enable_esc1, ai_players,
-        hp_add=BALANCE["escalation_hp_add"], atk_add=BALANCE["escalation_atk_add"],
-    )
     send_highlight_chat(
         t_enable_esc1, "<ORANGE>",
-        f"[WZROST SILY HORDY]: Jednostki Hordy otrzymuja +{BALANCE['escalation_hp_add']} HP oraz +{BALANCE['escalation_atk_add']} Ataku!",
+        f"[WZROST SILY HORDY - BIEG 1]: Rozpoczyna sie mobilizacja Hordy (+{BALANCE['escalation_hp_add']} HP i +{BALANCE['escalation_atk_add']} Ataku co 5 min do 35:17)!",
     )
 
     t_escalate1 = tm.add_trigger("04b_Global_Horde_Escalation_Every_5m", enabled=False, looping=True)
@@ -869,13 +871,10 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     t_enable_esc2 = tm.add_trigger("04c_Enable_LateGame_Escalation_At_45m", enabled=True, looping=False)
     safe_call(t_enable_esc2.new_condition.timer, timer=BALANCE["late_escalation_start_sec"])
-    add_enemy_combat_buff(
-        t_enable_esc2, ai_players,
-        hp_add=BALANCE["late_escalation_hp_add"], atk_add=BALANCE["late_escalation_atk_add"],
-    )
+    safe_call(t_enable_esc2.new_effect.deactivate_trigger, trigger_id=t_escalate1.trigger_id)
     send_highlight_chat(
         t_enable_esc2, "<RED>",
-        f"[FURIA LATE-GAME]: Horda wchodzi w faze pelnej mobilizacji (+{BALANCE['late_escalation_hp_add']} HP)!",
+        f"[FURIA LATE-GAME - BIEG 2]: Horda przechodzi na drugi bieg mobilizacji (+{BALANCE['late_escalation_hp_add']} HP i +{BALANCE['late_escalation_atk_add']} Ataku co 5 min do 55:17)!",
     )
 
     t_escalate2 = tm.add_trigger("04d_LateGame_Horde_Overdrive_Every_5m", enabled=False, looping=True)
@@ -887,18 +886,15 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     )
     send_highlight_chat(
         t_escalate2, "<RED>",
-        f"[FURIA LATE-GAME]: Horda wchodzi w faze pelnej mobilizacji (+{BALANCE['late_escalation_hp_add']} HP)!",
+        f"[FURIA LATE-GAME]: Horda wchodzi w faze pelnej mobilizacji (+{BALANCE['late_escalation_hp_add']} HP, +{BALANCE['late_escalation_atk_add']} Ataku)!",
     )
 
     t_enable_esc3 = tm.add_trigger("04e_Enable_Endgame_Escalation_At_55m", enabled=True, looping=False)
     safe_call(t_enable_esc3.new_condition.timer, timer=BALANCE["endgame_escalation_start_sec"])
-    add_enemy_combat_buff(
-        t_enable_esc3, ai_players,
-        hp_add=BALANCE["endgame_escalation_hp_add"], atk_add=BALANCE["endgame_escalation_atk_add"],
-    )
+    safe_call(t_enable_esc3.new_effect.deactivate_trigger, trigger_id=t_escalate2.trigger_id)
     send_highlight_chat(
         t_enable_esc3, "<RED>",
-        f"[ESKALACJA ENDGAME]: Elitarne dywizje Hordy zyskuja kolejne +{BALANCE['endgame_escalation_hp_add']} HP i +{BALANCE['endgame_escalation_atk_add']} Ataku!",
+        f"[ESKALACJA ENDGAME - BIEG 3]: Elitarne dywizje Hordy wchodza w trzecia faze (+{BALANCE['endgame_escalation_hp_add']} HP i +{BALANCE['endgame_escalation_atk_add']} Ataku co 5 min do 65:30)!",
     )
 
     t_escalate3 = tm.add_trigger("04f_Endgame_Horde_Escalation_Every_5m", enabled=False, looping=True)
@@ -911,6 +907,16 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     send_highlight_chat(
         t_escalate3, "<RED>",
         f"[ESKALACJA ENDGAME]: Elitarne dywizje Hordy zyskuja kolejne +{BALANCE['endgame_escalation_hp_add']} HP i +{BALANCE['endgame_escalation_atk_add']} Ataku!",
+    )
+
+    t_cap_esc = tm.add_trigger("04g_Cap_All_Time_Escalation_At_65m", enabled=True, looping=False)
+    safe_call(t_cap_esc.new_condition.timer, timer=BALANCE["escalation_cap_sec"])
+    safe_call(t_cap_esc.new_effect.deactivate_trigger, trigger_id=t_escalate1.trigger_id)
+    safe_call(t_cap_esc.new_effect.deactivate_trigger, trigger_id=t_escalate2.trigger_id)
+    safe_call(t_cap_esc.new_effect.deactivate_trigger, trigger_id=t_escalate3.trigger_id)
+    send_highlight_chat(
+        t_cap_esc, "<AQUA>",
+        "[ESKALACJA HORDY] Horda osiągnęła maksymalny pułap furii czasowej (+67 HP, +9 Ataku) — statystyki wrogów nie rosną już z czasem!",
     )
 
     # ==============================================================================
@@ -980,9 +986,9 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_endless_sapper.new_effect.deactivate_trigger, trigger_id=t_endless_sapper.trigger_id)
     all_settlement_wave_triggers["G2_Snipers"].append(t_endless_sapper)
 
-    # Ogłoszenie cykliczne Endless
+    # Ogłoszenie cykliczne Endless (co 10 minut / 600s, start w 102:00 / 6120s)
     t_end_ann = tm.add_trigger("03_Endless_Announce_Loop", enabled=False, looping=True)
-    safe_call(t_end_ann.new_condition.timer, timer=BALANCE["wave_interval_sec"])
+    safe_call(t_end_ann.new_condition.timer, timer=BALANCE["endless_repeat_interval"])
     send_highlight_chat(
         t_end_ann, "<RED>",
         "=== [TRYB ENDLESS - NIESKONCZONA HORDA] === Horda rzuca do walki wszystkie rezerwy! Zniszczcie pozostale Settlementy, aby wygrac!",
@@ -990,7 +996,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     )
 
     t_end_gate_ann = tm.add_trigger("03_Endless_Announce_Gate", enabled=True, looping=False)
-    safe_call(t_end_gate_ann.new_condition.timer, timer=4710)
+    safe_call(t_end_gate_ann.new_condition.timer, timer=w14_def.wave_sec)
     safe_call(t_end_gate_ann.new_effect.activate_trigger, trigger_id=t_end_ann.trigger_id)
 
     # Indywidualne Bramki Endless dla każdego Settlementu (bez blokowania Sanktuarium)
@@ -998,7 +1004,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     all_endless_variants = []
     for s_key, (ai_p, sx, sy, tx, ty) in settlement_spawn_configs.items():
         end_gate = tm.add_trigger(f"03_Endless_Gate_{s_key}", enabled=False, looping=True)
-        safe_call(end_gate.new_condition.timer, timer=BALANCE["wave_interval_sec"])
+        safe_call(end_gate.new_condition.timer, timer=BALANCE["endless_repeat_interval"])
         all_settlement_wave_triggers[s_key].append(end_gate)
         endless_gates[s_key] = end_gate
 
@@ -1135,15 +1141,24 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
                     safe_call(v.new_effect.deactivate_trigger, trigger_id=brother.trigger_id)
 
         if w_num == 9:
+            t_warn_forest_n_2m = tm.add_trigger("03_W09_Forest_Breach_North_Warn_2m", enabled=True, looping=False)
+            safe_call(t_warn_forest_n_2m.new_condition.timer, timer=w_time - 120)
+            send_highlight_chat(
+                t_warn_forest_n_2m, "<ORANGE>",
+                "[ALARM SAPERSKI - 2 MINUTY!] Saperzy Hordy szykują wyłom w północnym lesie (78, 95)! Macie 2 minuty na przygotowanie obrony za lasem!",
+                flare_x=78, flare_y=95,
+            )
+            all_settlement_wave_triggers["G2_Snipers"].append(t_warn_forest_n_2m)
+
             t_warn_forest_n = tm.add_trigger("03_W09_Forest_Breach_North_Warn", enabled=True, looping=False)
-            safe_call(t_warn_forest_n.new_condition.timer, timer=w_time - 45)
+            safe_call(t_warn_forest_n.new_condition.timer, timer=w_time - 30)
             add_spawn_and_attack_effect(
                 t_warn_forest_n, PlayerId.SIX, [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 8)],
                 spawn_x=78, spawn_y=90, target_x=78, target_y=95,
             )
             send_highlight_chat(
                 t_warn_forest_n, "<ORANGE>",
-                "[ALARM SAPERSKI] Za 45 sekund Saperzy Hordy wyrąbią wyłom w północnym lesie (78, 95)!",
+                "[ALARM SAPERSKI] Za 30 sekund Saperzy Hordy wyrąbią wyłom w północnym lesie (78, 95)!",
                 flare_x=78, flare_y=98,
             )
             all_settlement_wave_triggers["G2_Snipers"].append(t_warn_forest_n)
@@ -1165,15 +1180,24 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             all_settlement_wave_triggers["G2_Snipers"].append(t_breach_n)
 
         if w_num == 12:
+            t_warn_forest_e_2m = tm.add_trigger("03_W12_Forest_Breach_East_Warn_2m", enabled=True, looping=False)
+            safe_call(t_warn_forest_e_2m.new_condition.timer, timer=w_time - 120)
+            send_highlight_chat(
+                t_warn_forest_e_2m, "<ORANGE>",
+                "[ALARM SAPERSKI - 2 MINUTY!] Saperzy Hordy szykują wyłom we wschodnim lesie (109, 140)! Macie 2 minuty na przygotowanie obrony!",
+                flare_x=109, flare_y=140,
+            )
+            all_settlement_wave_triggers["G2_Snipers"].append(t_warn_forest_e_2m)
+
             t_warn_forest_e = tm.add_trigger("03_W12_Forest_Breach_East_Warn", enabled=True, looping=False)
-            safe_call(t_warn_forest_e.new_condition.timer, timer=w_time - 45)
+            safe_call(t_warn_forest_e.new_condition.timer, timer=w_time - 30)
             add_spawn_and_attack_effect(
                 t_warn_forest_e, PlayerId.SIX, [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 10)],
                 spawn_x=115, spawn_y=140, target_x=109, target_y=140,
             )
             send_highlight_chat(
                 t_warn_forest_e, "<ORANGE>",
-                "[ALARM SAPERSKI] Za 45 sekund Saperzy Hordy wyrąbią wyłom we wschodnim lesie (109, 140)!",
+                "[ALARM SAPERSKI] Za 30 sekund Saperzy Hordy wyrąbią wyłom we wschodnim lesie (109, 140)!",
                 flare_x=106, flare_y=140,
             )
             all_settlement_wave_triggers["G2_Snipers"].append(t_warn_forest_e)
@@ -1213,5 +1237,6 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         t_escalate2,
         t_enable_esc3,
         t_escalate3,
+        t_cap_esc,
     ]
     ctx["state_markers"] = state_markers

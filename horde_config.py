@@ -4,6 +4,7 @@ from pathlib import Path
 from AoE2ScenarioParser.datasets.buildings import BuildingInfo
 from AoE2ScenarioParser.datasets.heroes import HeroInfo
 from AoE2ScenarioParser.datasets.other import OtherInfo
+from AoE2ScenarioParser.datasets.projectiles import ProjectileInfo
 from AoE2ScenarioParser.datasets.units import UnitInfo
 
 if not hasattr(UnitInfo, "SUBOTAI"):
@@ -65,6 +66,26 @@ IMAM_UNIT_ID = 842
 
 
 SIEGE_ONAGER_ID = 588
+
+
+ONAGER_PROJECTILE_ID = ProjectileInfo.ONAGER.ID
+
+
+ONAGER_FIRE_PROJECTILE_ID = ProjectileInfo.ONAGER_FIRE.ID
+
+
+ONAGER_SECONDARY_PROJECTILE_ID = ProjectileInfo.MANGONEL_SECONDARY.ID
+
+
+ONAGER_SECONDARY_FIRE_PROJECTILE_ID = ProjectileInfo.MANGONEL_SECONDARY_FIRE.ID
+
+
+ONAGER_PROJECTILE_IDS = [
+    ONAGER_PROJECTILE_ID,
+    ONAGER_FIRE_PROJECTILE_ID,
+    ONAGER_SECONDARY_PROJECTILE_ID,
+    ONAGER_SECONDARY_FIRE_PROJECTILE_ID,
+]
 
 
 PETARD_ID = 440
@@ -395,18 +416,18 @@ def populate_ingame_scenario_descriptions(scenario):
     tldr_block = (
         "TL;DR (NAJWAZNIEJSZE ZASADY W 30 SEKUND):\n"
         "- CEL GRY: Bron Cytadeli (Feitorii P2) w sercu bazy (54, 146) - jej utrata to natychmiastowa porazka wszystkich! Wyjdz za mury, zniszcz 6 Twierdz Hordy (G1-G3), a po 60s na powrot armii zgladz Wielkiego Chana Subotaia (4500 HP) przed Brama Centralna.\n"
-        "- USTAWIENIA I FALE: Gracze P1-P4 (ludzie, P2 najlepiej Hiszpanie) vs P5-P8 (AI Extreme). 14 fal od 8:30 do 78:30 (potem Endless) - zegar do kolejnej fali i poziom trudnosci sa zawsze na gorze Objectives (a skrot zasad w zakladce Objectives!).\n"
+        "- USTAWIENIA I FALE: Gracze P1-P4 (ludzie, P2 najlepiej Hiszpanie) vs P5-P8 (AI Extreme). 14 fal od 8:30 do 92:00 (od F7 rozrzedzone co 6-8 min; potem Endless co 10 min od 102:00) - zegar do kolejnej fali i poziom trudnosci sa zawsze na gorze Objectives (a skrot zasad w zakladce Objectives!).\n"
         "- ROLE GRACZY (P1-P4):\n"
         "  * P1 (Niebieski): Brama Centralna + Krol w odizolowanym Sanktuarium (4, 138) (wejscie na flage zmienia trudnosc -2..+2).\n"
         "  * P2 (Czerwony): Handel, obrona chlopow przed Szakalami + Krol-Kwatermistrz w odizolowanej komnacie (4, 164) (od 10:00 co 4 min rosnace wsparcie: 10-20m Male, 20-30m Srednie, 30m+ Duze).\n"
-        "  * P3 (Zielony): Brama Polnocna (uwaga: w 50:15 alarm, a w 51:00 saperzy wyrabia wylom w polnocnym lesie!).\n"
-        "  * P4 (Zolty): Brama Wschodnia (w 66:45 alarm, w 67:30 wylom we wschodnim lesie) + korytarz handlowy na poludniu.\n"
+        "  * P3 (Zielony): Brama Polnocna (uwaga: w 52:00 alarm 2 min, w 53:30 alarm 30s, a w 54:00 saperzy wyrabia wylom w polnocnym lesie!).\n"
+        "  * P4 (Zolty): Brama Wschodnia (w 74:00 alarm 2 min, w 75:30 alarm 30s, w 76:00 wylom we wschodnim lesie) + korytarz handlowy na poludniu.\n"
         "- WYPRAWY (SETTLEMENTY I QUESTY): Zburzenie kazdego Settlementu (G1-G3) daje surowce i na stale wylacza jego fale oraz jednostki specjalne (wywolujac jeden kontratak i Furie). Questy (Q1-Q4) daja potezne perki calej druzynie (Q1: mur i handel; Q2: rozbij 2 Baszty Bombardowe by zdjac tarcze Uniwersytetu -> bonus strzelcow/jazdy; Q3: staly dochod co 1 min; Q4: przetrwaj 30s odwetu -> +30% HP/pancerz i Wielki Klasztor).\n"
-        "- 3 ZLOTE ZASADY W WALCE: (1) W pierwszej kolejnosci zabijaj Arcymaga (Imama) przed Brama Centralna (daje calej Hordzie tarcze +8/+8 pancerza!), (2) Chron wiesniakow pod TC przed szybkimi Szakalami (7 ataku!), (3) Nie buduj na polanach spawnu Hordy przed bramami (fala niszczy budynki w miejscu swojego pojawienia sie).\n\n"
+        "- 3 ZLOTE ZASADY W WALCE: (1) W pierwszej kolejnosci zabijaj Arcymaga (Imama) przed Brama Centralna (daje kolumnie P7 tarcze +8/+8 pancerza i leczy pobliskich wrogow +25 HP/3s!), (2) Chron wiesniakow pod TC przed szybkimi Szakalami (7 ataku!), (3) Nie buduj na polanach spawnu Hordy przed bramami (fala niszczy budynki w miejscu swojego pojawienia sie).\n\n"
     )
 
     instructions_text = (
-        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v7.0.3 - 4P Co-op)\n\n"
+        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v7.0.4 - 4P Co-op)\n\n"
         f"{tldr_block}"
         "USTAWIENIA LOBBY I STARTU:\n"
         "- Gracze P5-P8 sa automatycznie skonfigurowani jako AI z zablokowanymi cywilizacjami (P5 Wikingowie, P6 Turcy, P7 Saraceni, P8 Persowie). Ustaw trudnosc AI na EKSTREMALNY (Extreme)!\n"
@@ -431,14 +452,15 @@ def populate_ingame_scenario_descriptions(scenario):
         "SZLAK HANDLOWY I PLAC GRACZY (Lewy dolny rog mapy x=2..24, y=176..198):\n"
         "- W lewym dolnym rogu bazy znajduje sie duzy, czysty Plac pod Targowiska graczy.\n"
         "- Zburzenie Q1 (Karawanseraj) stawia pojedyncze Targowisko sojusznicze w prawym rogu (195, 194) oraz buduje Kamienny Mur Obronny na y=186 (z 2-kratkowymi otworami wypadowymi na x=122..123 i x=170..171 oslonietych Basztami na y=184)!\n\n"
-        "ZASADY ROZGRYWKI I WARUNEK ZWYCIESTWA (Horyzont 60-90 minut):\n"
-        "- Fala 1 w 8:30 (bez taranow), Fala 2 w 13:00 (z taranem/mangonelem i uderzeniem na wszystkie 3 bramy, bez mutantow), Fala 3 w 18:00, kolejne co 5,5 min.\n"
-        "- Trzypoziomowa eskalacja czasowa (natychmiastowy 1. tick i powtorzenie co 5 min):\n"
-        "  * Od 20:00: +5 HP, +1 Atak co 5 min.\n"
-        "  * Od 45:00: dodatkowo +9 HP, +0 Ataku co 5 min (lacznie +14 HP, +1 Atak co 5 min).\n"
-        "  * Od 55:00: dodatkowo +6 HP, +1 Atak co 5 min (lacznie +20 HP, +2 Ataku co 5 min).\n"
-        "- Od 45. minuty (Fale 8-14) co druga fala wysyla szturm na SZLAK HANDLOWY w kierunku Bramy Handlowej.\n"
-        "- W Falach 9 (51:00, alarm 45s wczesniej o 50:15) i 12 (67:30, alarm 45s wczesniej o 66:45) Saperzy P6 wyrabuja przesieki w lesie (6x11 na polnocy, 11x6 na wschodzie)!\n"
+        "ZASADY ROZGRYWKI I WARUNEK ZWYCIESTWA (Horyzont 60-95 minut):\n"
+        "- Fale 1-6: 8:30, 13:00, 18:00, 23:30, 29:00, 34:30; Fale 7-14 (rozrzedzone): 40:30, 47:00, 54:00, 61:00, 68:30, 76:00, 84:00, 92:00; Tryb Endless od 102:00 co 10 minut (600s).\n"
+        "- Rozlaczna trzypoziomowa eskalacja czasowa (przesunieta o +17s, twardy sufit w 65:30):\n"
+        "  * Bieg 1 (20:17 -> 35:17): +5 HP, +1 Atak co 5 min (3 ticki: 25:17, 30:17, 35:17).\n"
+        "  * Bieg 2 (35:17 -> 55:17, wylacza Bieg 1): +8 HP, +1 Atak co 5 min (4 ticki: 40:17, 45:17, 50:17, 55:17).\n"
+        "  * Bieg 3 (55:17 -> 65:17, wylacza Bieg 2): +10 HP, +1 Atak co 5 min (2 ticki: 60:17, 65:17).\n"
+        "  * Twardy Limit (65:30): zatrzymuje cala eskalacje czasowa na pulapie +67 HP i +9 Ataku!\n"
+        "- Od 47. minuty (Fale 8, 10, 12, 14 i Endless) co druga fala wysyla szturm na SZLAK HANDLOWY w kierunku Bramy Handlowej.\n"
+        "- W Falach 9 (54:00, alarmy 52:00 i 53:30) i 12 (76:00, alarmy 74:00 i 75:30) Saperzy P6 wyrabuja przesieki w lesie (6x11 na polnocy, 11x6 na wschodzie)!\n"
         "- FINALOWY BOSS FIGHT: Po zniszczeniu wszystkich 6 Settlementow Hordy macie 60 sekund na powrot armii pod Brama Centralna (104, 114), zanim Wielki Chan Subotai (4500 HP) uderzy z (116, 114) wsparty skrzydlami na Brame Polnocna (68, 60 -> 48, 136) i Wschodnia (116, 162 -> 68, 152). Dopoki w strefie bitwy (40..135, 90..175) zyje przynajmniej 1 Zelazny Slon gwardii P8, Chan regeneruje +180 HP co 3s! Zgladz Chana, aby wygrac!\n"
     )
 
@@ -447,8 +469,8 @@ def populate_ingame_scenario_descriptions(scenario):
         "BESTIARIUSZ HORDY (WYSPECJALIZOWANE JEDNOSTKI Z POSWIATA BOHATERA):\n"
         "1. Taran-Zolw / Zelazny Slon (P8 - Tank): 1450 HP, szybkosc 0.72, +10/+12 pancerza, odporny na konwersje. Zadaje zawsze 3 dmg jednostkom (odpornosc na buffy ataku), ale +140 dmg budynkom!\n"
         "2. Szakale Dywersyjne (Huzarzy P7 - Eco-Raiders): Szybkosc 1.62, +6 pancerza na strzaly, zawsze 7 ataku (skaluja wylacznie HP). Wjezdzaja pod TC atakowac chlopow!\n"
-        "3. Arcymag Tarczy (Imam P7 - Globalny Support): Gdy stoi w strefie przedpola (promien 18 kratek wokol 110, 114) przed Brama Centralna, daje GLOBALNIE +8/+8 Pancerza wszystkim armiom Hordy (P5-P8 na calej mapie) oraz LOKALNIE leczy (+15 HP/3s) jednostki Hordy w tej strefie! Ma 240 HP i regeneracje 5 HP/s. Zabicie go zdejmuje aure z calej Hordy!\n"
-        "4. Mozdzierz Oblezniczy (Onager P6): 350 HP, szybkosc 0.58, 21 zasiegu, wybuch co 10s, MARTWA STREFA 6 kratek. Pociski maja Blast Attack Level = 2 (nie scinaja drzew wokol bram).\n"
+        "3. Arcymag Tarczy (Imam P7 - Lokalny Support Bramy Centralnej): Gdy stoi w strefie przedpola (promien 18 kratek wokol 110, 114) przed Brama Centralna, daje kolumnie P7 +8/+8 Pancerza oraz LOKALNIE leczy (+25 HP/3s) wszystkie jednostki Hordy w tej strefie! Ma 240 HP i regeneracje 5 HP/s. Zabicie go zdejmuje tarcze i leczenie!\n"
+        "4. Mozdzierz Oblezniczy (Onager P6 - Glass Cannon): 70 HP (nie skaluje HP!), pancerz 0/3, szybkosc 0.58, 21 zasiegu, spowolniony lot pocisku (3.2), wybuch co 10s, MARTWA STREFA 6 kratek. Pociski maja Blast Attack Level = 2 (nie scinaja drzew wokol bram).\n"
         "5. Snajperzy (Janczarzy P6): 90 HP, 19 zasiegu, ~107 dmg w 1 cel.\n"
         "6. Berserkerzy i Kamikaze (P5): Szybkie jednostki szturmowe o zerowym pancerzu na strzaly.\n"
         "7. Wielki Chan Subotai (P8 - Finalowy Boss): 4500 HP, 45 ataku, 8/10 pancerza, szybkosc 0.85. Po upadku 6 Settlementow daje 60s na przegrupowanie, po czym pojawia sie z eskorta P8 (6x Zelazny Slon, 16x Paladyn, 4x Siege Ram) na (116, 114), 2x Arcymag P7 na (118, 122) oraz skrzydlami na Brame Polnocna (68, 60 -> 48, 136) i Wschodnia (116, 162 -> 68, 152) (po 10x Paladyn, 10x Heavy Cav Archer, 2x Siege Ram). Dopoki w strefie bitwy (40..135, 90..175) zyje choc 1 Zelazny Slon P8, Chan odzyskuje +180 HP co 3s - wybij najpierw gwardie sloni lub skup caly ogien na Chanie!\n"
@@ -509,21 +531,24 @@ BALANCE = {
     "wave1_sec": 510,                     # 8:30
     "wave2_sec": 780,                     # 13:00
     "wave3_sec": 1080,                    # 18:00
-    "wave_interval_sec": 330,             # Co 5,5 minuty (330s)
+    "wave_interval_sec": 330,             # Co 5,5 minuty (330s) dla Fal 3-6
+    "endless_start_sec": 6120,            # 102:00 (10 minut po Fali 14 w 92:00)
+    "endless_repeat_interval": 600,       # Co 10 minut (600s) w Trybie Endless
 
-    "escalation_start_sec": 1200,         # Od 20:00 (Bieg 1): +5 HP i +1 Ataku co 5 minut
+    "escalation_start_sec": 1217,         # Od 20:17 (Bieg 1): +5 HP i +1 Ataku co 5 minut (3 ticki: 25:17, 30:17, 35:17)
     "escalation_interval_sec": 300,
     "escalation_hp_add": 5,
     "escalation_atk_add": 1,
     "gear1_atk": 1,
-    "late_escalation_start_sec": 2700,    # Od 45:00 (Bieg 2): +9 HP i +0 Ataku co 5 minut (lacznie +14 HP i +1 Ataku)
-    "late_escalation_hp_add": 9,
-    "late_escalation_atk_add": 0,
+    "late_escalation_start_sec": 2117,    # Od 35:17 (Bieg 2, wylacza Bieg 1): +8 HP i +1 Ataku co 5 minut (4 ticki: 40:17..55:17)
+    "late_escalation_hp_add": 8,
+    "late_escalation_atk_add": 1,
     "gear2_atk": 1,
-    "endgame_escalation_start_sec": 3300, # Od 55:00 (Bieg 3): +6 HP i +1 Ataku co 5 minut (lacznie +20 HP i +2 Ataku)
-    "endgame_escalation_hp_add": 6,
+    "endgame_escalation_start_sec": 3317, # Od 55:17 (Bieg 3, wylacza Bieg 2): +10 HP i +1 Ataku co 5 minut (2 ticki: 60:17, 65:17)
+    "endgame_escalation_hp_add": 10,
     "endgame_escalation_atk_add": 1,
-    "gear3_atk": 2,
+    "gear3_atk": 1,
+    "escalation_cap_sec": 3930,           # 65:30 Twardy Wylacznik Koncowy (sufit: +67 HP, +9 Ataku)
 
     "diff_step_up_hp": 15,
     "diff_step_up_atk": 2,
@@ -546,16 +571,19 @@ BALANCE = {
     "mage_regen_per_min": 300,
     "mage_local_radius": 18,
     "mage_shield_armor": 8,
-    "mage_aoe_heal_3s": 15,
+    "mage_aoe_heal_3s": 25,
     "mage_speed": 0.78,
 
-    "mortar_hp": 350,
+    "mortar_hp": 70,
+    "mortar_pierce_armor": 3,
+    "mortar_melee_armor": 0,
     "mortar_range": 21,
     "mortar_min_range": 6,
     "mortar_reload": 10.0,
     "mortar_blast_width": 2.6,
     "mortar_bonus_atk": 75,
     "mortar_speed": 0.58,
+    "mortar_projectile_speed": 3.2,
 
     "sniper_hp": 90,
     "sniper_range": 19,
@@ -633,9 +661,13 @@ class EnemyUnitSpec:
     base_atk: int = 0
     is_ranged: bool = False
     scales_atk: bool = False
+    hp_delta_up: int = 15
+    custom_hp_delta_down: int | None = None
 
     @property
     def hp_delta_down(self) -> int:
+        if self.custom_hp_delta_down is not None:
+            return self.custom_hp_delta_down
         if not self.scales_hp:
             return 0
         return max(2, (self.base_hp * 15 + 50) // 100)
@@ -697,7 +729,16 @@ ENEMY_UNIT_REGISTRY: dict[int, EnemyUnitSpec] = {
         unit_id=UnitInfo.MANGONEL.ID, name="Mangonel", base_hp=50, attack_class=4, scales_hp=True, receives_mage_shield=False, mandatory_min_one=True
     ),
     SIEGE_ONAGER_ID: EnemyUnitSpec(
-        unit_id=SIEGE_ONAGER_ID, name="Mozdzierz Oblezniczy", base_hp=350, attack_class=4, scales_hp=True, receives_mage_shield=False, mandatory_min_one=True
+        unit_id=SIEGE_ONAGER_ID,
+        name="Mozdzierz Oblezniczy",
+        base_hp=70,
+        attack_class=None,
+        scales_hp=False,
+        receives_mage_shield=False,
+        mandatory_min_one=True,
+        scales_atk=False,
+        hp_delta_up=10,
+        custom_hp_delta_down=15,
     ),
     ELITE_BATTLE_ELEPHANT_ID: EnemyUnitSpec(
         unit_id=ELITE_BATTLE_ELEPHANT_ID, name="Zelazny Slon-Tank", base_hp=1450, attack_class=None, scales_hp=True, receives_mage_shield=False, mandatory_min_one=True
@@ -769,7 +810,7 @@ def get_wave_definitions() -> list[WaveDefinition]:
             [], [], 5,
         ),
         (
-            4, 1410, "Fala 4/14 (23:30 - Castle Age + Arcymag Tarczy dajacy +8/+8 Pancerza calej Hordzie!)",
+            4, 1410, "Fala 4/14 (23:30 - Castle Age + Arcymag Tarczy dajacy +8/+8 Pancerza kolumnie P7 i leczenie 25 HP/3s!)",
             [(UnitInfo.PIKEMAN.ID, 14), (ELITE_BERSERK_ID, 4), (UnitInfo.BATTERING_RAM.ID, 2)],
             [(UnitInfo.HUSKARL.ID, 10), (UnitInfo.KNIGHT.ID, 6), (FLAMING_CAMEL_ID, 2)],
             [(UnitInfo.CROSSBOWMAN.ID, 12), (UnitInfo.ELITE_JANISSARY.ID, 3)],
@@ -796,7 +837,7 @@ def get_wave_definitions() -> list[WaveDefinition]:
             8,
         ),
         (
-            7, 2400, "Fala 7/14 (40:00 - Wczesny Imperial: PANCERNA SZARZA!)",
+            7, 2430, "Fala 7/14 (40:30 - Wczesny Imperial: PANCERNA SZARZA!)",
             [(UnitInfo.HALBERDIER.ID, 20), (ELITE_BERSERK_ID, 5), (PETARD_ID, 3), (UnitInfo.CAPPED_RAM.ID, 3)],
             [(UnitInfo.HUSKARL.ID, 16), (FLAMING_CAMEL_ID, 3), (UnitInfo.CAPPED_RAM.ID, 2)],
             [(UnitInfo.ARBALESTER.ID, 18), (UnitInfo.ELITE_JANISSARY.ID, 4), (SIEGE_ONAGER_ID, 1)],
@@ -806,7 +847,7 @@ def get_wave_definitions() -> list[WaveDefinition]:
             9,
         ),
         (
-            8, 2730, "Fala 8/14 (45:30 - Imperial Age + UDERZENIE NA SZLAK HANDLOWY!)",
+            8, 2820, "Fala 8/14 (47:00 - Imperial Age + UDERZENIE NA SZLAK HANDLOWY!)",
             [(UnitInfo.HALBERDIER.ID, 22), (ELITE_BERSERK_ID, 6), (UnitInfo.SIEGE_RAM.ID, 3)],
             [(UnitInfo.HUSKARL.ID, 18), (FLAMING_CAMEL_ID, 3), (UnitInfo.SIEGE_RAM.ID, 3)],
             [(UnitInfo.ARBALESTER.ID, 20), (UnitInfo.ELITE_JANISSARY.ID, 4), (SIEGE_ONAGER_ID, 2)],
@@ -816,7 +857,7 @@ def get_wave_definitions() -> list[WaveDefinition]:
             10,
         ),
         (
-            9, 3060, "Fala 9/14 (51:00 - Imperial Age + PRZEBICIE PRZEZ POLNOCNY LAS!)",
+            9, 3240, "Fala 9/14 (54:00 - Imperial Age + PRZEBICIE PRZEZ POLNOCNY LAS!)",
             [(UnitInfo.HALBERDIER.ID, 25), (ELITE_BERSERK_ID, 7), (PETARD_ID, 3), (UnitInfo.SIEGE_RAM.ID, 3)],
             [(UnitInfo.HUSKARL.ID, 20), (FLAMING_CAMEL_ID, 4), (UnitInfo.SIEGE_RAM.ID, 3)],
             [(UnitInfo.ARBALESTER.ID, 22), (UnitInfo.ELITE_JANISSARY.ID, 4), (SIEGE_ONAGER_ID, 2)],
@@ -827,16 +868,24 @@ def get_wave_definitions() -> list[WaveDefinition]:
         ),
     ]
 
+    late_wave_times = {
+        10: 3660,
+        11: 4110,
+        12: 4560,
+        13: 5040,
+        14: 5520,
+    }
+
     for w_late in range(10, 15):
         m = w_late - 9
-        wave_sec = 3060 + m * 330
-        minute_mark = wave_sec // 60
+        wave_sec = late_wave_times[w_late]
+        time_label = f"{wave_sec // 60}:{wave_sec % 60:02d}"
         extra_tag = ""
         if w_late in (10, 12, 14):
             extra_tag += " + ATAK NA TRADE LINE"
         if w_late == 12:
             extra_tag += " + PRZEBICIE PRZEZ LAS"
-        wave_title = f"Fala {w_late}/14 ({minute_mark}m - Late Imperial{extra_tag}!)"
+        wave_title = f"Fala {w_late}/14 ({time_label} - Late Imperial{extra_tag}!)"
 
         g1_north = [(UnitInfo.HALBERDIER.ID, 25 + m * 3), (ELITE_BERSERK_ID, 7 + m), (PETARD_ID, 3 + (m // 2)), (UnitInfo.SIEGE_RAM.ID, 4)]
         g1_east = [(UnitInfo.HUSKARL.ID, 20 + m * 3), (FLAMING_CAMEL_ID, 3 + (m // 2)), (UnitInfo.SIEGE_RAM.ID, 4)]
@@ -847,14 +896,14 @@ def get_wave_definitions() -> list[WaveDefinition]:
         raider_count = 12 + m
 
         if w_late == 10:
-            wave_title = "Fala 10/14 (56m - NOC SZAKALI + ATAK NA TRADE LINE!)"
+            wave_title = "Fala 10/14 (61:00 - NOC SZAKALI + ATAK NA TRADE LINE!)"
             raider_count = 22
         elif w_late == 11:
-            wave_title = "Fala 11/14 (62m - NAWALNICA ARTYLERII I SNAJPEROW!)"
+            wave_title = "Fala 11/14 (68:30 - NAWALNICA ARTYLERII I SNAJPEROW!)"
             g2_snipers = [(UnitInfo.ARBALESTER.ID, 28), (UnitInfo.ELITE_JANISSARY.ID, 8), (SIEGE_ONAGER_ID, 4)]
             g3_east = [(ELITE_BATTLE_ELEPHANT_ID, 4), (UnitInfo.ARBALESTER.ID, 26), (SIEGE_ONAGER_ID, 4)]
         elif w_late == 13:
-            wave_title = "Fala 13/14 (73m - STRAZ PRZEDNIA TYTANOW!)"
+            wave_title = "Fala 13/14 (84:00 - STRAZ PRZEDNIA TYTANOW!)"
             g2_mages = [(IMAM_UNIT_ID, 3), (UnitInfo.PALADIN.ID, 28), (UnitInfo.SIEGE_RAM.ID, 4)]
             g3_north = [(ELITE_BATTLE_ELEPHANT_ID, 6), (UnitInfo.PALADIN.ID, 28), (UnitInfo.HALBERDIER.ID, 24)]
             g3_east = [(ELITE_BATTLE_ELEPHANT_ID, 6), (UnitInfo.ARBALESTER.ID, 32), (SIEGE_ONAGER_ID, 3)]

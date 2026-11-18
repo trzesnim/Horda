@@ -1,4 +1,4 @@
-# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v7.0.3)
+# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v7.0.4)
 
 ## 0. Protokół Wykonawczy dla Agenta IDE (Antigravity / VS Code)
 1. **Atomowość etapów:** Realizuj podetapy ściśle po kolei (`Etap 0` -> `1A` -> `1B` -> `2` -> `3A` -> `3B` -> `3C` -> `4` -> `5` -> `6A` -> `6B` -> `6C` -> `7` -> `8`). **Zabrania się łączenia kilku podetapów (szczególnie 3A, 3B i 3C) w jedną edycję.**
@@ -528,4 +528,20 @@ Zaktualizuj `horda.md` oraz teksty w `populate_ingame_scenario_descriptions()` (
    - `FINAL_BOSS_HERO_ID` (`Subotai`) wzmocniony do `4500 HP`, a jego Tarcza Gwardii Słoni w `07b_Boss_Elephant_Guard_Heal` do `+180 HP / 3s` przy ograniczeniu strefy warunku Słoni `P8` w `07b_Boss_Elephant_Guard_Heal` i `07b_Boss_Elephants_Slain_Disable_Heal` do obszaru `(40, 90, 135, 175)`.
    - `07b_Spawn_Final_Boss_Wave` uderza jednocześnie na 3 bramy: Centralna `(116, 114) -> (54, 146)` (`1x Subotai, 6x Iron Elephant, 16x Paladin, 4x Siege Ram` + `2x Imam P7` z `(118, 122)`), Północna `(68, 60) -> (48, 136)` oraz Wschodnia `(116, 162) -> (68, 152)` (po `10x Paladin, 10x Heavy Cav Archer, 2x Siege Ram`).
 4. **Rozszerzenie walidacji (`test_horde_scenario.py` — `30/30 testów OK`) oraz aktualizacja kompletu dokumentacji (`v7.0.3`).**
+
+---
+
+## Plan Wdrożeniowy v7.0.4 (Etap R15 — Wnioski z 62-minutowego playtestu co-op 2026-11-16) [DONE / WDROŻONE]
+
+1. **Rozrzedzenie Fal F7–F14, Tryb Endless co `600 s` i 2-minutowe ostrzeżenia o Wyłomach (`horde_config.py`, `horde_waves.py`, `horde_quests.py`):**
+   - Wydłużenie harmonogramu F7–F14 (`40:30, 47:00, 54:00, 61:00, 68:30, 76:00, 84:00, 92:00`), ustawienie Trybu Endless na start w `102:00` (`6120 s`) co `600 s` (`10` min) i rozszerzenie Zegara Fal `00_Wave_Timer_*` (`205` banerów UI + `204` przełączniki).
+   - Dodanie wczesnych alarmów saperskich `120 s` przed wyłomem (`03_W09_Forest_Breach_North_Warn_2m` w `3120 s` z flarą `78, 95` oraz `03_W12_Forest_Breach_East_Warn_2m` w `4440 s` z flarą `109, 140`, deaktywowanych po zniszczeniu `G2_Snipers`) oraz przesunięcie drugiego ostrzeżenia z pre-spawnem na `30 s` przed wycinką (`3210 s` i `4530 s`).
+2. **Naprawa i Twardy Limit (`65:30`) Eskalacji Czasowej + Przesunięcie Fazowe Anty-OOS (`horde_config.py`, `horde_waves.py`):**
+   - Zmiana interwału `02e_Push_Gate_Units_Deep_Into_Base` z `15 s` na `17 s` i przesunięcie startu Biegów Eskalacji o `+17 s` (`1217 s`, `2117 s`, `3317 s`).
+   - Rozłączenie pętli eskalacji (`04c` wyłącza `04b`, `04e` wyłącza `04d`) i dodanie `04g_Cap_All_Time_Escalation_At_65m` (`3930 s` / `65:30`), który wyłącza `04b`, `04d`, `04f` na stałym pułapie `+67 HP, +9 Ataku`.
+3. **Rebalans Moździerza (`Glass Cannon` + spowolnione pociski `3.2`) bez zmniejszania liczebności (`horde_config.py`, `horde_waves.py`):**
+   - Zachowanie pełnej liczby `SIEGE_ONAGER_ID` we wszystkich falach (`8` szt. w Fali 11), zmiana w `ENEMY_UNIT_REGISTRY` (`base_hp=70`, `hp_delta_up=10`, `hp_delta_down=15`, `scales_hp=False`, `scales_atk=False`, `attack_class=None`), ustawienie w `01b` `HP=70`, pancerza `0/3` i prędkości pocisków `ONAGER_PROJECTILE_IDS` (`551, 552, 369, 468`) na `3.2` dla `P6` i `P8`.
+4. **Lokalna Aura Imama (`+8/+8` wyłącznie dla `P7` i leczenie `+25 HP/3s`) (`horde_config.py`, `horde_waves.py`):**
+   - Ograniczenie pancerza `+8/-8` w `02a`/`02d` wyłącznie do `PlayerId.SEVEN` (bez globalnego buffa dla `P5, P6, P8`) oraz wzmocnienie leczenia obszarowego w `02b` z `15` na `25 HP/3s`.
+5. **Rozszerzenie `test_horde_scenario.py` (`31/31 testów OK`) oraz pełna synchronizacja dokumentacji i dodanie empirycznej telemetrii z playtestu 2026-11-16 do `SCENARIO_DOSSIER.md` i `BALANCE_DOSSIER.md`.**
 

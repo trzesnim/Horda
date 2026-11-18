@@ -1,6 +1,6 @@
-# SCENARIO DOSSIER — Kroniki Rubieży: Horda i Ekspedycje (v7.0.3)
+# SCENARIO DOSSIER — Kroniki Rubieży: Horda i Ekspedycje (v7.0.4)
 
-- **Plik wynikowy:** `Kroniki_Rubiezy_Horda_Coop.aoe2scenario` (`243 043` B, `969` triggerów, `5350` obiektów startowych: `P0=5142, P1=37, P2=18, P3=26, P4=39, P5=13, P6=12, P7=10, P8=53`) | **Rozmiar mapy:** `200×200` (Olbrzymia) | **Horyzont rozgrywki:** 60–90 min
+- **Plik wynikowy:** `Kroniki_Rubiezy_Horda_Coop.aoe2scenario` (`239 537` B, `1044` triggerów, `5350` obiektów startowych: `P0=5142, P1=37, P2=18, P3=26, P4=39, P5=13, P6=12, P7=10, P8=53`) | **Rozmiar mapy:** `200×200` (Olbrzymia) | **Horyzont rozgrywki:** 60–95 min
 - **Struktura drużyn:** 8 graczy aktywnych — Drużyna 1 (`P1–P4` Ludzie, `human=True`, `lock_civ=False`, `allied_victory=True`) vs Drużyna 2 (`P5–P8` AI, `human=False`, `lock_civ=True`, `allied_victory=True`, zasoby startowe `0/0/0/0`)
 - **Wymagane ustawienia lobby:**
   - Tryb: `Custom Scenario` | AI Difficulty: **`Extreme`** (wymagane dla poprawnego wyboru celów przez jednostki AI po skryptowym rozkazie)
@@ -15,7 +15,7 @@
 - **Warunek porażki (`08_Defeat_Citadel_Lost`):** zniszczenie Cytadeli Sojuszu `P2` (`Feitoria` na `(54, 146)`) -> `declare_victory` dla `P5–P8`
 - **Interfejs panelu Celów (`Objectives`):**
   - `order=210..207`: **Skrót zasad `TL;DR` w oknie `Objectives`** (`00_TLDR_Modal_1_Cel` [`header=1, order=210`], `00_TLDR_Modal_2_Role` [`209`], `00_TLDR_Modal_3_Wyprawy` [`208`], `00_TLDR_Modal_4_Wrogowie` [`207`]) — `display_as_objective=1, display_on_screen=0, timer=999999` (widoczne po kliknięciu zakładki `Objectives`, bez zaśmiecania stałego HUD-u podczas rozgrywki; to samo `TL;DR` umieszczone też na początku zakładki `Hints`)
-  - `order=110`: Zegar Fali (`00_Wave_Timer_UI_000..168`) — statyczne banery (`timer=999999`) przełączane co `30s` od `0:00` do `84:00` (`5040s`) oraz `00_Wave_Timer_Boss_Banner` aktywowany w `07a`; alerty na czacie na `-60s` przed każdą z Fal 1–14 i startem Endless (`84:00`) oraz dodatkowy alert `-30s` przed Falą 1 (`8:00`)
+  - `order=110`: Zegar Fali (`00_Wave_Timer_UI_000..204`) — statyczne banery (`timer=999999`) przełączane co `30s` od `0:00` do `102:00` (`6120s`) oraz `00_Wave_Timer_Boss_Banner` aktywowany w `07a`; alerty na czacie na `-60s` przed każdą z Fal 1–14 i startem Endless (`102:00`) oraz dodatkowy alert `-30s` przed Falą 1 (`8:00`)
   - `order=109`: Poziom Trudności (`State_Diff_Lvl_M2..P2`, lokalizacja `(4,138)`) aktualizowany na żywo przez Sanktuarium Balansu
   - `order=100..96`: Nagłówek Questów (`100`) i 4 Questy (`Q1=99`, `Q2=98`, `Q3=97`, `Q4=96` z etapami `Stage1 -> Stage2`)
   - `order=99` *(aktywowany w `07c`)*: Finałowy cel zgładzenia Wielkiego Chana Subotaia (`07d_Victory_Final_Boss_Defeated`)
@@ -71,8 +71,8 @@
 | **Brama Handlowa** | `(104, 193)` | `P4` (wzdłuż Y) | Strefa `13×13`, brama `793` (`y=191..194`, `+600 HP`), mur na `y=186..199`, `2x Guard Tower` na `(100, 189)` i `(100, 197)` |
 | **Rzeka i 3 brody** | `rx=62+0.9t, ry=8+0.8t+3sin(0.08t)` (`t=0..139`) | `TERRAIN_WATER=1` (`r=2`) | Warunek omijający Twierdzę: `rx>112 or ry<90`; 3 brody (`TERRAIN_SHALLOWS=4, r=5`): `(84, 30)`, `(122, 62)`, `(154, 92)` |
 | **Grzbiety skalne** | `(16,48)->(44,48)` i `(124,134)->(158,134)` | `GAIA` (`ROCK_CLIFF_ID`) | Grzbiet NW: `height=3`, łuk `curve=3sin(t*pi)`; grzbiet E: `height=2`; pas `DIRT_3` (`r=2`), bez drzew |
-| **Przesieka Północna** | `(75..80, 95..105)` | Wyłom `6×11` | Zablokowana drzewami (`north_breach_trees`), wycinana w Fali 9 (`51:00`) |
-| **Przesieka Wschodnia** | `(99..109, 137..142)` | Wyłom `11×6` | Zablokowana drzewami (`east_breach_trees`), wycinana w Fali 12 (`67:30`) |
+| **Przesieka Północna** | `(75..80, 95..105)` | Wyłom `6×11` | Zablokowana drzewami (`north_breach_trees`), wycinana w Fali 9 (`54:00`) |
+| **Przesieka Wschodnia** | `(99..109, 137..142)` | Wyłom `11×6` | Zablokowana drzewami (`east_breach_trees`), wycinana w Fali 12 (`76:00`) |
 | **Relikty + Złoto** | `(54,62), (116,88), (168,128), (92,44)` | `GAIA` | Po `1x Relic` (`285`) w punkcie oraz `6x Gold Mine` na `(rx+3, ry+3)` |
 | **Stałe odsłaniacze** | Centra 10 obozów (4Q + 6S) | `P1` (`MAP_REVEALER=837`) | `LOS = 4` (ustawione w `01_Init`), zapewnia stałą widoczność i podgląd opisów pod Mgłą Wojny |
 
@@ -104,24 +104,24 @@
 | **1. Żelazny Słoń (`1134`, `P8`)** | `1450` (Tak; `-20` w `8:30`) | `0.72` (Cap) | `3` melee `cl=4` (Cap; **Nie skaluje**) + `+140` vs budynki (`cl=11, 21`) | `10 / 12` (Cap `cl=4, 3`) | `Hero Status=1` (odporny na konwersję), `receives_mage_shield=False`, `mandatory_min_one=True` |
 | **2. Szakal Dywersyjny (`441`, `P7`)** | `95` (Tak; `-20` w `8:30`) | `1.62` (Cap) | `7` melee `cl=4` (Cap; **Nie skaluje**) | `0 / 6` (Cap `cl=4, 3`) | `receives_mage_shield=False`, `mandatory_min_one=False` |
 | **3. Arcymag Tarczy (`842`, `P7`)** | `240` (Nie; `Q4 -> 120`) | `0.78` (Cap) | Brak (`range=0, work_rate=0`) | `3 / 4` (z `01b`) | `Hero Status=1`, regen `300/min` (`5 HP/s`), `receives_mage_shield=False`, `mandatory_min_one=True` |
-| **4. Moździerz Oblężniczy (`588`, `P6`)** | `350` (Tak) | `0.58` (Cap) | `+75` bonus `cl=4` (Tak `cl=4`) | Bazowy + Kuźnia | `Hero Status=1`, Range `21` (Cap), `min_range=6`, `LOS/Search=23`, Reload `10.0s`, `Blast Width=2.6`, `Blast Attack Level=2` (nie ścina drzew), `receives_mage_shield=False`, `mandatory_min_one=True` |
+| **4. Moździerz Oblężniczy (`588`, `P6`)** | `70` (**Nie** — Glass Cannon) | `0.58` (Cap); pocisk `3.2` (`P6, P8`) | `+75` bonus `cl=4` (**Nie** skaluje, `None`) | `0 / 3` (`cl=4: 0`, `cl=3: 3` w `01b`) | `Hero Status=1`, Range `21` (Cap), `min_range=6`, `LOS/Search=23`, Reload `10.0s`, `Blast Width=2.6`, `Blast Attack Level=2` (nie ścina drzew), spowolnione pociski (`551, 552, 369, 468`) do `3.2`, `receives_mage_shield=False`, `mandatory_min_one=True` |
 | **5. Snajper Imperialny (`557`, `P6`)** | `90` (Tak) | Bazowy + Squires | `+85` bonus `cl=3` (Tak `cl=3`) | Bazowy + Kuźnia | `Hero Status=1`, Range `19` (Cap), `LOS/Search=21`, Reload `6.5s`, `receives_mage_shield=False`, `mandatory_min_one=True` |
 | **6a. Berserker Szturmowy (`694`, `P5`)** | `185` (Tak) | `1.40` (Cap) | `+12` bonus `cl=4` (Tak `cl=4`) | Pierce `0` (Cap `cl=3`) | `receives_mage_shield=True`, `mandatory_min_one=True` |
 | **6b. Petard (`440`) / Pł. Wielbłąd (`1263`, `P5`)** | `115` (Nie) | `1.50` (Cap) | `+95` bonus `cl=4` (**Nie skaluje**) | Pierce `0` (Cap `cl=3`) | `Blast Width=2.4`, `receives_mage_shield=False`, `mandatory_min_one=True` |
 
-### 3. Mechanika Aury Arcymaga, ruch Szakali i popychanie bram (`02a–02e`)
+### 3. Lokalna Aura Arcymaga, ruch Szakali i popychanie bram (`02a–02e`)
 - **Strefa Aury Arcymaga (`02a–02d`):** kwadrat `±18` wokół `(110, 114)`, czyli `(92, 96)..(128, 132)` (`37×37` kratek) przed Bramą Centralną:
-  - **`02a_Mage_Global_Horde_Shield_On`:** aktywuje się przy `≥1` `IMAM_UNIT_ID` (`P7`) w strefie; nakłada **globalnie wszystkim graczom `P5–P8`** **`+8/+8` pancerza** (`cl=3, 4`) dla **`20` jednostek** z `receives_mage_shield=True` (6 typów piechoty, 6 jazdy, 4 łuczników, `Capped Ram`, `Siege Ram`, `Heavy Camel Rider`, `Elite Mameluke`)
+  - **`02a_Mage_Global_Horde_Shield_On`:** aktywuje się przy `≥1` `IMAM_UNIT_ID` (`P7`) w strefie; nakłada **lokalnie wyłącznie dla kolumny `PlayerId.SEVEN` (`P7`)** **`+8/+8` pancerza** (`cl=3, 4`) dla **`20` jednostek** z `receives_mage_shield=True` (jednostki `P5, P6, P8` na pozostałych frontach i w garnizonach nie dostają już pancerza z aury Imama)
   - **Wykluczenia z Tarczy Maga (`10` jednostek):** `Snajper Imperialny`, `Mangonel`, `Moździerz Oblężniczy`, `Żelazny Słoń`, `Szakal`, `Arcymag`, `Petard`, `Płonący Wielbłąd`, `Battering Ram`, `Wielki Chan Subotai`
-  - **`02b_Mage_AoE_Heal_Pulse_3s`:** co `3s` (gdy Imam `P7` w strefie) leczy wszystkie jednostki `P5–P8` w `(92..128, 96..132)` o **`+15 HP`**
+  - **`02b_Mage_AoE_Heal_Pulse_3s`:** co `3s` (gdy Imam `P7` w strefie) leczy wszystkie jednostki `P5–P8` przebywające fizycznie w prostokącie `(92..128, 96..132)` o **`+25 HP`** (`8.33 HP/s`)
   - **`02c_Mage_Visual_Flare_Beacon_8s`:** co **`20s`** (`timer=20`, gdy Imam `P7` w strefie) wysyła ostrzeżenie na czacie i flarę na `(114, 114)`
-  - **`02d_Mage_Global_Horde_Shield_Off`:** gdy brak Imama `P7` w strefie (`inverted=1`), odejmuje `-8/-8` pancerza tym samym `20` typom jednostek, wyłącza `02b/02c/02d` i reaktywuje `02a`
+  - **`02d_Mage_Global_Horde_Shield_Off`:** gdy brak Imama `P7` w strefie (`inverted=1`), odejmuje `-8/-8` pancerza wyłącznie jednostkom `PlayerId.SEVEN`, wyłącza `02b/02c/02d` i reaktywuje `02a`
 - **Zachowanie Szakali (`ActionType.MOVE`):**
   - Spawnowane w Falach 3–14 z `G2_Mages` (`P7`) rozkazem `task_object(..., ActionType.MOVE)` na obszar `±8` wokół spawnu — ignorują jednostki na przedpolu aż do celu pod TC
   - Fale nieparzyste (`3,5,7,9,11,13`): spawn Brama Północna `(52, 86)`; fale parzyste (`4,6,8,10,12,14`): spawn Brama Wschodnia `(116, 162)`
   - Cele cykliczne `eco_raid_targets[w_num % 4]`: `w%4==0 -> (32, 118)` (P3), `w%4==1 -> (76, 120)` (P1), `w%4==2 -> (32, 168)` (P2), `w%4==3 -> (76, 172)` (P4)
   - Tryb Endless: łączna liczba skalowana jak dla F14 (`17` bazowo), dzielona na dwie grupy: `(n+1)//2` z `(52, 86)` na `(32, 118)` oraz `n//2` z `(116, 162)` na `(76, 172)`
-- **Popychanie bram (`02e_Push_Gate_Units_Deep_Into_Base`):** pętla co `15s` wysyłająca `attack_move` w 5 strefach:
+- **Popychanie bram (`02e_Push_Gate_Units_Deep_Into_Base`):** pętla co **`17s`** (liczba pierwsza — przesunięcie fazowe względem fal na `:00`/`:30` eliminujące desynchronizację *OOS*) wysyłająca `attack_move` w 5 strefach:
   - Brama Północna `(40..56, 96..108)` -> `(48, 138)` dla **`P5, P6, P8`** (wyklucza `P7`, aby nie nadpisywać `MOVE` Szakali)
   - Brama Centralna `(96..108, 106..122)` -> `(54, 146)` dla **`P5, P6, P7, P8`**
   - Brama Wschodnia `(96..108, 154..170)` -> `(68, 162)` dla **`P5, P6, P8`** (wyklucza `P7`)
@@ -151,15 +151,15 @@
 | **F4** `23:30` (`1410s`) | 14 Pike, 4 Bers, 2 B.Ram | 10 Husk, 6 Kni, 2 F.Cam | 12 Xbow, 3 Jan | **1 Imam**, 10 Kni, 2 B.Ram + **6 Szakali** `(116,162)->(32,118)` | — | — |
 | **F5** `29:00` (`1740s`) | 16 Pike, 4 Bers, 2 Pet, 2 C.Ram | 12 Husk, 2 F.Cam, 2 C.Ram | 14 Xbow, 3 Jan, **1 S.Onag** | 1 Imam, 12 Kni + **7 Szakali** `(52,86)->(76,120)` | 8 Kni, 10 Pike | — |
 | **F6** `34:30` (`2070s`) | 18 Pike, 5 Bers, 2 C.Ram | 14 Husk, 3 F.Cam, 2 C.Ram | 16 Xbow, 3 Jan, 1 S.Onag | 1 Imam, 12 Cav, 2 C.Ram + **8 Szakali** `(116,162)->(32,168)` | **1 Ele**, 10 Kni, 12 Pike | 14 Xbow, 8 Kni |
-| **F7** `40:00` (`2400s`) | 20 Halb, 5 Bers, 3 Pet, 3 C.Ram | 16 Husk, 3 F.Cam, 2 C.Ram | 18 Arb, 4 Jan, 1 S.Onag | 1 Imam, **18 Cav** + 9 Szakali `(52,86)->(76,172)` | 2 Ele, **16 Cav**, 12 Halb, **2 S.Ram** | 1 Ele, 16 Arb *(Signature: Pancerna Szarża)* |
-| **F8** `45:30` (`2730s`) | 22 Halb, 6 Bers, 3 S.Ram | 18 Husk, 3 F.Cam, 3 S.Ram | 20 Arb, 4 Jan, 2 S.Onag | 2 Imam, 16 Cav, 3 S.Ram + **10 Szakali** `(116,162)->(32,118)` | 2 Ele, 14 Cav, 14 Halb | 2 Ele, 18 Arb, 1 S.Onag + **Trade Raid** (`3 SR, 10 Pal, 10 HCA`) |
-| **F9** `51:00` (`3060s`) | 25 Halb, 7 Bers, 3 Pet, 3 S.Ram | 20 Husk, 4 F.Cam, 3 S.Ram | 22 Arb, 4 Jan, 2 S.Onag | 2 Imam, 16 Pal, 3 S.Ram + **12 Szakali** `(52,86)->(76,120)` | 3 Ele, 15 Pal, 16 Halb | 2 Ele, 20 Arb, 2 S.Onag + **Wyłom Płn. (`G2_Snipers`)** |
-| **F10** `56:30` (`3390s`) | 28 Halb, 8 Bers, 3 Pet, 4 S.Ram | 23 Husk, 3 F.Cam, 4 S.Ram | 25 Arb, 4 Jan, 2 S.Onag | 2 Imam, 19 Pal, 4 S.Ram + **22 Szakali** `(116,162)->(32,168)` | 3 Ele, 19 Pal, 18 Halb | 3 Ele, 23 Arb, 2 S.Onag + **Trade Raid** (`3 SR, 14 Pal, 14 HCA`) *(Signature: Noc Szakali)* |
-| **F11** `62:00` (`3720s`) | 31 Halb, 9 Bers, 4 Pet, 4 S.Ram | 26 Husk, 4 F.Cam, 4 S.Ram | 28 Arb, **8 Jan**, **4 S.Onag** | 2 Imam, 22 Pal, 4 S.Ram + **14 Szakali** `(52,86)->(76,172)` | 4 Ele, 22 Pal, 20 Halb | 4 Ele, 26 Arb, **4 S.Onag** *(Signature: Nawałnica Artylerii i Snajperów)* |
-| **F12** `67:30` (`4050s`) | 34 Halb, 10 Bers, 4 Pet, 4 S.Ram | 29 Husk, 4 F.Cam, 4 S.Ram | 31 Arb, 5 Jan, 3 S.Onag | 3 Imam, 25 Pal, 4 S.Ram + **15 Szakali** `(116,162)->(32,118)` | 4 Ele, 25 Pal, 22 Halb | 4 Ele, 29 Arb, 3 S.Onag + **Trade Raid** (`3 SR, 18 Pal, 18 HCA`) + **Wyłom Wsch. (`G2_Snipers`)** |
-| **F13** `73:00` (`4380s`) | 37 Halb, 11 Bers, 5 Pet, 4 S.Ram | 32 Husk, 5 F.Cam, 4 S.Ram | 34 Arb, 6 Jan, 3 S.Onag | **3 Imam**, 28 Pal, 4 S.Ram + **16 Szakali** `(52,86)->(76,120)` | **6 Ele**, 28 Pal, 24 Halb | **6 Ele**, 32 Arb, 3 S.Onag *(Signature: Straż Przednia Tytanów)* |
-| **F14** `78:30` (`4710s`) | 40 Halb, 12 Bers, 5 Pet, 4 S.Ram | 35 Husk, 5 F.Cam, 4 S.Ram | 37 Arb, 6 Jan, 3 S.Onag | 3 Imam, 31 Pal, 4 S.Ram + **17 Szakali** `(116,162)->(32,168)` | 5 Ele, 31 Pal, 26 Halb | 5 Ele, 35 Arb, 3 S.Onag + **Trade Raid** (`3 SR, 22 Pal, 22 HCA`) |
-| **Endless** `84:00+` (`5040s+`, co `330s`) | Skład F14 (skalowany) | Skład F14 (skalowany) | Skład F14 (skalowany) + **Wyłom N+E** | Skład F14 (skalowany) + **17 Szakali** (split `9` N / `8` E, skal.) | Skład F14 (skalowany) | Skład F14 (skalowany) + **Trade Raid F14** (`3 SR, 22 Pal, 22 HCA`, skal.) |
+| **F7** `40:30` (`2430s`) | 20 Halb, 5 Bers, 3 Pet, 3 C.Ram | 16 Husk, 3 F.Cam, 2 C.Ram | 18 Arb, 4 Jan, 1 S.Onag | 1 Imam, **18 Cav** + 9 Szakali `(52,86)->(76,172)` | 2 Ele, **16 Cav**, 12 Halb, **2 S.Ram** | 1 Ele, 16 Arb *(Signature: Pancerna Szarża)* |
+| **F8** `47:00` (`2820s`) | 22 Halb, 6 Bers, 3 S.Ram | 18 Husk, 3 F.Cam, 3 S.Ram | 20 Arb, 4 Jan, 2 S.Onag | 2 Imam, 16 Cav, 3 S.Ram + **10 Szakali** `(116,162)->(32,118)` | 2 Ele, 14 Cav, 14 Halb | 2 Ele, 18 Arb, 1 S.Onag + **Trade Raid** (`3 SR, 10 Pal, 10 HCA`) |
+| **F9** `54:00` (`3240s`) | 25 Halb, 7 Bers, 3 Pet, 3 S.Ram | 20 Husk, 4 F.Cam, 3 S.Ram | 22 Arb, 4 Jan, 2 S.Onag | 2 Imam, 16 Pal, 3 S.Ram + **12 Szakali** `(52,86)->(76,120)` | 3 Ele, 15 Pal, 16 Halb | 2 Ele, 20 Arb, 2 S.Onag + **Wyłom Płn. (`G2_Snipers`, alarm 2m o `52:00`)** |
+| **F10** `61:00` (`3660s`) | 28 Halb, 8 Bers, 3 Pet, 4 S.Ram | 23 Husk, 3 F.Cam, 4 S.Ram | 25 Arb, 4 Jan, 2 S.Onag | 2 Imam, 19 Pal, 4 S.Ram + **22 Szakali** `(116,162)->(32,168)` | 3 Ele, 19 Pal, 18 Halb | 3 Ele, 23 Arb, 2 S.Onag + **Trade Raid** (`3 SR, 14 Pal, 14 HCA`) *(Signature: Noc Szakali)* |
+| **F11** `68:30` (`4110s`) | 31 Halb, 9 Bers, 4 Pet, 4 S.Ram | 26 Husk, 4 F.Cam, 4 S.Ram | 28 Arb, **8 Jan**, **4 S.Onag** | 2 Imam, 22 Pal, 4 S.Ram + **14 Szakali** `(52,86)->(76,172)` | 4 Ele, 22 Pal, 20 Halb | 4 Ele, 26 Arb, **4 S.Onag** *(Signature: Nawałnica Artylerii i Snajperów)* |
+| **F12** `76:00` (`4560s`) | 34 Halb, 10 Bers, 4 Pet, 4 S.Ram | 29 Husk, 4 F.Cam, 4 S.Ram | 31 Arb, 5 Jan, 3 S.Onag | 3 Imam, 25 Pal, 4 S.Ram + **15 Szakali** `(116,162)->(32,118)` | 4 Ele, 25 Pal, 22 Halb | 4 Ele, 29 Arb, 3 S.Onag + **Trade Raid** (`3 SR, 18 Pal, 18 HCA`) + **Wyłom Wsch. (`G2_Snipers`, alarm 2m o `74:00`)** |
+| **F13** `84:00` (`5040s`) | 37 Halb, 11 Bers, 5 Pet, 4 S.Ram | 32 Husk, 5 F.Cam, 4 S.Ram | 34 Arb, 6 Jan, 3 S.Onag | **3 Imam**, 28 Pal, 4 S.Ram + **16 Szakali** `(52,86)->(76,120)` | **6 Ele**, 28 Pal, 24 Halb | **6 Ele**, 32 Arb, 3 S.Onag *(Signature: Straż Przednia Tytanów)* |
+| **F14** `92:00` (`5520s`) | 40 Halb, 12 Bers, 5 Pet, 4 S.Ram | 35 Husk, 5 F.Cam, 4 S.Ram | 37 Arb, 6 Jan, 3 S.Onag | 3 Imam, 31 Pal, 4 S.Ram + **17 Szakali** `(116,162)->(32,168)` | 5 Ele, 31 Pal, 26 Halb | 5 Ele, 35 Arb, 3 S.Onag + **Trade Raid** (`3 SR, 22 Pal, 22 HCA`) |
+| **Endless** `102:00+` (`6120s+`, co `600s`) | Skład F14 (skalowany) | Skład F14 (skalowany) | Skład F14 (skalowany) + **Wyłom N+E** | Skład F14 (skalowany) + **17 Szakali** (split `9` N / `8` E, skal.) | Skład F14 (skalowany) | Skład F14 (skalowany) + **Trade Raid F14** (`3 SR, 22 Pal, 22 HCA`, skal.) |
 
 ### 3. Reguły specjalne fal (Wyłomy Saperów, Rajdy Handlowe, Tryb Endless)
 - **Wzór bazowy Fal 10–14 (`m = wave_num - 9`, dla `m = 1..5`; modyfikacje *Signature Waves* w F10, F11 i F13 powyżej):**
@@ -167,33 +167,36 @@
   - `G2_Snipers`: `22+3m` Arb, `4+m//2` Jan, `2+m//3` S.Onag | `G2_Mages`: `2+m//3` Imam, `16+3m` Pal, `4` S.Ram, `12+m` Szakali
   - `G3_North`: `3+m//2` Ele, `16+3m` Pal, `16+2m` Halb | `G3_East`: `3+m//2` Ele, `20+3m` Arb, `2+m//3` S.Onag
 - **Wyłom Północny (`G2_Snipers`, `P6`, Fala 9):**
-  - `50:15` (`3015s`): alarm (`45s` wyprzedzenia) i flara `(78, 98)` + spawn `2x S.Onag, 8x Halb` na `(78, 90)` -> `attack_move` `(78, 95)`
-  - `51:00` (`3060s`): usuwa drzewa `north_breach_trees (75..80, 95..105)` + spawn `2x S.Onag, 14x Halb, 8x Jan` na `(78, 94)` -> `attack_move` `(68, 130)`, flara `(78, 102)`
+  - `52:00` (`3120s`): wczesny alarm saperski **2 minuty przed wyłomem** (`03_W09_Forest_Breach_North_Warn_2m`), komunikat do `P1–P4` + flara `(78, 95)`
+  - `53:30` (`3210s`): drugi alarm przypominający (`30s` przed wyłomem, `03_W09_Forest_Breach_North_Warn`) i flara `(78, 98)` + pre-spawn `2x S.Onag, 8x Halb` na `(78, 90)` -> `attack_move` `(78, 95)`
+  - `54:00` (`3240s`): usuwa drzewa `north_breach_trees (75..80, 95..105)` + spawn `2x S.Onag, 14x Halb, 8x Jan` na `(78, 94)` -> `attack_move` `(68, 130)`, flara `(78, 102)`
 - **Wyłom Wschodni (`G2_Snipers`, `P6`, Fala 12):**
-  - `66:45` (`4005s`): alarm (`45s` wyprzedzenia) i flara `(106, 140)` + spawn `2x S.Onag, 10x Halb` na `(115, 140)` -> `attack_move` `(109, 140)`
-  - `67:30` (`4050s`): usuwa drzewa `east_breach_trees (99..109, 137..142)` + spawn `2x S.Onag, 16x Halb, 12x Arb` na `(115, 140)` -> `attack_move` `(68, 146)`, flara `(104, 140)`
-- **Wyłom w Trybie Endless (`03_Endless_Forest_Breach_Assault`):** aktywowany co `330s` przez bramkę `G2_Snipers` (`03_Endless_Gate_G2_Snipers`); spawnuje równocześnie `2x S.Onag, 14x Halb, 8x Jan` na `(78, 94)->(68, 130)` oraz `2x S.Onag, 14x Halb, 10x Arb` na `(115, 140)->(68, 146)` (uwaga: wyłomy F9/F12/Endless nie przechodzą przez `scale_comp_for_level`)
-- **`Trade_Line_Attack` (`G3_East`, `P8`):** fale `8, 10, 12, 14` i `Endless`; spawn `(162, 180)` -> `attack_move` `(96, 194)`, flara `(162, 184)`; skład w Fali `w`: `3x Siege Ram`, `10+(w-8)*2` Paladin, `10+(w-8)*2` Heavy Cav Archer (skalowany przez `scale_comp_for_level`)
-- **Mechanika Trybu Endless:** w `78:30` (`4710s`) zegary Fali 14 każdego obozu aktywują jego indywidualną bramkę `03_Endless_Gate_<camp>` (`looping=True, timer=330s`), a `03_Endless_Announce_Gate` (`4710s`) uruchamia ogłoszenie cykliczne co `330s` + flarę `(104, 114)`; pierwsze uderzenie Endless przypada w `84:00` (`5040s`)
+  - `74:00` (`4440s`): wczesny alarm saperski **2 minuty przed wyłomem** (`03_W12_Forest_Breach_East_Warn_2m`), komunikat do `P1–P4` + flara `(109, 140)`
+  - `75:30` (`4530s`): drugi alarm przypominający (`30s` przed wyłomem, `03_W12_Forest_Breach_East_Warn`) i flara `(106, 140)` + pre-spawn `2x S.Onag, 10x Halb` na `(115, 140)` -> `attack_move` `(109, 140)`
+  - `76:00` (`4560s`): usuwa drzewa `east_breach_trees (99..109, 137..142)` + spawn `2x S.Onag, 16x Halb, 12x Arb` na `(115, 140)` -> `attack_move` `(68, 146)`, flara `(104, 140)`
+- **Wyłom w Trybie Endless (`03_Endless_Forest_Breach_Assault`):** aktywowany co **`600s` (10 min)** przez bramkę `G2_Snipers` (`03_Endless_Gate_G2_Snipers`); spawnuje równocześnie `2x S.Onag, 14x Halb, 8x Jan` na `(78, 94)->(68, 130)` oraz `2x S.Onag, 14x Halb, 10x Arb` na `(115, 140)->(68, 146)` (uwaga: wyłomy F9/F12/Endless nie przechodzą przez `scale_comp_for_level`)
+- **`Trade_Line_Attack` (`G3_East`, `P8`):** fale `8 (47:00), 10 (61:00), 12 (76:00), 14 (92:00)` i `Endless (102:00+ co 600s)`; spawn `(162, 180)` -> `attack_move` `(96, 194)`, flara `(162, 184)`; skład w Fali `w`: `3x Siege Ram`, `10+(w-8)*2` Paladin, `10+(w-8)*2` Heavy Cav Archer (skalowany przez `scale_comp_for_level`)
+- **Mechanika Trybu Endless:** w `92:00` (`5520s`) zegary Fali 14 każdego obozu aktywują jego indywidualną bramkę `03_Endless_Gate_<camp>` (`looping=True, timer=600s`), a `03_Endless_Announce_Gate` (`5520s`) uruchamia ogłoszenie cykliczne co `600s` + flarę `(104, 114)`; pierwsze uderzenie Endless przypada w **`102:00` (`6120s`)**
 
 ---
 
 ## D. Eskalacja Czasowa, Sanktuarium Balansu i Rejestr Jednostek
 
-### 1. Trzystopniowa Eskalacja Czasowa (`04a–04f`, aplikowana przez `ENEMY_UNIT_REGISTRY`)
-- **Bieg 1 (`04a`/`04b`, start `20:00` / `1200s`):** natychmiastowy 1. tick w `20:00` i powtórzenie co `300s`: **`+5 HP, +1 Atk`**
-- **Bieg 2 (`04c`/`04d`, start `45:00` / `2700s`):** natychmiastowy 1. tick w `45:00` i powtórzenie co `300s`: dodatkowo **`+9 HP, +0 Atk`** (łącznie z Biegiem 1: **`+14 HP, +1 Atk`** co `5` min)
-- **Bieg 3 (`04e`/`04f`, start `55:00` / `3300s`):** natychmiastowy 1. tick w `55:00` i powtórzenie co `300s`: dodatkowo **`+6 HP, +1 Atk`** (łącznie z Biegami 1+2: **`+20 HP, +2 Atk`** co `5` min)
+### 1. Rozłączna 3-Stopniowa Eskalacja Czasowa z Twardym Limitem (`04a–04g`, przesunięcie fazowe `+17s`)
+- **Bieg 1 (`04a`/`04b`, start `20:17` / `1217s`):** `04a` aktywuje pętlę `04b` (`timer=300s`): **`+5 HP, +1 Atk`** (`25:17, 30:17, 35:17` = 3 razy, łącznie `+15 HP, +3 Atk`).
+- **Bieg 2 (`04c`/`04d`, start `35:17` / `2117s`):** `04c` **dezaktywuje `04b`** i aktywuje pętlę `04d` (`timer=300s`): **`+8 HP, +1 Atk`** (`40:17, 45:17, 50:17, 55:17` = 4 razy, łącznie `+32 HP, +4 Atk`).
+- **Bieg 3 (`04e`/`04f`, start `55:17` / `3317s`):** `04e` **dezaktywuje `04d`** i aktywuje pętlę `04f` (`timer=300s`): **`+10 HP, +1 Atk`** (`60:17, 65:17` = 2 razy, łącznie `+20 HP, +2 Atk`).
+- **Twardy Wyłącznik Końcowy (`04g_Cap_All_Time_Escalation_At_65m`, `3930s` = `65:30`):** na stałe **dezaktywuje `04b`, `04d` i `04f`**, zamykając eskalację czasową na nieprzekraczalnym suficie **`+67 HP, +9 Ataku`**.
 - **Kumulacyjny przyrost czasowy (bez Questów i Furii Settlementów):**
-  - `20:00`: `+5 HP / +1 Atk` | `30:00`: `+15 HP / +3 Atk` | `40:00`: `+25 HP / +5 Atk`
-  - `45:00`: `+39 HP / +6 Atk` | `50:00`: `+53 HP / +7 Atk` | `55:00`: `+73 HP / +9 Atk`
-  - `60:00`: `+93 HP / +11 Atk` | `70:00`: `+133 HP / +15 Atk` | `80:00`: `+173 HP / +19 Atk`
+  - `20:17`: `+0 HP / +0 Atk` (uzbrojenie) | `25:17`: `+5 HP / +1 Atk` | `30:17`: `+10 HP / +2 Atk` | `35:17`: `+15 HP / +3 Atk`
+  - `40:17`: `+23 HP / +4 Atk` | `45:17`: `+31 HP / +5 Atk` | `50:17`: `+39 HP / +6 Atk` | `55:17`: `+47 HP / +7 Atk`
+  - `60:17`: `+57 HP / +8 Atk` | `65:17` / **`65:30+` (HARD CAP):** **`+67 HP / +9 Atk`** (nie rośnie już dalej nawet w Trybie Endless!)
 
 ### 2. Sanktuarium Balansu (`(4, 138)`, `09_Diff_*`)
 - **Strefy komnaty:** pad górny `(2..6, 134..136)` (+1 stopień), pad dolny `(2..6, 140..142)` (-1 stopień), pełna strefa resetu `(2..6, 134..142)`. Po wykryciu Króla `P1` trigger wykonuje `teleport_object` na `(4, 138)`, `stop_object`, przełącza `State_Diff_Lvl_*`, wysyła flarę `(4, 138)` i komunikat czatu do wszystkich graczy `P1–P4` oraz modyfikuje statystyki jednostek w `ENEMY_UNIT_REGISTRY`.
-- **Brak blokad czasowych i kolejność topologiczna:** brak timerów zamrażających komnatę (`State_Sanctuary_Unlocked` / `Close_Window` nie istnieją). Przed wielokrotnym przeskokiem w 1 ticku chroni odwrócony porządek rejestracji 8 triggerów:
-  - Pad górny (`pad_up_box`, kolejność ID): `09_Diff_Up_P1_to_P2` -> `09_Diff_Up_0_to_P1` -> `09_Diff_Up_M1_to_0` -> `09_Diff_Up_M2_to_M1` (na starcie aktywny tylko `0_to_P1`)
-  - Pad dolny (`pad_down_box`, kolejność ID): `09_Diff_Down_M1_to_M2` -> `09_Diff_Down_0_to_M1` -> `09_Diff_Down_P1_to_0` -> `09_Diff_Down_P2_to_P1` (na starcie aktywny tylko `0_to_M1`)
+- **Brak blokad czasowych i kolejność topologiczna:** brak timerów zamrażających komnatę (`State_Sanctuary_Unlocked` / `Close_Window` nie istnieją). Przed wielokrotnym przeskokiem w 1 ticku chroni odwrócony porządek rejestracji 8 triggerów (`574..581`):
+  - Pad górny (`pad_up_box`, kolejność ID): `09_Diff_Up_P1_to_P2` (`574`) -> `09_Diff_Up_0_to_P1` (`575`) -> `09_Diff_Up_M1_to_0` (`576`) -> `09_Diff_Up_M2_to_M1` (`577`) (na starcie aktywny tylko `0_to_P1`)
+  - Pad dolny (`pad_down_box`, kolejność ID): `09_Diff_Down_M1_to_M2` (`578`) -> `09_Diff_Down_0_to_M1` (`579`) -> `09_Diff_Down_P1_to_0` (`580`) -> `09_Diff_Down_P2_to_P1` (`581`) (na starcie aktywny tylko `0_to_M1`)
 - **Algorytm skalowania liczebności (`scale_comp_for_level`):**
   - Docelowa suma grupy `effective_target = max((total_orig * pct + 50) // 100, sum(min_reqs))` (zaokrąglanie `HALF_UP`)
   - Nadwyżki (`+25%` / `+50%`) przydzielane po `1` szt. wg największej reszty z dzielenia (remis wygrywa wcześniejszy typ w grupie); redukcje (`-20%` / `-40%`) odejmowane wieloprzebiegowo wg najmniejszej reszty wyłącznie z pozycji mających zapas ponad `min_req`
@@ -230,7 +233,7 @@
 | `474` | Heavy Cav Archer | `80` | Tak | `12` | `3` (Pierce) | Tak | Nie |
 | `557` | Snajper Imperialny | `90` | Tak | `14` | `3` (Pierce) | **Nie** | **Tak** |
 | `280` | Mangonel | `50` | Tak | `8` | `4` (Melee) | **Nie** | **Tak** |
-| `588` | Moździerz Oblężniczy | `350` | Tak | `53` | `4` (Melee) | **Nie** | **Tak** |
+| `588` | Moździerz Oblężniczy | `70` | **Nie** | `15` *(meta)* | **None** | **Nie** | **Tak** |
 | `1134` | Żelazny Słoń-Tank | `1450` | Tak | `218` | **None** | **Nie** | **Tak** |
 | `441` | Szakal Dywersyjny | `95` | Tak | `14` | **None** | **Nie** | Nie |
 | `842` | Arcymag Tarczy | `240` | **Nie** | `0` | **None** | **Nie** | **Tak** |
@@ -329,3 +332,22 @@
 - **Teren i zabudowa:** plateau `flat_radius=17, height=4`, bez drzew `r=18`; cel główny `Castle` `(176, 56)` + `2x Castle` `(167, 64), (185, 48)` + `Stable` `(169, 49)` + `Siege Workshop` `(183, 63)` + `4x Keep` `(164, 44), (188, 44), (164, 68), (188, 68)`
 - **Garnizon (`±20`):** `3x Iron Elephant`, `20x Arbalester`, `2x Siege Onager`
 - **Po zburzeniu:** `+1500F/+1500G`, Furia `+20 HP / +2 Atk`, kontratak `1x Iron Elephant, 12x Pal, 14x Halb` z `(117, 178)->(68, 162)`, wycofuje fale `G3_East` (Słonie Wsch.) oraz **Rajdy Handlowe** (F8, F10, F12, F14, Endless)
+
+---
+
+## F. Empiryczna Telemetria z Playtestu Co-op (2026-11-16, `v7.0.3 -> v7.0.4`)
+
+Wnioski zebrane bezpośrednio z analizy powtórek `.aoe2record` z pierwszego pełnego, **62-minutowego playtestu kooperacyjnego (2026-11-16, `v7.0.3`)**:
+
+1. **Skład drużyny i rzeczywiste czasy wejścia w Epoki:**
+   - **P1 (`Bouli` — Burgundians):** Feudal `7:10`, Castle `15:26`, Imperial `30:10`.
+   - **P2 (`trzesiu` — Italians):** Feudal `5:56`, Castle `9:50`, Imperial `28:12`.
+   - **P3 (`Krylir` — Britons):** Feudal `8:27`, Castle `16:22`, Imperial `36:07`.
+   - **P4 (`Kamil the Beetle` — Khmer):** Feudal `8:17`, Castle `12:19`, Imperial `36:12`.
+2. **Rzeczywiste użycie mechanik scenariusza:**
+   - **Kwatermistrz P2 `(4, 164)`:** 4 aktywacje w trakcie gry — `17:15` (Eko T1), `26:10` (Eko T2), `36:53` (Eko T3), `52:11` (Mil T3).
+   - **Quest 1 (`Karawanseraj`):** ukończony ok. `45:00` (wybudowanie Muru Handlowego i Marketu `P2`).
+   - **Sanktuarium Balansu P1 `(4, 138)`:** obniżenie poziomu trudności z `0` na `-1` w `57:53`.
+3. **Zdiagnozowane przyczyny OOS (`40:00`) i porażki (`62:21`) — naprawione w `v7.0.4`:**
+   - **Desynchronizacja *Out of Sync* w `40:00` (`2400 s`):** kolizja w tej samej klatce czasowej jednoczesnego masowego `create_object` Fali 7 (`2400 s`) z pętlą eskalacji `04b` (`ATTR_HIT_POINTS`/`ATTR_ATTACK` co `300 s`, również na `2400 s`) oraz pętlą rozkazów ruchu `02e` (`15 s`, także na `2400 s`). Rozwiązano w `v7.0.4` przez przesunięcie fazowe `02e` na **`17 s`** oraz startów Biegów Eskalacji na **`+17 s`** (`1217 s`, `2117 s`, `3317 s`).
+   - **Porażka drużyny w `62:21` (upadek Cytadeli po Fali 11):** trzy nakładające się źródła przeciążenia late-game: (a) zbyt ciasne fale F7–F11 co `5,5 min` po wyłomie północnym z `51:00` uniemożliwiające wyjście z kontratakiem na Settlementy, (b) błąd nakładających się pętli `04b + 04d + 04f` dający `+20 HP / +2 Atk` co `5` minut bez górnego limitu, (c) globalna tarcza Imama `+8/+8` obejmująca wszystkie fronty `P5–P8` oraz pancerne Moździerze `350+ HP` w Fali 11. Rozwiązano w `v7.0.4` przez rozrzedzenie F7–F14 (`40:30..92:00`, Endless co `600 s`), 2-minutowe alarmy wyłomów (`52:00`, `74:00`), rozłączną eskalację z twardym limitem `+67 HP / +9 Atk` w `65:30`, zawężenie pancerza Imama do kolumny `P7` (+ wzmocnienie leczenia w strefie do `+25 HP/3s`) oraz rebalans Moździerza do roli *Glass Cannon* (`70 HP`, `0/3` armor, brak skalowania HP, pociski `3.2`, przy zachowaniu pełnej liczebności `8` szt. w F11).
