@@ -1,4 +1,4 @@
-# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v7.0.4)
+# ROADMAP.md — Plan Naprawczy i Rozwojowy (`Kroniki Rubieży: Horda` v6.2 -> v7.0.5)
 
 ## 0. Protokół Wykonawczy dla Agenta IDE (Antigravity / VS Code)
 1. **Atomowość etapów:** Realizuj podetapy ściśle po kolei (`Etap 0` -> `1A` -> `1B` -> `2` -> `3A` -> `3B` -> `3C` -> `4` -> `5` -> `6A` -> `6B` -> `6C` -> `7` -> `8`). **Zabrania się łączenia kilku podetapów (szczególnie 3A, 3B i 3C) w jedną edycję.**
@@ -544,4 +544,21 @@ Zaktualizuj `horda.md` oraz teksty w `populate_ingame_scenario_descriptions()` (
 4. **Lokalna Aura Imama (`+8/+8` wyłącznie dla `P7` i leczenie `+25 HP/3s`) (`horde_config.py`, `horde_waves.py`):**
    - Ograniczenie pancerza `+8/-8` w `02a`/`02d` wyłącznie do `PlayerId.SEVEN` (bez globalnego buffa dla `P5, P6, P8`) oraz wzmocnienie leczenia obszarowego w `02b` z `15` na `25 HP/3s`.
 5. **Rozszerzenie `test_horde_scenario.py` (`31/31 testów OK`) oraz pełna synchronizacja dokumentacji i dodanie empirycznej telemetrii z playtestu 2026-11-16 do `SCENARIO_DOSSIER.md` i `BALANCE_DOSSIER.md`.**
+
+---
+
+## Plan Wdrożeniowy v7.0.5 (Etap R16 — Finalny szlif przed meczem rewanżowym po audycie Opus 5.5 / Sonnet 5.5 / GPT 5.6 Sol) [DONE / WDROŻONE]
+
+1. **Powiadomienia Kwatermistrza P2 (`240s`) i Skalowanie Wyłomów Saperskich `F9`/`F12` (`horde_waves.py`, `horde_quests.py`):**
+   - W `06d_P2_QM_Cooldown_T1..T3_240s` dodano flarę na `(4, 164)`, sygnał dźwiękowy `Play_Tribute_Received` dla `PlayerId.TWO` oraz wyróżniony komunikat czatu `[KWATERMISTRZ P2 - GOTOWY!]`.
+   - Rozbito spawny jednostek obu wyłomów (`03_W09_Forest_Breach_North_Warn/_Execute` oraz `03_W12_Forest_Breach_East_Warn/_Execute`) na 5 wariantów `_Diff_{M2..P2}` przez `scale_comp_for_level` (20 wariantów podpiętych pod dezaktywację po zburzeniu `G2_Snipers`).
+2. **Odciążenie Fali 12 na Wschodzie (przesunięcie 3. Rajdu Handlowego z `F12` do `F13`) (`horde_config.py`, `horde_waves.py`):**
+   - Przeniesiono 3. Rajd Handlowy (`39` jedn.: `3x Siege Ram, 18x Paladin, 18x Heavy Cav Archer`) z Fali 12 (`4560 s`) do Fali 13 (`5040 s`); rajdy wypadają teraz w falach `F8, F10, F13, F14` i `Endless`.
+3. **Arytmetyczne rozdzielenie timerów `02e`, `01d–01f` i `04c`/`04e` (`horde_config.py`, `horde_waves.py`):**
+   - Ustawiono `02e_Push_Gate_Units_Deep_Into_Base` jako `enabled=False` ze startem w `t=11s` przez `02e_Start_Push_Loop_At_11s` (odpalenia w sekundach $11 + 17k$ — zero kolizji z falami aż do 192. minuty gry).
+   - Przesunięto badania AI (`01d–01f`) o `+23 s` na `533 s`, `1103 s`, `2093 s` oraz przełączniki Biegów Eskalacji `04c`/`04e` o `+1 s` na `2118 s` i `3318 s`.
+4. **Dopracowanie Finałowego Boss Fightu i Wskazówek Strategicznych (`horde_config.py`, `horde_quests.py`, `horda.md`, `PRZEWODNIK_GRACZA.md`):**
+   - Dodano `07a_Reset_Mage_Shield_If_Active` (zdejmujący aktywną tarczę `+8/+8` z `P7` jeśli `02d` było aktywne), wyłączono triggery aury Imama (`02a–02d`) w `07a`, zdjęto połowę Furii Settlementów z `P8` (`-42 HP, -4 Ataku`) oraz rozszerzono strefę detekcji żywych Słoni Bossa w `07b_Boss_Elephant_Guard_Heal` i `07b_Boss_Elephants_Slain_Disable_Heal` z `(40, 90, 135, 175)` na `(15, 85, 140, 185)`.
+   - Dopisano rekomendowaną kolejność celów wypraw (`Q1 -> Q3 -> G2 Akademia/Klasztor -> najbliższe G1 na koniec`) oraz adnotację w `SCENARIO_DOSSIER.md` i `GEMINI.md` o celowym auto-deployu `OUTPUT_SCENARIO`.
+5. **Weryfikacja (`test_horde_scenario.py` — `32/32` testów OK, `ruff check .` — `All checks passed!`) oraz pełna synchronizacja wszystkich 7 plików dokumentacji do `v7.0.5`.**
 

@@ -172,7 +172,9 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     deep_target_north = ctx["deep_target_north"]
     endless_triggers = ctx["endless_triggers"]
     escalation_triggers = ctx["escalation_triggers"]
+    global_shielded_units = ctx["global_shielded_units"]
     human_players = ctx["human_players"]
+    mage_aura_triggers = ctx["mage_aura_triggers"]
     p2_qm_pads = ctx["p2_qm_pads"]
     p_coords = ctx["p_coords"]
     q1_bldg = ctx["q1_bldg"]
@@ -716,10 +718,18 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         safe_call(t_cd.new_effect.activate_trigger, trigger_id=t_qm_ready.trigger_id)
         safe_call(t_cd.new_effect.activate_trigger, trigger_id=t_mil.trigger_id)
         safe_call(t_cd.new_effect.activate_trigger, trigger_id=t_eco.trigger_id)
+        safe_call(
+            t_cd.new_effect.play_sound,
+            source_player=PlayerId.TWO,
+            location_x=qm_cx,
+            location_y=qm_cy,
+            global_sound=1,
+            sound_name="Play_Tribute_Received",
+        )
         send_highlight_chat(
             t_cd,
             "<AQUA>",
-            f"[KWATERMISTRZ P2] Rozkazy Kwatermistrza ({qm_cx}, {qm_cy}) są ponownie gotowe do użycia!",
+            "[KWATERMISTRZ P2 - GOTOWY!] Flagi wsparcia w komnacie Czerwonego (4,164) odnowiły się — wejdź Królem P2 na Północną (Wojsko) lub Południową (Surowce)!",
             flare_x=qm_cx,
             flare_y=qm_cy,
         )
@@ -1085,6 +1095,33 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         )
 
     # 12. Warunki Zwycięstwa (Czterofazowy Finałowy Boss + Tarcza Gwardii Słoni) i Porażki
+    t_shield_on, t_mage_heal_pulse, t_mage_beacon, t_shield_off = mage_aura_triggers
+    t_clear_mage_shield = tm.add_trigger("07a_Reset_Mage_Shield_If_Active", enabled=True, looping=False)
+    for s_def in settlement_defs:
+        core_unit = s_def[2]
+        safe_call(t_clear_mage_shield.new_condition.destroy_object, unit_object=core_unit.reference_id)
+    safe_call(t_clear_mage_shield.new_condition.trigger_active, trigger_id=t_shield_off.trigger_id)
+    for u_id in global_shielded_units:
+        safe_modify_attribute(
+            t_clear_mage_shield,
+            PlayerId.SEVEN,
+            u_id,
+            ATTR_ARMOR,
+            Operation.SUBTRACT,
+            BALANCE["mage_shield_armor"],
+            armor_class=3,
+        )
+        safe_modify_attribute(
+            t_clear_mage_shield,
+            PlayerId.SEVEN,
+            u_id,
+            ATTR_ARMOR,
+            Operation.SUBTRACT,
+            BALANCE["mage_shield_armor"],
+            armor_class=4,
+        )
+    safe_call(t_clear_mage_shield.new_effect.deactivate_trigger, trigger_id=t_clear_mage_shield.trigger_id)
+
     t_boss_warn = tm.add_trigger("07a_All_Settlements_Destroyed_Boss_Warning", enabled=True, looping=False)
     t_boss_spawn = tm.add_trigger("07b_Spawn_Final_Boss_Wave", enabled=False, looping=False)
     t_boss_guard_heal = tm.add_trigger("07b_Boss_Elephant_Guard_Heal", enabled=False, looping=True)
@@ -1100,6 +1137,28 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
         safe_call(t_boss_warn.new_effect.deactivate_trigger, trigger_id=esc_t.trigger_id)
     for end_t in endless_triggers:
         safe_call(t_boss_warn.new_effect.deactivate_trigger, trigger_id=end_t.trigger_id)
+
+    safe_call(t_boss_warn.new_effect.deactivate_trigger, trigger_id=t_clear_mage_shield.trigger_id)
+    for aura_t in (t_shield_on, t_mage_heal_pulse, t_mage_beacon, t_shield_off):
+        safe_call(t_boss_warn.new_effect.deactivate_trigger, trigger_id=aura_t.trigger_id)
+
+    relief_hp = BALANCE["final_boss_fury_relief_hp"]
+    relief_atk = BALANCE["final_boss_fury_relief_atk"]
+    for spec in ENEMY_UNIT_REGISTRY.values():
+        if spec.scales_hp and relief_hp > 0:
+            safe_modify_attribute(
+                t_boss_warn, PlayerId.EIGHT, spec.unit_id, ATTR_HIT_POINTS, Operation.SUBTRACT, relief_hp
+            )
+        if spec.attack_class is not None and relief_atk > 0:
+            safe_modify_attribute(
+                t_boss_warn,
+                PlayerId.EIGHT,
+                spec.unit_id,
+                ATTR_ATTACK,
+                Operation.SUBTRACT,
+                relief_atk,
+                armor_class=spec.attack_class,
+            )
 
     for h_p in human_players:
         safe_call(
@@ -1135,7 +1194,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     send_highlight_chat(
         t_boss_warn,
         "<RED>",
-        "[FINAŁOWY ALARM] Wszystkie 6 Twierdz Hordy runęło! Macie 60 sekund na wycofanie armii pod Bramę Centralną (104, 114) — nadciąga Wielki Chan Subotai (4500 HP)!",
+        "[FINAŁOWY ALARM] Wszystkie 6 Twierdz Hordy runęło! Morale Hordy słabnie (-42 HP, -4 Ataku dla P8, aura Imama wyłączona). Macie 60 sekund na wycofanie armii pod Bramę Centralną (104, 114) — nadciąga Wielki Chan Subotai (4500 HP)!",
         flare_x=116,
         flare_y=114,
     )
@@ -1194,7 +1253,7 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     send_highlight_chat(
         t_boss_spawn,
         "<RED>",
-        "[OSTATNI SZTURM] Wielki Chan Subotai (4500 HP, regeneruje +180 HP/3s dopóki w strefie bitwy (40..135, 90..175) żyje Żelazny Słoń!) uderza ze wszystkich 3 bram (Centralna 116,114; Północna 68,60; Wschodnia 116,162)!",
+        "[OSTATNI SZTURM] Wielki Chan Subotai (4500 HP, regeneruje +180 HP/3s dopóki w strefie bitwy (15..140, 85..185) żyje Żelazny Słoń!) uderza ze wszystkich 3 bram (Centralna 116,114; Północna 68,60; Wschodnia 116,162)!",
         flare_x=116,
         flare_y=114,
     )
@@ -1205,10 +1264,10 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     safe_call(t_boss_guard_heal.new_condition.timer, timer=3)
     safe_call(
         t_boss_guard_heal.new_condition.objects_in_area,
-        area_x1=40,
-        area_y1=90,
-        area_x2=135,
-        area_y2=175,
+        area_x1=15,
+        area_y1=85,
+        area_x2=140,
+        area_y2=185,
         source_player=PlayerId.EIGHT,
         object_list=ELITE_BATTLE_ELEPHANT_ID,
         object_state=ObjectState.ALIVE,
@@ -1228,10 +1287,10 @@ def setup_sanctuary_quests_and_victory(scenario, ctx: dict) -> None:
     safe_call(t_boss_guard_down.new_condition.timer, timer=10)
     safe_call(
         t_boss_guard_down.new_condition.objects_in_area,
-        area_x1=40,
-        area_y1=90,
-        area_x2=135,
-        area_y2=175,
+        area_x1=15,
+        area_y1=85,
+        area_x2=140,
+        area_y2=185,
         source_player=PlayerId.EIGHT,
         object_list=ELITE_BATTLE_ELEPHANT_ID,
         object_state=ObjectState.ALIVE,

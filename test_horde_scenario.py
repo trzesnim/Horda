@@ -1,6 +1,6 @@
 """
 test_horde_scenario.py - Kompleksowy zestaw testow jednostkowych, integracyjnych
-oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Horda (v7.0.4).
+oraz walidacji binarnej pliku .aoe2scenario dla scenariusza Kroniki Rubiezy: Horda (v7.0.5).
 """
 
 import tempfile
@@ -338,20 +338,20 @@ class TestScenarioBinaryStructure(unittest.TestCase):
                         f"{d_name} modyfikuje trigger fali {target_tr.name}! (Regresja BUG-01)",
                     )
 
-        # Porzadek topologiczny trigger_id (574..581)
-        # Pad GORNY: P1->P2 (574) < 0->P1 (575) < M1->0 (576) < M2->M1 (577)
+        # Porzadek topologiczny trigger_id (595..602)
+        # Pad GORNY: P1->P2 (595) < 0->P1 (596) < M1->0 (597) < M2->M1 (598)
         id_up_p1_p2 = self.t_map["09_Diff_Up_P1_to_P2"].trigger_id
         id_up_0_p1 = self.t_map["09_Diff_Up_0_to_P1"].trigger_id
         id_up_m1_0 = self.t_map["09_Diff_Up_M1_to_0"].trigger_id
         id_up_m2_m1 = self.t_map["09_Diff_Up_M2_to_M1"].trigger_id
-        self.assertEqual((id_up_p1_p2, id_up_0_p1, id_up_m1_0, id_up_m2_m1), (574, 575, 576, 577))
+        self.assertEqual((id_up_p1_p2, id_up_0_p1, id_up_m1_0, id_up_m2_m1), (595, 596, 597, 598))
 
-        # Pad DOLNY: M1->M2 (578) < 0->M1 (579) < P1->0 (580) < P2->P1 (581)
+        # Pad DOLNY: M1->M2 (599) < 0->M1 (600) < P1->0 (601) < P2->P1 (602)
         id_down_m1_m2 = self.t_map["09_Diff_Down_M1_to_M2"].trigger_id
         id_down_0_m1 = self.t_map["09_Diff_Down_0_to_M1"].trigger_id
         id_down_p1_0 = self.t_map["09_Diff_Down_P1_to_0"].trigger_id
         id_down_p2_p1 = self.t_map["09_Diff_Down_P2_to_P1"].trigger_id
-        self.assertEqual((id_down_m1_m2, id_down_0_m1, id_down_p1_0, id_down_p2_p1), (578, 579, 580, 581))
+        self.assertEqual((id_down_m1_m2, id_down_0_m1, id_down_p1_0, id_down_p2_p1), (599, 600, 601, 602))
 
     def test_siege_onager_blast_attack_level_bug02(self):
         """01b musi ustawiac ATTR_BLAST_ATTACK_LEVEL = 44 na 2 dla SIEGE_ONAGER_ID dla wszystkich 4 graczy AI."""
@@ -418,8 +418,8 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         t_04g = self.t_map["04g_Cap_All_Time_Escalation_At_65m"]
 
         self.assertEqual(t_04a.conditions[0].timer, 1217)
-        self.assertEqual(t_04c.conditions[0].timer, 2117)
-        self.assertEqual(t_04e.conditions[0].timer, 3317)
+        self.assertEqual(t_04c.conditions[0].timer, 2118)
+        self.assertEqual(t_04e.conditions[0].timer, 3318)
         self.assertEqual(t_04g.conditions[0].timer, 3930)
 
         self.assertIn(t_04b.trigger_id, {e.trigger_id for e in t_04a.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER})
@@ -654,7 +654,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             for s_key, attr_name in s_keys:
                 comp = getattr(w_def, attr_name)
                 has_raiders = (s_key == "G2_Mages" and w_def.raider_count > 0)
-                has_trade_raid = (s_key == "G3_East" and w_num in (8, 10, 12, 14))
+                has_trade_raid = (s_key == "G3_East" and w_num in (8, 10, 13, 14))
                 should_exist = bool(comp) or has_raiders or has_trade_raid
                 clock_name = f"03_W{w_num:02d}_{s_key}_Clock"
 
@@ -821,19 +821,21 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         # Zbierz wspolrzedne drzew na mapie (poza drzewami wycinanymi przez Saperow w Fali 9 i 12)
         breach_n_tr = self.t_map["03_W09_Forest_Breach_North_Execute"]
         breach_e_tr = self.t_map["03_W12_Forest_Breach_East_Execute"]
+        breach_n_units_tr = self.t_map["03_W09_Forest_Breach_North_Execute_Diff_0"]
+        breach_e_units_tr = self.t_map["03_W12_Forest_Breach_East_Execute_Diff_0"]
         endless_breach_tr = self.t_map["03_Endless_Forest_Breach_Assault"]
         expected_breach_units = {
-            "03_W09_Forest_Breach_North_Execute": {
+            "03_W09_Forest_Breach_North_Execute_Diff_0": {
                 SIEGE_ONAGER_ID, UnitInfo.HALBERDIER.ID, UnitInfo.ELITE_JANISSARY.ID,
             },
-            "03_W12_Forest_Breach_East_Execute": {
+            "03_W12_Forest_Breach_East_Execute_Diff_0": {
                 SIEGE_ONAGER_ID, UnitInfo.HALBERDIER.ID, UnitInfo.ARBALESTER.ID,
             },
             "03_Endless_Forest_Breach_Assault": {
                 SIEGE_ONAGER_ID, UnitInfo.HALBERDIER.ID, UnitInfo.ELITE_JANISSARY.ID, UnitInfo.ARBALESTER.ID,
             },
         }
-        for b_tr in (breach_n_tr, breach_e_tr, endless_breach_tr):
+        for b_tr in (breach_n_units_tr, breach_e_units_tr, endless_breach_tr):
             b_units = {
                 e.object_list_unit_id
                 for e in b_tr.effects
@@ -903,7 +905,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         self.assertGreater(len(g3_east_diff_triggers), 0)
         trade_raid_triggers = [
             t for t in g3_east_diff_triggers
-            if any(tag in t.name for tag in ("03_W08_", "03_W10_", "03_W12_", "03_W14_", "03_Endless_"))
+            if any(tag in t.name for tag in ("03_W08_", "03_W10_", "03_W13_", "03_W14_", "03_Endless_"))
         ]
         self.assertEqual(len(trade_raid_triggers), 25)
         for g3_tr in g3_east_diff_triggers:
@@ -1283,8 +1285,8 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             ("03_W07_G3_North_Diff_0", 106, 72, 182),
             ("03_W08_G1_East_Diff_0", 117, 178, 182),
             ("03_W08_G3_East_Diff_0", 162, 180, 182),
-            ("03_W09_Forest_Breach_North_Execute", 78, 94, 199),
-            ("03_W12_Forest_Breach_East_Execute", 115, 140, 199),
+            ("03_W09_Forest_Breach_North_Execute_Diff_0", 78, 94, 199),
+            ("03_W12_Forest_Breach_East_Execute_Diff_0", 115, 140, 199),
         ]
         for trig_name, sx, sy, max_y2 in expected_spawn_clearings:
             tr = self.t_map[trig_name]
@@ -1331,7 +1333,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         self.assertEqual(dict(wave_map[11].g2_snipers)[SIEGE_ONAGER_ID], 4)
         self.assertEqual(dict(wave_map[11].g3_east)[SIEGE_ONAGER_ID], 4)
 
-        self.assertEqual(wave_map[13].wave_title, "Fala 13/14 (84:00 - STRAZ PRZEDNIA TYTANOW!)")
+        self.assertEqual(wave_map[13].wave_title, "Fala 13/14 (84:00 - STRAZ PRZEDNIA TYTANOW + ATAK NA TRADE LINE!)")
         self.assertEqual(dict(wave_map[13].g2_mages)[IMAM_UNIT_ID], 3)
         self.assertEqual(dict(wave_map[13].g3_north)[ELITE_BATTLE_ELEPHANT_ID], 6)
         self.assertEqual(dict(wave_map[13].g3_east)[ELITE_BATTLE_ELEPHANT_ID], 6)
@@ -1435,7 +1437,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             {t_07c.trigger_id, t_boss_heal.trigger_id, t_boss_heal_off.trigger_id},
         )
 
-        # Tarcza Gwardii Sloni Wielkiego Chana (+180 HP/3s dopoki zyje >=1 Zelazny Slon P8 w strefie bitwy 40..135, 90..175)
+        # Tarcza Gwardii Sloni Wielkiego Chana (+180 HP/3s dopoki zyje >=1 Zelazny Slon P8 w strefie bitwy 15..140, 85..185)
         self.assertTrue(any(c.condition_type == ConditionId.TIMER and c.timer == 3 for c in t_boss_heal.conditions))
         self.assertTrue(any(
             c.condition_type == ConditionId.OBJECTS_IN_AREA
@@ -1444,7 +1446,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             and c.object_state == ObjectState.ALIVE.value
             and c.inverted in (0, None)
             and c.quantity == 1
-            and (c.area_x1, c.area_y1, c.area_x2, c.area_y2) == (40, 90, 135, 175)
+            and (c.area_x1, c.area_y1, c.area_x2, c.area_y2) == (15, 85, 140, 185)
             for c in t_boss_heal.conditions
         ))
         self.assertTrue(any(
@@ -1462,7 +1464,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
             and c.object_state == ObjectState.ALIVE.value
             and c.inverted == 1
             and c.quantity == 1
-            and (c.area_x1, c.area_y1, c.area_x2, c.area_y2) == (40, 90, 135, 175)
+            and (c.area_x1, c.area_y1, c.area_x2, c.area_y2) == (15, 85, 140, 185)
             for c in t_boss_heal_off.conditions
         ))
         self.assertIn(t_boss_heal.trigger_id, {e.trigger_id for e in t_boss_heal_off.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER})
@@ -1798,7 +1800,7 @@ class TestScenarioBinaryStructure(unittest.TestCase):
 
         # 8. Opcjonalny output_path w build_horde_scenario + weryfikacja round-trip z TemporaryDirectory
         with tempfile.TemporaryDirectory() as tmp_dir:
-            custom_path = Path(tmp_dir) / "test_custom_horda_v704.aoe2scenario"
+            custom_path = Path(tmp_dir) / "test_custom_horda_v705.aoe2scenario"
             returned_path = build_horde_scenario(output_path=custom_path)
             self.assertEqual(returned_path, custom_path)
             self.assertTrue(custom_path.exists())
@@ -2157,8 +2159,8 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         t_04g = self.t_map["04g_Cap_All_Time_Escalation_At_65m"]
 
         self.assertEqual(t_04a.conditions[0].timer, 1217)
-        self.assertEqual(t_04c.conditions[0].timer, 2117)
-        self.assertEqual(t_04e.conditions[0].timer, 3317)
+        self.assertEqual(t_04c.conditions[0].timer, 2118)
+        self.assertEqual(t_04e.conditions[0].timer, 3318)
         self.assertIn(t_04b.trigger_id, {e.trigger_id for e in t_04c.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER})
         self.assertIn(t_04d.trigger_id, {e.trigger_id for e in t_04e.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER})
         self.assertEqual(
@@ -2255,6 +2257,165 @@ class TestScenarioBinaryStructure(unittest.TestCase):
         heal_effs = [e for e in t_heal.effects if e.effect_type == EffectId.HEAL_OBJECT]
         self.assertEqual(len(heal_effs), 4)
         self.assertTrue(all(e.quantity == 25 for e in heal_effs))
+
+    def test_v705_r16_qm_flares_breach_scaling_f13_trade_timers_and_boss(self):
+        """Weryfikuje zmiany v7.0.5 (Etap R16): flary i dzwiek Kwatermistrza P2, skalowanie wylomow F9/F12, 3. Rajd Handlowy w F13, separacja timerow 02e/01d-01f/04c/04e oraz Boss Fight."""
+        # 1. Flara, dzwiek i wyrazny czat w cooldownach Kwatermistrza P2 (T1-T3)
+        for tier_tag in ("T1", "T2", "T3"):
+            t_cd = self.t_map[f"06d_P2_QM_Cooldown_{tier_tag}_240s"]
+            flares = [
+                e for e in t_cd.effects
+                if e.effect_type == EffectId.CREATE_OBJECT
+                and e.object_list_unit_id == FLARE_UNIT_ID
+                and (e.location_x, e.location_y) == (4, 164)
+            ]
+            self.assertEqual({e.source_player for e in flares}, {1, 2, 3, 4})
+            sounds = [
+                e for e in t_cd.effects
+                if e.effect_type == EffectId.PLAY_SOUND
+                and e.source_player == PlayerId.TWO.value
+                and e.sound_name == "Play_Tribute_Received"
+            ]
+            self.assertEqual(len(sounds), 1)
+            chats = [e for e in t_cd.effects if e.effect_type == EffectId.SEND_CHAT]
+            self.assertEqual({e.source_player for e in chats}, {1, 2, 3, 4})
+            self.assertTrue(all("[KWATERMISTRZ P2 - GOTOWY!]" in e.message and "(4,164)" in e.message for e in chats))
+
+        # 2. Skalowanie wylomow saperskich F9 i F12 (-2..+2) + deaktywacja po zburzeniu G2_Snipers
+        breach_specs = [
+            ("03_W09_Forest_Breach_North_Warn", [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 8)]),
+            ("03_W09_Forest_Breach_North_Execute", [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14), (UnitInfo.ELITE_JANISSARY.ID, 8)]),
+            ("03_W12_Forest_Breach_East_Warn", [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 10)]),
+            ("03_W12_Forest_Breach_East_Execute", [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 16), (UnitInfo.ARBALESTER.ID, 12)]),
+        ]
+        diff_tags = {-2: "M2", -1: "M1", 0: "0", 1: "P1", 2: "P2"}
+        deact_g2_s = {e.trigger_id for e in self.t_map["05_Settlement_Destroyed_G2_Snipers"].effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER}
+
+        for prefix, base_comp in breach_specs:
+            t_parent = self.t_map[prefix]
+            parent_unit_creates = [
+                e for e in t_parent.effects
+                if e.effect_type == EffectId.CREATE_OBJECT and e.object_list_unit_id != FLARE_UNIT_ID
+            ]
+            self.assertEqual(len(parent_unit_creates), 0, f"{prefix} powinien delegowac spawn do wariantow _Diff_*!")
+
+            variant_ids = set()
+            for lvl, tag in diff_tags.items():
+                v_name = f"{prefix}_Diff_{tag}"
+                self.assertIn(v_name, self.t_map)
+                t_v = self.t_map[v_name]
+                variant_ids.add(t_v.trigger_id)
+                self.assertEqual((t_v.enabled, t_v.looping), (0, 0))
+                self.assertEqual(t_v.conditions[0].condition_type, ConditionId.TRIGGER_ACTIVE)
+                self.assertEqual(t_v.conditions[0].trigger_id, self.t_map[f"State_Diff_Lvl_{tag}"].trigger_id)
+                self.assertIn(t_v.trigger_id, deact_g2_s)
+
+                expected_counts: dict[int, int] = {}
+                for u_id, cnt in scale_comp_for_level(base_comp, lvl):
+                    expected_counts[u_id] = expected_counts.get(u_id, 0) + cnt
+                actual_counts: dict[int, int] = {}
+                for e in t_v.effects:
+                    if e.effect_type == EffectId.CREATE_OBJECT and e.source_player == PlayerId.SIX.value:
+                        actual_counts[e.object_list_unit_id] = actual_counts.get(e.object_list_unit_id, 0) + 1
+                self.assertEqual(actual_counts, expected_counts, f"Zle skalowanie w {v_name}!")
+
+            self.assertEqual(
+                {e.trigger_id for e in t_parent.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER},
+                variant_ids,
+            )
+            for tag in diff_tags.values():
+                t_v = self.t_map[f"{prefix}_Diff_{tag}"]
+                self.assertEqual(
+                    {e.trigger_id for e in t_v.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER},
+                    variant_ids,
+                )
+
+        # 3. Przesuniecie 3. Rajdu Handlowego z F12 na F13
+        wave_map = {w.wave_num: w for w in get_wave_definitions()}
+        self.assertEqual(wave_map[12].wave_title, "Fala 12/14 (76:00 - Late Imperial + PRZEBICIE PRZEZ LAS!)")
+        self.assertEqual(wave_map[13].wave_title, "Fala 13/14 (84:00 - STRAZ PRZEDNIA TYTANOW + ATAK NA TRADE LINE!)")
+        t_w12_e = self.t_map["03_W12_G3_East_Diff_0"]
+        t_w13_e = self.t_map["03_W13_G3_East_Diff_0"]
+        self.assertEqual(len([e for e in t_w12_e.effects if e.effect_type == EffectId.ATTACK_MOVE]), 1)
+        self.assertEqual(len([e for e in t_w13_e.effects if e.effect_type == EffectId.ATTACK_MOVE]), 2)
+        w13_trade_creates = [
+            e for e in t_w13_e.effects
+            if e.effect_type == EffectId.CREATE_OBJECT
+            and e.object_list_unit_id != FLARE_UNIT_ID
+            and e.location_x >= 157 and e.location_y >= 175
+        ]
+        self.assertEqual(len(w13_trade_creates), 39)
+        self.assertEqual([e.object_list_unit_id for e in w13_trade_creates].count(UnitInfo.SIEGE_RAM.ID), 3)
+        self.assertEqual([e.object_list_unit_id for e in w13_trade_creates].count(UnitInfo.PALADIN.ID), 18)
+        self.assertEqual([e.object_list_unit_id for e in w13_trade_creates].count(UnitInfo.HEAVY_CAVALRY_ARCHER.ID), 18)
+
+        # 4. Separacja timerow 02e (start w 11s -> 11+17k), 01d-01f (533, 1103, 2093) i 04c/04e (2118, 3318)
+        t_02e = self.t_map["02e_Push_Gate_Units_Deep_Into_Base"]
+        t_02e_start = self.t_map["02e_Start_Push_Loop_At_11s"]
+        self.assertEqual((t_02e.enabled, t_02e.looping, t_02e.conditions[0].timer), (0, 1, 17))
+        self.assertEqual((t_02e_start.enabled, t_02e_start.looping, t_02e_start.conditions[0].timer), (1, 0, 11))
+        self.assertEqual(
+            {e.trigger_id for e in t_02e_start.effects if e.effect_type == EffectId.ACTIVATE_TRIGGER},
+            {t_02e.trigger_id},
+        )
+        self.assertEqual(self.t_map["01d_AI_Techs_Feudal_8m30s"].conditions[0].timer, 533)
+        self.assertEqual(self.t_map["01e_AI_Techs_Castle_18m"].conditions[0].timer, 1103)
+        self.assertEqual(self.t_map["01f_AI_Techs_Imperial_34m30s"].conditions[0].timer, 2093)
+        self.assertEqual(self.t_map["04c_Enable_LateGame_Escalation_At_45m"].conditions[0].timer, 2118)
+        self.assertEqual(self.t_map["04e_Enable_Endgame_Escalation_At_55m"].conditions[0].timer, 3318)
+
+        # 5. Boss Fight: czyszczenie aury Imama, oslabienie Furii P8 (-42 HP, -4 Atk) oraz strefa Sloni (15..140, 85..185)
+        t_clear_shield = self.t_map["07a_Reset_Mage_Shield_If_Active"]
+        t_07a = self.t_map["07a_All_Settlements_Destroyed_Boss_Warning"]
+        t_02d = self.t_map["02d_Mage_Global_Horde_Shield_Off"]
+        self.assertLess(t_clear_shield.trigger_id, t_07a.trigger_id)
+        self.assertEqual((t_clear_shield.enabled, t_clear_shield.looping), (1, 0))
+        self.assertEqual(len([c for c in t_clear_shield.conditions if c.condition_type == ConditionId.DESTROY_OBJECT]), 6)
+        self.assertTrue(any(c.condition_type == ConditionId.TRIGGER_ACTIVE and c.trigger_id == t_02d.trigger_id for c in t_clear_shield.conditions))
+
+        expected_shielded = {u_id for u_id, spec in ENEMY_UNIT_REGISTRY.items() if spec.receives_mage_shield}
+        shield_clear_mods = [e for e in t_clear_shield.effects if e.effect_type == EffectId.MODIFY_ATTRIBUTE]
+        self.assertEqual({e.source_player for e in shield_clear_mods}, {PlayerId.SEVEN.value})
+        self.assertEqual({e.object_list_unit_id for e in shield_clear_mods}, expected_shielded)
+        self.assertTrue(all(e.operation == Operation.SUBTRACT.value for e in shield_clear_mods))
+
+        deact_07a = {e.trigger_id for e in t_07a.effects if e.effect_type == EffectId.DEACTIVATE_TRIGGER}
+        for aura_name in (
+            "07a_Reset_Mage_Shield_If_Active",
+            "02a_Mage_Global_Horde_Shield_On",
+            "02b_Mage_AoE_Heal_Pulse_3s",
+            "02c_Mage_Visual_Flare_Beacon_8s",
+            "02d_Mage_Global_Horde_Shield_Off",
+        ):
+            self.assertIn(self.t_map[aura_name].trigger_id, deact_07a, f"07a nie dezaktywuje {aura_name}!")
+
+        p8_hp_subs = [
+            e for e in t_07a.effects
+            if e.effect_type == EffectId.MODIFY_ATTRIBUTE
+            and e.source_player == PlayerId.EIGHT.value
+            and e.object_attributes == ATTR_HIT_POINTS
+            and e.operation == Operation.SUBTRACT.value
+        ]
+        p8_atk_subs = [
+            e for e in t_07a.effects
+            if e.effect_type == EffectId.MODIFY_ATTRIBUTE
+            and e.source_player == PlayerId.EIGHT.value
+            and e.object_attributes == ATTR_ATTACK
+            and e.operation == Operation.SUBTRACT.value
+        ]
+        self.assertEqual({e.object_list_unit_id for e in p8_hp_subs}, {u for u, s in ENEMY_UNIT_REGISTRY.items() if s.scales_hp})
+        self.assertEqual({e.object_list_unit_id for e in p8_atk_subs}, {u for u, s in ENEMY_UNIT_REGISTRY.items() if s.attack_class is not None})
+        self.assertTrue(all(e.quantity == 42 for e in p8_hp_subs))
+        for e in p8_atk_subs:
+            val = e.armour_attack_quantity if e.armour_attack_quantity is not None else (e.quantity % 65536)
+            self.assertEqual(val, 4)
+
+        for boss_tr_name in ("07b_Boss_Elephant_Guard_Heal", "07b_Boss_Elephants_Slain_Disable_Heal"):
+            cond_ele = next(
+                c for c in self.t_map[boss_tr_name].conditions
+                if c.condition_type == ConditionId.OBJECTS_IN_AREA and c.object_list == ELITE_BATTLE_ELEPHANT_ID
+            )
+            self.assertEqual((cond_ele.area_x1, cond_ele.area_y1, cond_ele.area_x2, cond_ele.area_y2), (15, 85, 140, 185))
 
 
 if __name__ == "__main__":

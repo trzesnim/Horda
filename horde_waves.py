@@ -526,7 +526,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     research_techs(t_init, [PlayerId.EIGHT], [TECH_FAITH])
 
     t_ai_smith_feudal = tm.add_trigger("01d_AI_Techs_Feudal_8m30s", enabled=True, looping=False)
-    safe_call(t_ai_smith_feudal.new_condition.timer, timer=510)
+    safe_call(t_ai_smith_feudal.new_condition.timer, timer=BALANCE["ai_tech_feudal_sec"])
     research_techs(
         t_ai_smith_feudal,
         ai_players,
@@ -538,7 +538,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     enforce_specialized_unit_caps(t_ai_smith_feudal, ai_players)
 
     t_ai_smith_castle = tm.add_trigger("01e_AI_Techs_Castle_18m", enabled=True, looping=False)
-    safe_call(t_ai_smith_castle.new_condition.timer, timer=1080)
+    safe_call(t_ai_smith_castle.new_condition.timer, timer=BALANCE["ai_tech_castle_sec"])
     research_techs(
         t_ai_smith_castle,
         ai_players,
@@ -556,7 +556,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     enforce_specialized_unit_caps(t_ai_smith_castle, ai_players)
 
     t_ai_smith_imp = tm.add_trigger("01f_AI_Techs_Imperial_34m30s", enabled=True, looping=False)
-    safe_call(t_ai_smith_imp.new_condition.timer, timer=2070)
+    safe_call(t_ai_smith_imp.new_condition.timer, timer=BALANCE["ai_tech_imperial_sec"])
     research_techs(
         t_ai_smith_imp,
         ai_players,
@@ -595,7 +595,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
     send_highlight_chat(
         t_init, "<YELLOW>",
-        "=== KRONIKI RUBIEZY v7.0.4 === Inzynier Balansu P1 czeka w Sanktuarium (4, 138), a Kwatermistrz P2 w komnacie (4, 164) [od 10:00]! W panelu Celow (Objectives) dziala ZEGAR FALI oraz skrot zasad TL;DR!",
+        "=== KRONIKI RUBIEZY v7.0.5 === Inzynier Balansu P1 czeka w Sanktuarium (4, 138), a Kwatermistrz P2 w komnacie (4, 164) [od 10:00]! W panelu Celow (Objectives) dziala ZEGAR FALI oraz skrot zasad TL;DR!",
     )
 
     t_mutate = tm.add_trigger("01b_Apply_Specialized_Unit_Archetypes", enabled=True, looping=False)
@@ -824,7 +824,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         "[BARIERA PRZELAMANA]: Arcymag zabity! Kolumna P7 traci +8/+8 Pancerza, a leczenie w strefie Bramy Centralnej wygasa!",
     )
 
-    t_push_inside = tm.add_trigger("02e_Push_Gate_Units_Deep_Into_Base", enabled=True, looping=True)
+    t_push_inside = tm.add_trigger("02e_Push_Gate_Units_Deep_Into_Base", enabled=False, looping=True)
     safe_call(t_push_inside.new_condition.timer, timer=17)
     # P7 (Saracens / G2_Mages) wystawia Szakale Dywersyjne (HUSSAR_ID) przez Bramę Północną (52, 86)
     # oraz Wschodnią (116, 162) z rozkazem ActionType.MOVE. Wykluczamy P7 z tych stref, aby 02e
@@ -846,6 +846,10 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
                 location_x=p_tx, location_y=p_ty,
             )
 
+    t_start_push = tm.add_trigger("02e_Start_Push_Loop_At_11s", enabled=True, looping=False)
+    safe_call(t_start_push.new_condition.timer, timer=11)
+    safe_call(t_start_push.new_effect.activate_trigger, trigger_id=t_push_inside.trigger_id)
+
     # ==============================================================================
     # 7. ROZLACZNA 3-STOPNIOWA ESKALACJA CZASOWA (+17s) + TWARDY LIMIT 65:30
     # ==============================================================================
@@ -854,7 +858,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_enable_esc1.new_condition.timer, timer=BALANCE["escalation_start_sec"])
     send_highlight_chat(
         t_enable_esc1, "<ORANGE>",
-        f"[WZROST SILY HORDY - BIEG 1]: Rozpoczyna sie mobilizacja Hordy (+{BALANCE['escalation_hp_add']} HP i +{BALANCE['escalation_atk_add']} Ataku co 5 min do 35:17)!",
+        f"[WZROST SILY HORDY - BIEG 1]: Rozpoczyna sie mobilizacja Hordy (+{BALANCE['escalation_hp_add']} HP i +{BALANCE['escalation_atk_add']} Ataku co 5 min do 35:18)!",
     )
 
     t_escalate1 = tm.add_trigger("04b_Global_Horde_Escalation_Every_5m", enabled=False, looping=True)
@@ -874,7 +878,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
     safe_call(t_enable_esc2.new_effect.deactivate_trigger, trigger_id=t_escalate1.trigger_id)
     send_highlight_chat(
         t_enable_esc2, "<RED>",
-        f"[FURIA LATE-GAME - BIEG 2]: Horda przechodzi na drugi bieg mobilizacji (+{BALANCE['late_escalation_hp_add']} HP i +{BALANCE['late_escalation_atk_add']} Ataku co 5 min do 55:17)!",
+        f"[FURIA LATE-GAME - BIEG 2]: Horda przechodzi na drugi bieg mobilizacji (+{BALANCE['late_escalation_hp_add']} HP i +{BALANCE['late_escalation_atk_add']} Ataku co 5 min do 55:18)!",
     )
 
     t_escalate2 = tm.add_trigger("04d_LateGame_Horde_Overdrive_Every_5m", enabled=False, looping=True)
@@ -1059,6 +1063,39 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             for brother in end_variants:
                 safe_call(ev.new_effect.deactivate_trigger, trigger_id=brother.trigger_id)
 
+    def add_scaled_breach_variants(
+        parent_trig,
+        prefix_name: str,
+        base_comp: list[tuple[int, int]],
+        spawn_x: int,
+        spawn_y: int,
+        target_x: int,
+        target_y: int,
+    ):
+        breach_variants = []
+        for lvl, tag in diff_tags.items():
+            t_bvar = tm.add_trigger(f"{prefix_name}_Diff_{tag}", enabled=False, looping=False)
+            safe_call(t_bvar.new_condition.trigger_active, trigger_id=state_markers[lvl].trigger_id)
+            add_spawn_and_attack_effect(
+                t_bvar,
+                PlayerId.SIX,
+                scale_comp_for_level(base_comp, lvl),
+                spawn_x=spawn_x,
+                spawn_y=spawn_y,
+                target_x=target_x,
+                target_y=target_y,
+            )
+            all_settlement_wave_triggers["G2_Snipers"].append(t_bvar)
+            breach_variants.append(t_bvar)
+
+        for bv in breach_variants:
+            safe_call(parent_trig.new_effect.activate_trigger, trigger_id=bv.trigger_id)
+        for bv in breach_variants:
+            for brother in breach_variants:
+                safe_call(bv.new_effect.deactivate_trigger, trigger_id=brother.trigger_id)
+
+    trade_raid_counts = {8: 10, 10: 14, 13: 18, 14: 22}
+
     # Harmonogram Fal 1–14 (bez blokowania Sanktuarium i bez Close_Window)
     for w_def in wave_definitions:
         w_num = w_def.wave_num
@@ -1084,7 +1121,7 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
         for s_key, ai_p, comp, sx, sy, tx, ty in per_settlement_wave:
             has_raiders = (s_key == "G2_Mages" and w_def.raider_count > 0)
-            has_trade_raid = (s_key == "G3_East" and w_num in (8, 10, 12, 14))
+            has_trade_raid = (s_key == "G3_East" and w_num in trade_raid_counts)
             if not comp and not has_raiders and not has_trade_raid:
                 continue
 
@@ -1112,10 +1149,11 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
                     )
 
                 if has_trade_raid:
+                    pal_hca_cnt = trade_raid_counts[w_num]
                     trade_raid_comp = [
                         (UnitInfo.SIEGE_RAM.ID, 3),
-                        (UnitInfo.PALADIN.ID, 10 + (w_num - 8) * 2),
-                        (UnitInfo.HEAVY_CAVALRY_ARCHER.ID, 10 + (w_num - 8) * 2),
+                        (UnitInfo.PALADIN.ID, pal_hca_cnt),
+                        (UnitInfo.HEAVY_CAVALRY_ARCHER.ID, pal_hca_cnt),
                     ]
                     scaled_trade = scale_comp_for_level(trade_raid_comp, lvl)
                     add_spawn_and_attack_effect(
@@ -1152,8 +1190,10 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
             t_warn_forest_n = tm.add_trigger("03_W09_Forest_Breach_North_Warn", enabled=True, looping=False)
             safe_call(t_warn_forest_n.new_condition.timer, timer=w_time - 30)
-            add_spawn_and_attack_effect(
-                t_warn_forest_n, PlayerId.SIX, [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 8)],
+            add_scaled_breach_variants(
+                t_warn_forest_n,
+                "03_W09_Forest_Breach_North_Warn",
+                [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 8)],
                 spawn_x=78, spawn_y=90, target_x=78, target_y=95,
             )
             send_highlight_chat(
@@ -1167,8 +1207,9 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             safe_call(t_breach_n.new_condition.timer, timer=w_time)
             for tr_u in north_breach_trees:
                 safe_call(t_breach_n.new_effect.remove_object, selected_object_ids=[tr_u.reference_id])
-            add_spawn_and_attack_effect(
-                t_breach_n, PlayerId.SIX,
+            add_scaled_breach_variants(
+                t_breach_n,
+                "03_W09_Forest_Breach_North_Execute",
                 [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 14), (UnitInfo.ELITE_JANISSARY.ID, 8)],
                 spawn_x=78, spawn_y=94, target_x=68, target_y=130,
             )
@@ -1191,8 +1232,10 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
 
             t_warn_forest_e = tm.add_trigger("03_W12_Forest_Breach_East_Warn", enabled=True, looping=False)
             safe_call(t_warn_forest_e.new_condition.timer, timer=w_time - 30)
-            add_spawn_and_attack_effect(
-                t_warn_forest_e, PlayerId.SIX, [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 10)],
+            add_scaled_breach_variants(
+                t_warn_forest_e,
+                "03_W12_Forest_Breach_East_Warn",
+                [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 10)],
                 spawn_x=115, spawn_y=140, target_x=109, target_y=140,
             )
             send_highlight_chat(
@@ -1206,8 +1249,9 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
             safe_call(t_breach_e.new_condition.timer, timer=w_time)
             for tr_u in east_breach_trees:
                 safe_call(t_breach_e.new_effect.remove_object, selected_object_ids=[tr_u.reference_id])
-            add_spawn_and_attack_effect(
-                t_breach_e, PlayerId.SIX,
+            add_scaled_breach_variants(
+                t_breach_e,
+                "03_W12_Forest_Breach_East_Execute",
                 [(SIEGE_ONAGER_ID, 2), (UnitInfo.HALBERDIER.ID, 16), (UnitInfo.ARBALESTER.ID, 12)],
                 spawn_x=115, spawn_y=140, target_x=68, target_y=146,
             )
@@ -1239,4 +1283,6 @@ def setup_init_aura_and_waves(scenario, ctx: dict) -> None:
         t_escalate3,
         t_cap_esc,
     ]
+    ctx["global_shielded_units"] = global_shielded_units
+    ctx["mage_aura_triggers"] = (t_shield_on, t_mage_heal_pulse, t_mage_beacon, t_shield_off)
     ctx["state_markers"] = state_markers

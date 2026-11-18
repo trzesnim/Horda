@@ -1,18 +1,18 @@
-# Przewodnik Gracza — Kroniki Rubieży: Horda i Ekspedycje (v7.0.4)
+# Przewodnik Gracza — Kroniki Rubieży: Horda i Ekspedycje (v7.0.5)
 
-Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, podział ról na mapie i przegląd zmian po naszym pierwszym pełnym, 62-minutowym playteście co-op (`2026-11-16`).
+Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, podział ról na mapie, rekomendowana ścieżka wypraw oraz przegląd szlifów `v7.0.5` po analizie telemetrii z naszego pierwszego, 62-minutowego playtestu co-op (`2026-11-16`).
 
 ---
 
 ## TL;DR — Najważniejsze zasady w 30 sekund
 
-- **Cel gry:** Broń **Cytadeli (Feitorii P2)** w sercu bazy `(54, 146)` (jej utrata = natychmiastowa porażka wszystkich). Wyjdź za mury, zniszcz **6 Twierdz Hordy (`G1–G3`)**, a po `60s` na powrót armii zgładź **Wielkiego Chana Subotaia (4500 HP)** przed Bramą Centralną (dopóki w strefie bitwy żyją jego Żelazne Słonie, Chan regeneruje `+180 HP/3s`; w finale Horda atakuje jednocześnie na wszystkie 3 bramy).
+- **Cel gry:** Broń **Cytadeli (Feitorii P2)** w sercu bazy `(54, 146)` (jej utrata = natychmiastowa porażka wszystkich). Wyjdź za mury, zniszcz **6 Twierdz Hordy (`G1–G3`)** (zostawiając najbliższy obóz `G1` na koniec!), a po `60s` na powrót armii zgładź **Wielkiego Chana Subotaia (4500 HP)** przed Bramą Centralną (po upadku 6. Twierdzy aura Imama wyłącza się, a gwardia `P8` traci połowę Furii Settlementów; dopóki w strefie bitwy `(15..140, 85..185)` żyją jego Żelazne Słonie, Chan regeneruje `+180 HP/3s`).
 - **Ustawienia i Fale:** Gracze `P1–P4` (ludzie, P2 najlepiej Hiszpanie) vs `P5–P8` (AI **Extreme**). 14 fal od `8:30` do `92:00` (Fale 7–14 rozrzedzone co 6–8 min, potem Endless co 10 min od `102:00`) — zegar do kolejnej fali i poziom trudności są zawsze na górze **Objectives**, a skrót tych zasad (`TL;DR`) znajduje się na górze zakładki **Objectives** po kliknięciu ikony w górnym pasku gry oraz w **Hints**.
 - **Role (`P1–P4`):**
-  * **P1 (Niebieski):** Brama Centralna + Król w odizolowanym **Sanktuarium `(4, 138)`** na zachodniej krawędzi mapy (wejście na flagę zmienia trudność `-2..+2`).
-  * **P2 (Czerwony):** Handel, obrona chłopów przed **Szakalami** + Król-Kwatermistrz w odizolowanej komnacie **`(4, 164)`** (od `10:00` co 4 min wejście Królem na Północną lub Południową Flagę daje rosnące wsparcie: `10–20m` Małe, `20–30m` Średnie, `30m+` Duże).
+  * **P1 (Niebieski):** Brama Centralna + Król w odizolowanym **Sanktuarium `(4, 138)`** na zachodniej krawędzi mapy (wejście na flagę zmienia trudność `-2..+2`, w tym skaluje wyłomy saperskie `F9`/`F12`).
+  * **P2 (Czerwony):** Handel, obrona chłopów przed **Szakalami** + Król-Kwatermistrz w odizolowanej komnacie **`(4, 164)`** (od `10:00` co 4 min wejście Królem na Północną lub Południową Flagę daje rosnące wsparcie: `10–20m` Małe, `20–30m` Średnie, `30m+` Duże; o odnowieniu informuje **flara na `(4, 164)`, dźwięk i wyraźny komunikat na czacie**).
   * **P3 (Zielony):** Brama Północna (uwaga: w **`52:00`** alarm 2 minuty przed wycinką, w `53:30` drugi alarm 30s, a w **`54:00`** saperzy wyrąbią wyłom w północnym lesie!).
-  * **P4 (Żółty):** Brama Wschodnia (w **`74:00`** alarm 2 minuty przed wycinką, w `75:30` drugi alarm 30s, a w **`76:00`** wyłom we wschodnim lesie) + korytarz handlowy na południu.
+  * **P4 (Żółty):** Brama Wschodnia (w **`74:00`** alarm 2 minuty przed wycinką, w `75:30` drugi alarm 30s, a w **`76:00`** wyłom we wschodnim lesie — bez jednoczesnego rajdu handlowego, który przesunięto na F13 `84:00`!) + korytarz handlowy na południu.
 - **Wyprawy (Settlementy, Questy i Map PoI):** Zburzenie każdego **Settlementu (`G1–G3`)** daje surowce i **na stałe wyłącza jego fale oraz jednostki specjalne** (wywołując jeden kontratak i *Furię*). **Questy (`Q1–Q4`)** dają potężne perki całej drużynie (`Q1`: mur i handel; `Q2`: rozbij 2 Baszty Bombardowe by zdjąć tarczę Uniwersytetu -> bonus strzelców/jazdy; `Q3`: stały dochód `+100F/+100W/+90G/+20S` co 1 min; `Q4`: przetrwaj 30s odwetu -> `+30%` HP/pancerz i Wielki Klasztor). Dodatkowo na mapie ukryto **3 punkty eksploracyjne (`PoI 1–3`)**.
 - **3 złote zasady w walce:** (1) W pierwszej kolejności zabijaj **Arcymaga (Imama)** przed Bramą Centralną (daje kolumnie `P7` tarczę `+8/+8` pancerza i leczy wrogów w strefie `+25 HP/3s`!), (2) Chroń wieśniaków pod TC przed szybkimi **Szakalami** (`7` ataku!), (3) Nie buduj na polanach spawnu Hordy przed bramami (fala niszczy budynki w miejscu swojego pojawienia się).
 
@@ -47,7 +47,7 @@ Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, 
 * **Gracz 2 (Czerwony — Cytadela, Handel i Kwatermistrz Twierdzy):**
   * Startuje w bezpiecznym sercu bazy obok **Cytadeli (Feitorii)**, ze zwiększonym na starcie limitem populacji (`220`) i sześcioma gotowymi domkami.
   * Odpowiada za gospodarkę, handel wozami (Plac Targowy jest w lewym dolnym rogu mapy) oraz za mobilne odwody w głębi bazy — szczególnie przeciwko wrogim **Szakalom**, które omijają walkę na bramach i wpadają prosto między naszych chłopów pod Town Center!
-  * Obsługuje szczelnie odizolowany **Posterunek Kwatermistrza Twierdzy** (`4, 164` na zachodniej krawędzi mapy — odblokowywany o **`10:00`** po Fali 1). Wchodząc **wyłącznie swoim Królem** na jedną z dwóch flag, może raz na **4 minuty** wezwać wsparcie rosnące wraz z czasem meczu:
+  * Obsługuje szczelnie odizolowany **Posterunek Kwatermistrza Twierdzy** (`4, 164` na zachodniej krawędzi mapy — odblokowywany o **`10:00`** po Fali 1). Wchodząc **wyłącznie swoim Królem** na jedną z dwóch flag, może raz na **4 minuty** wezwać wsparcie rosnące wraz z czasem meczu (po każdym odnowieniu na `(4, 164)` pojawia się **flara, sygnał dźwiękowy dla P2 i komunikat `[KWATERMISTRZ P2 - GOTOWY!]`**, żeby nie tracić cykli w ferworze walki):
     * **Poziom 1 (`10:00–20:00` — Mały Bonus):** Flaga Północna `(4, 161)` daje **`4x Konkwistador + 1x Mangonel`** wokół `(54, 149)`; Flaga Południowa `(4, 167)` daje **`+125 Żywności/Drewna i +100 Złota`** każdemu graczowi *(bez naprawy murów)*.
     * **Poziom 2 (`20:00–30:00` — Średni Bonus):** Flaga Północna `(4, 161)` daje **`4x Konkwistador + 2x Kolubryna`**; Flaga Południowa `(4, 167)` daje **`+200 Żywności/Drewna/Złota`** każdemu graczowi oraz naprawia Twierdzę i Mur `Q1` o **`+250 HP`**.
     * **Poziom 3 (`od 30:00+` — Duży Bonus):** Flaga Północna `(4, 161)` daje **`6x Elitarny Konkwistador + 2x Kolubryna + 2x Taran Oblężniczy`**; Flaga Południowa `(4, 167)` daje **`+300 Żywności/Drewna/Złota`** każdemu graczowi oraz naprawia Twierdzę i Mur `Q1` o **`+500 HP`**.
@@ -57,7 +57,7 @@ Krótka ściągawka przed meczem dla naszej czwórki — najważniejsze zasady, 
   * Ma najbliżej do pierwszego obozu wroga (**`G1 Północ`**) oraz zadania **`Q2 (Klif Artylerii)`** w północno-zachodnim narożniku mapy.
 
 * **Gracz 4 (Żółty — Brama Wschodnia i Szlak Handlowy):**
-  * Broni **Bramy Wschodniej** (pierwszy atak już o **`8:30`**) oraz południowej **Bramy Handlowej**. Uwaga: od **47. minuty** (`47:00`, Fala 8) co druga fala wysyła dodatkowy atak od południa wprost na Szlak Handlowy, w **`74:00`** przychodzi **alarm saperski 2 minuty przed wycinką** (drugi alarm 30s przed w `75:30`), a w **`76:00`** saperzy wycinają przejście we wschodnim lesie!
+  * Broni **Bramy Wschodniej** (pierwszy atak już o **`8:30`**) oraz południowej **Bramy Handlowej**. Uwaga: od **47. minuty** wybrane fale (F8 `47:00`, F10 `61:00`, F13 `84:00`, F14 `92:00` i Endless) wysyłają dodatkowy atak od południa wprost na Szlak Handlowy, w **`74:00`** przychodzi **alarm saperski 2 minuty przed wycinką** (drugi alarm 30s przed w `75:30`), a w **`76:00`** saperzy wycinają przejście we wschodnim lesie (oddzielnie od 3. rajdu handlowego przeniesionego na `84:00`)!
   * Ma najbliżej do zadania **`Q1 (Karawanseraj)`**, którego zburzenie buduje długi Kamienny Mur Handlowy z 6 basztami i otwiera bezpieczny szlak dla wozów handlowych przez całą mapę.
 
 ---
@@ -76,6 +76,12 @@ Zniszczenie głównego budynku obozu daje każdemu graczowi duży zastrzyk Żywn
 6. **`G3 Cytadela Wschodnia`** *(+1500 Żywności / +1500 Złota)* — wyłącza **Żelazne Słonie** na wschodzie oraz **ataki na Szlak Handlowy**.
 
 *Uwaga:* Zburzenie każdego obozu wywołuje natychmiastowy kontratak z pobliskiego kierunku oraz lekko wzmacnia pozostałe siły Hordy (*Furia Hordy*).
+
+### Rekomendowana kolejność celów wypraw (Wskazówka taktyczna)
+1. **`Q1 Karawanseraj`** *(ok. `20–30 min`)* — buduje Mur Handlowy, daje **`+20%` szybkości pracy chłopów**, **`+30` populacji** i otwiera złoty handel przez całą mapę.
+2. **`Q3 Skarbiec`** — zapewnia całej drużynie stały pasywny dochód **`+310` surowców/min na gracza** (`+100F, +100W, +90G, +20S` co minutę) i `+20` populacji.
+3. **`G2 Akademia Inżynierów` oraz `G2 Klasztor Mrocznych Magów`** — **zburzenie `G2 Akademia` przed `54:00` całkowicie zapobiega obu Wyłomom Saperskim w lesie i wyłącza Moździerze!**, a zniszczenie `G2 Klasztor` wyłącza Imamów i Szakale.
+4. **Najbliższy obóz `G1 Północ` lub `G1 Wschód` zostawcie na sam koniec** — dzięki temu po zburzeniu 6. obozu cała armia ma bardzo blisko pod Bramę Centralną na finałową walkę z Wielkim Chanem Subotaiem!
 
 ### 4 Questy Poboczne (`Q1–Q4`)
 Każdy ukończony Quest daje stałe, potężne wzmocnienie całej drużynie (i lekko wzmacnia Hordę):
@@ -105,3 +111,13 @@ Poza głównymi obozami na rubieżach ukryte są także trzy punkty eksploracyjn
 3. **2 minuty na reakcję przed wyłomami saperskimi:** Saperzy w Fali 9 (`54:00`) i Fali 12 (`76:00`) dają wczesny alarm z flarą już **2 minuty przed wycinką** (`52:00` i `74:00`), a przypomnienie na `30s` przed.
 4. **Lokalny Imam i Moździerze *Glass Cannon*:** Aura pancerza Imama (`+8/+8`) działa już tylko na jego kolumnę `P7` pod Bramą Centralną (z mocniejszym leczeniem `+25 HP/3s` w tej strefie), a Moździerze mają **70 HP**, pancerz **`0/3`** i spowolnione pociski (`3.2`).
 5. **Sprawdzone fundamenty z `v7.0.1–v7.0.3`:** Płynnie działające Sanktuarium Balansu `(4, 138)` i Kwatermistrz P2 `(4, 164)` (od `10:00` co 4 min z awansem `10–20m`, `20–30m`, `30m+`), Zegar Fali i `TL;DR` w zakładce **Objectives**, `PoI 1–3`, dwuetapowe `Q2/Q4` i 3-bramowy finał z Wielkim Chanem Subotaiem (`4500 HP`).
+
+---
+
+## 7. Finalne szlify przed rewanżem (`v7.0.4 -> v7.0.5 / Etap R16`)
+
+1. **Wyraźne powiadomienia Kwatermistrza P2 (`240s`):** po każdym odnowieniu flag w komnacie `(4, 164)` na mapie pojawia się **flara**, Gracz 2 słyszy **dźwięk**, a na czacie wyświetla się wyróżniony komunikat `[KWATERMISTRZ P2 - GOTOWY!]`.
+2. **Skalowanie Wyłomów Saperskich (`F9` i `F12`):** liczba jednostek w wyłomach w Fali 9 i Fali 12 skaluje się w 100% poziomem trudności Sanktuarium (`-2..+2`).
+3. **Równomierniejsze tempo na Wschodzie (3. Rajd Handlowy w F13):** 3. uderzenie na Szlak Handlowy (`39` jedn.) zostało przeniesione z Fali 12 (`76:00`) do **Fali 13 (`84:00`)**, aby nie nakładało się na Wschodni Wyłom Saperski w F12.
+4. **Arytmetyczne rozdzielenie wszystkich timerów (`02e`, `01d–01f`, `04c`/`04e`):** pętla bram `02e` startuje po `11 s` (`11 + 17k` s), badania AI przesunięto o `+23 s` (`8:53`, `18:23`, `34:53`), a przełączniki Biegów Eskalacji `04c`/`04e` na `35:18` (`2118 s`) i `55:18` (`3318 s`) — zero kolizji klatek.
+5. **Czystszy finał z Wielkim Chanem (`07a` / `07b`):** w momencie zburzenia 6. Twierdzy wyłącza się aura Imama (ze zdjęciem aktywnej tarczy `+8/+8` z `P7`), morale Hordy słabnie (`P8` traci połowę Furii Settlementów: `-42 HP, -4 Ataku`), a strefa wykrywania Żelaznych Słoni leczących Chana obejmuje szerszy obszar `(15..140, 85..185)`.

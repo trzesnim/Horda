@@ -427,7 +427,7 @@ def populate_ingame_scenario_descriptions(scenario):
     )
 
     instructions_text = (
-        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v7.0.4 - 4P Co-op)\n\n"
+        "KRONIKI RUBIEZY: HORDA I EKSPEDYCJE (v7.0.5 - 4P Co-op)\n\n"
         f"{tldr_block}"
         "USTAWIENIA LOBBY I STARTU:\n"
         "- Gracze P5-P8 sa automatycznie skonfigurowani jako AI z zablokowanymi cywilizacjami (P5 Wikingowie, P6 Turcy, P7 Saraceni, P8 Persowie). Ustaw trudnosc AI na EKSTREMALNY (Extreme)!\n"
@@ -454,14 +454,14 @@ def populate_ingame_scenario_descriptions(scenario):
         "- Zburzenie Q1 (Karawanseraj) stawia pojedyncze Targowisko sojusznicze w prawym rogu (195, 194) oraz buduje Kamienny Mur Obronny na y=186 (z 2-kratkowymi otworami wypadowymi na x=122..123 i x=170..171 oslonietych Basztami na y=184)!\n\n"
         "ZASADY ROZGRYWKI I WARUNEK ZWYCIESTWA (Horyzont 60-95 minut):\n"
         "- Fale 1-6: 8:30, 13:00, 18:00, 23:30, 29:00, 34:30; Fale 7-14 (rozrzedzone): 40:30, 47:00, 54:00, 61:00, 68:30, 76:00, 84:00, 92:00; Tryb Endless od 102:00 co 10 minut (600s).\n"
-        "- Rozlaczna trzypoziomowa eskalacja czasowa (przesunieta o +17s, twardy sufit w 65:30):\n"
-        "  * Bieg 1 (20:17 -> 35:17): +5 HP, +1 Atak co 5 min (3 ticki: 25:17, 30:17, 35:17).\n"
-        "  * Bieg 2 (35:17 -> 55:17, wylacza Bieg 1): +8 HP, +1 Atak co 5 min (4 ticki: 40:17, 45:17, 50:17, 55:17).\n"
-        "  * Bieg 3 (55:17 -> 65:17, wylacza Bieg 2): +10 HP, +1 Atak co 5 min (2 ticki: 60:17, 65:17).\n"
+        "- Rozlaczna trzypoziomowa eskalacja czasowa (przesunieta o +17s, przelaczniki Biegow 2/3 w 35:18 i 55:18, twardy sufit w 65:30):\n"
+        "  * Bieg 1 (20:17 -> 35:18): +5 HP, +1 Atak co 5 min (3 ticki: 25:17, 30:17, 35:17).\n"
+        "  * Bieg 2 (35:18 -> 55:18, wylacza Bieg 1): +8 HP, +1 Atak co 5 min (4 ticki: 40:18, 45:18, 50:18, 55:18).\n"
+        "  * Bieg 3 (55:18 -> 65:30, wylacza Bieg 2): +10 HP, +1 Atak co 5 min (2 ticki: 60:18, 65:18).\n"
         "  * Twardy Limit (65:30): zatrzymuje cala eskalacje czasowa na pulapie +67 HP i +9 Ataku!\n"
-        "- Od 47. minuty (Fale 8, 10, 12, 14 i Endless) co druga fala wysyla szturm na SZLAK HANDLOWY w kierunku Bramy Handlowej.\n"
-        "- W Falach 9 (54:00, alarmy 52:00 i 53:30) i 12 (76:00, alarmy 74:00 i 75:30) Saperzy P6 wyrabuja przesieki w lesie (6x11 na polnocy, 11x6 na wschodzie)!\n"
-        "- FINALOWY BOSS FIGHT: Po zniszczeniu wszystkich 6 Settlementow Hordy macie 60 sekund na powrot armii pod Brama Centralna (104, 114), zanim Wielki Chan Subotai (4500 HP) uderzy z (116, 114) wsparty skrzydlami na Brame Polnocna (68, 60 -> 48, 136) i Wschodnia (116, 162 -> 68, 152). Dopoki w strefie bitwy (40..135, 90..175) zyje przynajmniej 1 Zelazny Slon gwardii P8, Chan regeneruje +180 HP co 3s! Zgladz Chana, aby wygrac!\n"
+        "- Od 47. minuty (Fale 8, 10, 13, 14 i Endless) wybrana fala wysyla szturm na SZLAK HANDLOWY w kierunku Bramy Handlowej.\n"
+        "- W Falach 9 (54:00, alarmy 52:00 i 53:30) i 12 (76:00, alarmy 74:00 i 75:30) Saperzy P6 wyrabuja przesieki w lesie (6x11 na polnocy, 11x6 na wschodzie; sklady skalowane poziomem trudnosci)!\n"
+        "- FINALOWY BOSS FIGHT: Po zniszczeniu wszystkich 6 Settlementow Hordy wylacza sie aura Imama, morale wroga slabnie (P8 traci polowe Furii Settlementow: -42 HP i -4 Ataku) i macie 60 sekund na powrot armii pod Brama Centralna (104, 114), zanim Wielki Chan Subotai (4500 HP) uderzy z (116, 114) wsparty skrzydlami na Brame Polnocna (68, 60 -> 48, 136) i Wschodnia (116, 162 -> 68, 152). Dopoki w strefie bitwy (15..140, 85..185) zyje przynajmniej 1 Zelazny Slon gwardii P8, Chan regeneruje +180 HP co 3s! Zgladz Chana, aby wygrac!\n"
     )
 
     hints_text = (
@@ -473,7 +473,7 @@ def populate_ingame_scenario_descriptions(scenario):
         "4. Mozdzierz Oblezniczy (Onager P6 - Glass Cannon): 70 HP (nie skaluje HP!), pancerz 0/3, szybkosc 0.58, 21 zasiegu, spowolniony lot pocisku (3.2), wybuch co 10s, MARTWA STREFA 6 kratek. Pociski maja Blast Attack Level = 2 (nie scinaja drzew wokol bram).\n"
         "5. Snajperzy (Janczarzy P6): 90 HP, 19 zasiegu, ~107 dmg w 1 cel.\n"
         "6. Berserkerzy i Kamikaze (P5): Szybkie jednostki szturmowe o zerowym pancerzu na strzaly.\n"
-        "7. Wielki Chan Subotai (P8 - Finalowy Boss): 4500 HP, 45 ataku, 8/10 pancerza, szybkosc 0.85. Po upadku 6 Settlementow daje 60s na przegrupowanie, po czym pojawia sie z eskorta P8 (6x Zelazny Slon, 16x Paladyn, 4x Siege Ram) na (116, 114), 2x Arcymag P7 na (118, 122) oraz skrzydlami na Brame Polnocna (68, 60 -> 48, 136) i Wschodnia (116, 162 -> 68, 152) (po 10x Paladyn, 10x Heavy Cav Archer, 2x Siege Ram). Dopoki w strefie bitwy (40..135, 90..175) zyje choc 1 Zelazny Slon P8, Chan odzyskuje +180 HP co 3s - wybij najpierw gwardie sloni lub skup caly ogien na Chanie!\n"
+        "7. Wielki Chan Subotai (P8 - Finalowy Boss): 4500 HP, 45 ataku, 8/10 pancerza, szybkosc 0.85. Po upadku 6 Settlementow wylacza sie aura Imama, morale Hordy slabnie (-42 HP, -4 ataku dla P8), a gracze dostaja 60s na przegrupowanie, po czym Boss pojawia sie z eskorta P8 (6x Zelazny Slon, 16x Paladyn, 4x Siege Ram) na (116, 114), 2x Arcymag P7 na (118, 122) oraz skrzydlami na Brame Polnocna (68, 60 -> 48, 136) i Wschodnia (116, 162 -> 68, 152) (po 10x Paladyn, 10x Heavy Cav Archer, 2x Siege Ram). Dopoki w strefie bitwy (15..140, 85..185) zyje choc 1 Zelazny Slon P8, Chan odzyskuje +180 HP co 3s - wybij najpierw gwardie sloni lub skup caly ogien na Chanie!\n"
     )
 
     scouts_text = (
@@ -535,16 +535,20 @@ BALANCE = {
     "endless_start_sec": 6120,            # 102:00 (10 minut po Fali 14 w 92:00)
     "endless_repeat_interval": 600,       # Co 10 minut (600s) w Trybie Endless
 
+    "ai_tech_feudal_sec": 533,            # 8:53 (+23s po Fali 1)
+    "ai_tech_castle_sec": 1103,           # 18:23 (+23s po Fali 3)
+    "ai_tech_imperial_sec": 2093,         # 34:53 (+23s po Fali 6)
+
     "escalation_start_sec": 1217,         # Od 20:17 (Bieg 1): +5 HP i +1 Ataku co 5 minut (3 ticki: 25:17, 30:17, 35:17)
     "escalation_interval_sec": 300,
     "escalation_hp_add": 5,
     "escalation_atk_add": 1,
     "gear1_atk": 1,
-    "late_escalation_start_sec": 2117,    # Od 35:17 (Bieg 2, wylacza Bieg 1): +8 HP i +1 Ataku co 5 minut (4 ticki: 40:17..55:17)
+    "late_escalation_start_sec": 2118,    # Od 35:18 (Bieg 2, 1s po 3. ticku 04b w 2117s, wylacza Bieg 1): +8 HP i +1 Ataku co 5 minut (4 ticki: 40:18..55:18)
     "late_escalation_hp_add": 8,
     "late_escalation_atk_add": 1,
     "gear2_atk": 1,
-    "endgame_escalation_start_sec": 3317, # Od 55:17 (Bieg 3, wylacza Bieg 2): +10 HP i +1 Ataku co 5 minut (2 ticki: 60:17, 65:17)
+    "endgame_escalation_start_sec": 3318, # Od 55:18 (Bieg 3, 1s po 4. ticku 04d w 3318s, wylacza Bieg 2): +10 HP i +1 Ataku co 5 minut (2 ticki: 60:18, 65:18)
     "endgame_escalation_hp_add": 10,
     "endgame_escalation_atk_add": 1,
     "gear3_atk": 1,
@@ -618,6 +622,8 @@ BALANCE = {
     "final_boss_melee_armor": 8,
     "final_boss_pierce_armor": 10,
     "final_boss_speed": 0.85,
+    "final_boss_fury_relief_hp": 42,
+    "final_boss_fury_relief_atk": 4,
 }
 
 
@@ -881,7 +887,7 @@ def get_wave_definitions() -> list[WaveDefinition]:
         wave_sec = late_wave_times[w_late]
         time_label = f"{wave_sec // 60}:{wave_sec % 60:02d}"
         extra_tag = ""
-        if w_late in (10, 12, 14):
+        if w_late in (10, 13, 14):
             extra_tag += " + ATAK NA TRADE LINE"
         if w_late == 12:
             extra_tag += " + PRZEBICIE PRZEZ LAS"
@@ -903,7 +909,7 @@ def get_wave_definitions() -> list[WaveDefinition]:
             g2_snipers = [(UnitInfo.ARBALESTER.ID, 28), (UnitInfo.ELITE_JANISSARY.ID, 8), (SIEGE_ONAGER_ID, 4)]
             g3_east = [(ELITE_BATTLE_ELEPHANT_ID, 4), (UnitInfo.ARBALESTER.ID, 26), (SIEGE_ONAGER_ID, 4)]
         elif w_late == 13:
-            wave_title = "Fala 13/14 (84:00 - STRAZ PRZEDNIA TYTANOW!)"
+            wave_title = "Fala 13/14 (84:00 - STRAZ PRZEDNIA TYTANOW + ATAK NA TRADE LINE!)"
             g2_mages = [(IMAM_UNIT_ID, 3), (UnitInfo.PALADIN.ID, 28), (UnitInfo.SIEGE_RAM.ID, 4)]
             g3_north = [(ELITE_BATTLE_ELEPHANT_ID, 6), (UnitInfo.PALADIN.ID, 28), (UnitInfo.HALBERDIER.ID, 24)]
             g3_east = [(ELITE_BATTLE_ELEPHANT_ID, 6), (UnitInfo.ARBALESTER.ID, 32), (SIEGE_ONAGER_ID, 3)]
