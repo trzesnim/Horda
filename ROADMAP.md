@@ -562,3 +562,64 @@ Zaktualizuj `horda.md` oraz teksty w `populate_ingame_scenario_descriptions()` (
    - Dopisano rekomendowaną kolejność celów wypraw (`Q1 -> Q3 -> G2 Akademia/Klasztor -> najbliższe G1 na koniec`) oraz adnotację w `SCENARIO_DOSSIER.md` i `GEMINI.md` o celowym auto-deployu `OUTPUT_SCENARIO`.
 5. **Weryfikacja (`test_horde_scenario.py` — `32/32` testów OK, `ruff check .` — `All checks passed!`) oraz pełna synchronizacja wszystkich 7 plików dokumentacji do `v7.0.5`.**
 
+---
+
+## Backlog Rozwojowy v7.1 — Pakiet „Wywiad, Front i Odciążenie” [BACKLOG]
+**Status:** `[PROPOZYCJA / BACKLOG PO REWANŻU]` *(zweryfikowane technicznie na `AoE2ScenarioParser 0.9.8` / `DE v1.59`, baza `v7.0.5` = `1066` triggerów)*  
+**Szacowany przyrost triggerów:** `+105..135` triggerów (łącznie `~1170–1200` triggerów, `+3..6` aktywnych pętli).
+
+### Założenia techniczne i budżet faz timerów (wspólne dla v7.1):
+- **Łańcuch losujący `Chance` + zmienne (`AoE2ScenarioParser 0.9.8`):** potwierdzony round-trip `tm.add_variable()`, `new_condition.chance(quantity=...)`, `new_condition.variable_value(variable=..., comparison=Comparison.*, quantity=...)` oraz `new_effect.change_variable(variable=..., operation=Operation.*, quantity=...)`. Ponieważ silnik Genie ewaluuje `Chance` w każdym ticku aktywnego triggera, losowanie 1 z 3 bram musi działać jako **1-tickowa kaskada w kolejności ID** (`T1 < T2 < T3`): `T1` (`var==0` + `chance(33) -> var=1`), `T2` (`var==0` + `chance(50) -> var=2`), `T3` (`var==0`, 100% fallback `-> var=3`), z wzajemną dezaktywacją braci.
+- **Separacja faz timerów (poza siatką `:00/:30` i `11 + 17k` z `02e`):**
+  - Zapowiedź Głównego Uderzenia: `w_sec - 83` (`-1:23` przed falą; zweryfikowane `0` kolizji z `11 + 17k` dla wszystkich fal F5–F14 oraz brak kolizji z alarmami saperskimi `-120s/-30s`).
+  - Spawn Kuriera Chana: `w_sec + 47` (`0` kolizji z `11 + 17k`, `:00/:30` i technologiami AI `+23s`).
+  - Alerty Przeciążenia Bramy: startery jednorazowe `5s / 7s / 9s` (Północ / Centralna / Wschód) uruchamiające pętle co `11s` (lub `13s`) z cooldownem `61s`.
+  - Autopilot Kwatermistrza P2: timer bezczynności `107s` (względnie pierwsza z `17` i `30`).
+
+### Elementy pakietu v7.1:
+1. **Główne Uderzenie (Losowy Front Fali, zapowiadany `-83s` / `~1,5 min` przed falą):**
+   - Od **Fali 5 do Fali 14** jednorazowa kaskada `Chance` (`33% / 50% / 100%`) losuje jedną z 3 bram (`1=Północ`, `2=Centralna`, `3=Wschód`) do zmiennej `var_main_push_gate`, uruchamia flarę + komunikat czatu + 1 z 3 banerów w `Objectives` (`order=108`), a w momencie fali dosypuje na wylosowaną bramę `+20–25%` piechoty/jazdy (`P5`/`P8`, **bez Żelaznych Słoni i Imamów**).
+   - **Architektura skalowania (bilans triggerów):** zamiast pełnej siatki `10 fal × 3 bramy × 5 poziomów` (`~190` triggerów), rekomendowany jest wariant **3 koszyków erowych** (`Castle F5–F6`, `Early Imp F7–F10`, `Late Imp F11–F14`) z pełnym `scale_comp_for_level` (`-2..+2`) sterowanym przez `State_Diff_Lvl_*` oraz `var_main_push_gate`: daje to **~65–85 triggerów** przy 100% zgodności z Sanktuarium Balansu i walidatorem `test_horde_scenario.py`.
+
+2. **Kurier Chana (Przechwytywanie między falami, synergia z pkt 1):**
+   - W oknach po falach **F5, F7, F9, F11, F13** (`w_sec + 47s`) pojawia się szybki bohater-kurier `PlayerId.EIGHT` z `ATTR_HERO_STATUS = 1` (odporność na konwersję i złota poświata).
+   - **Jednostka i rejestr:** rekomendowane ID `UnitInfo.RELIC_CART.ID (1304)` lub `UnitInfo.OX_WAGON.ID (1273)` (nieuzbrojony wóz — nie zatrzymuje się do walki przy `ActionType.MOVE`, nie koliduje z wozami handlowymi graczy `TRADE_CART_*`). Wymaga dopisania do `ENEMY_UNIT_REGISTRY` (`scales_hp=False, attack_class=None, receives_mage_shield=False, mandatory_min_one=False`), aby przeszedł test `test_registry_completeness_across_all_spawns`.
+   - **Ograniczenia silnika (smycze `P8`, `02e` i mgła wojny):**
+     * Ponieważ smycze `Garrison_Leash_*` obozów `P8` (`G3_North`, `G3_East`, `Q3`) oraz `02e_Push_Gate_Units_Deep_Into_Base` nie filtrują po `unit_id`, trasy muszą w 100% omijać pierścienie `r=14..20` obozów `P8` i 5 stref `02e`. Ruch po punktach pośrednich realizowany przez potwierdzony round-tripem `task_object(..., action_type=ActionType.MOVE, queue_action=1)`.
+     * `MAP_REVEALER` jest obiektem statycznym (nie podąża za jednostką) — śledzenie Kuriera zrealizować przez okresowe flary (co `13s` w aktywnej strefie) lub przejściowe `MAP_REVEALER` na 2–3 punktach kontrolnych usuwane po ucieczce/śmierci.
+   - **3 zweryfikowane, w 100% czyste trasy (`0` zablokowanych kratek, `0` wody, `0` kolizji ze smyczami `P8` i strefami `02e`, bufor `3×3` na końcach):**
+     * **Trasa 1 (Centralna przez środkowy bród `(122, 62)`, dł. ~60):** `(88, 66)` [NE od `G1_North`] → `(112, 72)` → `(122, 62)` → `(132, 52)` → `(148, 58)` [N od `G2_Mages`].
+     * **Trasa 2 (Przedpole Bram, dł. ~94):** `(76, 86)` [S od `G1_North`] → `(96, 88)` → `(114, 96)` → `(116, 114)` [Przedpole Centralnej, poza `02e`] → `(118, 132)` → `(118, 152)` [W od `G1_East`].
+     * **Trasa 3 (Północna przez bród `(84, 30)`, dł. ~62):** `(54, 40)` [W od `G2_Snipers`] → `(74, 38)` → `(84, 30)` → `(105, 34)` [S od `Q4`] → `(116, 36)` [przed `G3_North`]. *(Alternatywna Trasa 4 Południowo-Wschodnia, dł. ~82: `(154, 178) → (138, 166) → (120, 162) → (118, 132) → (116, 114)` — również 0 kolizji).*
+   - **Nagroda i synergia:** zabicie Kuriera przed dotarciem do mety daje drużynie pakiet zasobów (np. `+250G/+250F`) oraz ustawia zmienną `var_main_push_gate = 0`, **anulując dodatek najbliższego Głównego Uderzenia** (komunikat wywiadowczy).
+
+3. **Odciążenie uwagi graczy (na bazie telemetrii z playtestu 2026-11-16):**
+   - **Autopilot Kwatermistrza P2:** równolegle z aktywacją flag `T1/T2/T3` uruchamiany jest jednorazowy timer bezczynności `107s` (dezaktywowany natychmiast przy ręcznym użyciu flagi Mil/Eco). Jeśli P2 nie użyje flag w ciągu `107s`, Autopilot automatycznie wypłaca **60% pakietu Eko** (bez naprawy murów lub z połową naprawy), informuje czat i uruchamia standardowy cooldown `240s`. Ręczne wejście Królem P2 nadal daje 100% Eko lub pełny zrzut Militarny.
+   - **Alert Przeciążenia Bramy:** 3 niezależne detektory pętlowe (`timer=11s`, fazy startowe `5s/7s/9s`) sprawdzające `objects_in_area` (`quantity >= 35`, `object_type=ObjectType.MILITARY` łącznie lub próg per główny gracz AI `P5/P6/P7/P8`, ew. zliczenie przez `count_units_into_variable` do wspólnej zmiennej sumującej `P5–P8`!) -> flara na zagrożonej bramie, dźwięk i komunikat czatu + wyciszenie na `61s`. *(Uwaga techniczna: pojedynczy warunek `objects_in_area` filtruje 1 gracza `source_player`, więc do dokładnej sumy `P5+P6+P7+P8 >= 35` użyć efektu `count_units_into_variable` + `variable_value(LARGER_OR_EQUAL, 35)`, dostępnego w `AoE2ScenarioParser 0.9.8`!).*
+   - **(Opcjonalnie) Ostatnia Reduta Cytadeli (`Feitoria` P2):** zweryfikowano istnienie `new_condition.object_hp(unit_object=allied_citadel.reference_id, comparison=Comparison.LESS, quantity=...)`.
+     * **Krytyczne ograniczenie silnika DE:** `object_hp` sprawdza **bezwzględne HP, nie procent Max HP**. Ponieważ `01_Init` używa obecnie `Operation.ADD, 3000` (co przy bazowej Feitorii DE daje wartość zależną od patcha/technologii murarskich), przed wdrożeniem należy w `01_Init` ustalić jawne `Operation.SET` (np. `6000 HP`) i ustawić próg bezwzględny `2400 HP` (`40%`).
+     * **Ochrona przed kolizją z `08_Defeat_Citadel_Lost`:** trigger musi zawierać drugi warunek `object_hp(unit_object=allied_citadel.reference_id, comparison=Comparison.LARGER, quantity=0)` (lub `destroy_object(..., inverted=1)`), aby nie odpalił na `HP == 0` w chwili przegranej.
+
+---
+
+## Backlog Rozwojowy v8.0 — Duże Rozszerzenia Regrywalności [BACKLOG]
+**Status:** `[PROPOZYCJA / BACKLOG PO REWANŻU]` *(wymaga rozszerzenia walidatora `test_horde_scenario.py` o zmienne scenariusza)*  
+**Szacowany przyrost triggerów:** `+65..90` triggerów (łącznie `~1240–1290` triggerów przy pełnym pakiecie `v7.1 + v8.0`).
+
+1. **Beczki Prochu na 3 bramach (Północna, Centralna, Wschodnia):**
+   - Za każdą z 3 głównych bram stoi jednorazowy, oznakowany budynek obrońcy (np. `OUTPOST` lub dedykowany obiekt o unikalnym ID przypisany do `P3/P1/P4`). Usunięcie (`Delete`) — lub zniszczenie go przez wroga — detonuje strefę bramy: 4 efekty `damage_object(source_player=ai_p, object_type=ObjectType.MILITARY, quantity=..., area=...)` dla `P5–P8` (potwierdzony round-trip w `v1.59`; `damage_object` zadaje obrażenia ignorujące pancerz, bez kolizji z pętlą `02e_Push_Gate_Units_Deep_Into_Base`).
+   - **Koszt taktyczny:** detonacja zawala własną bramę i mur w przełęczy. **Ograniczenie techniczne:** nie używać ogólnego `kill_object(object_type=ObjectType.BUILDING)` na bramie (skasowałoby to sąsiednie Zamki/Wieże graczy) — usuwać wyłącznie jawne ID murów i bram (`FORTIFIED_PALISADE_ID`, `STONE_WALL`, `FORTIFIED_WALL` oraz ID bram).
+   - **Odnawianie po zburzeniu Settlementu `Grade 2/3`:** nowo spawnowane przez `create_object` beczki nie mają statycznego `reference_id`, więc detekcję detonacji odnowionych beczek należy oprzeć na `objects_in_area(source_player=owner, object_list=BARREL_ID, area=..., quantity=1, inverted=1)` uzbrajanym z 2-sekundowym opóźnieniem po spawnie (analogicznie do `07c -> 07d`).
+
+2. **Omen Hordy (1 losowy mutator meczu losowany w `1:07` / `67s`):**
+   - Jednorazowy łańcuch `Chance` + zmienna `var_match_omen` uruchamiany w **`67s`** (poza `60s` Zegara Fal i poza `11 + 17k`, bo `67 ≡ 16 mod 17`) losuje 1 mutator na całą partię i wyświetla stały baner w `Objectives` (`order=107`).
+   - **Twarda zasada architektoniczna:** wyłącznie mutatory **składowe, czasowe lub wyłączające/przełączające mechaniki** (np. *Szakalowy Zmierzch*: częstsze rajdy Szakali bez wyłomów leśnych; *Oblężenie Żelaza*: więcej taranów zamiast strzelców; *Nawałnica Saperów*: wcześniejsze wyłomy z dłuższym ostrzeżeniem; *Spokojny Szlak*: brak Rajdów Handlowych w zamian za silniejszą Bramę Centralną) — **bez globalnych modyfikacji HP/Ataku**, aby zachować 100% kompatybilność z testem zerowego dryfu Sanktuarium (`test_sanctuary_cycle_mathematical_zero_drift`) oraz księgowaniem Furii.
+
+3. **Łupy Zwycięzcy (3 sztandary wyboru w ruinach każdego z 6 Settlementów, okno 60s):**
+   - Po zburzeniu rdzenia Settlementu w `05_Settlement_Destroyed_{s_key}` zamiast natychmiastowej stałej nagrody pojawiają się 3 rozróżnialne sztandary/pola wyboru (np. `FLAG_A / FLAG_B / TORCH` w promieniu `±5` kratek od ruin) aktywne przez `60s` (domyślny fallback po `60s` = opcja 1):
+     1. *Pełny łup + Furia:* 100% obecnej nagrody surowcowej + pełna Furia Settlementu (`Grade 1–3`).
+     2. *Ostrożne plądrowanie (50% łupu, bez Furii):* połowa surowców bez podnoszenia HP/Ataku pozostałych obozów.
+     3. *Trofeum Sektora:* mniejszy łup surowcowy w zamian za jednorazowy perk taktyczny (np. odnowienie Beczek Prochu / stały `MAP_REVEALER` na sąsiedni obóz / pakiet oblężniczy).
+   - **Wymaganie architektoniczne pod `07a` (Finałowy Boss):** ponieważ skumulowana Furia Settlementów przestaje być stałą (`84 HP / 8 Atk`), każde wybranie opcji z Furią musi księgować przyznane bonusy w zmiennych scenariusza (`var_fury_hp_acc`, `var_fury_atk_acc`), a `07a_All_Settlements_Destroyed_Boss_Warning` musi obliczać połowę tej puli (`Operation.DIVIDE, 2`) i zdejmować ją z `PlayerId.EIGHT` za pomocą zweryfikowanego efektu **`modify_attribute_by_variable`** (zamiast sztywnej stałej `final_boss_fury_relief_hp = 42, atk = 4`).
+
+
